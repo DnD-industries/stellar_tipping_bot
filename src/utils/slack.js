@@ -1,7 +1,10 @@
 "use strict";
 
 class SlackUtils {
-
+    
+    //TODO:Implement logic to dynamically extract parameters from a command, based on which command it is
+    extractParamsFromCommand(cmd){}
+    
     /**
      * Takes a string, which usually will be an escaped Slack userID string
      * such as "<@U12345678|dlohnes>". In this case, U12345678 is the slack
@@ -10,15 +13,13 @@ class SlackUtils {
      *
      * See: https://api.slack.com/slash-commands#how_do_commands_work
      */
-    constructor() {
-      this.extractUserId = function (str) {
+    extractUserIdFromCommand(cmd) {
         // If it doesn't contain @ and |, we're not interested. Just return what's given to us
-        if(str.indexOf("@") < 0 || str.indexOf("|") < 0 ) {
-            return str
+        if(cmd.indexOf("@") < 0 || cmd.indexOf("|") < 0 ) {
+            return cmd
         }
-        let result = str.slice(str.indexOf("@") + 1, str.indexOf("|"))
+        let result = cmd.slice(cmd.indexOf("@") + 1, cmd.indexOf("|"))
         return result
-      }
     }
 }
 

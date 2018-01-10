@@ -1,6 +1,5 @@
 "use strict"
 const { WebClient }   = require('@slack/client');
-
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
@@ -49,27 +48,29 @@ class SLMessage {
     return JSON.stringify(attachment); 
   }
   
-  sendMessageAttachmentsToSlackUser(attachments){
-    let optionalArgs = {username: process.env.SLACK_BOT_NAME, attachments: attachments};
-
-    //Retrieve the dm id for the user who sent us a message
+  sendDMToSlackUser(userID, attachments){
+    //Retrieve the dm id (between Starry and the user) for the user who sent us a message
     slackWebClient.im.list()
     .then((res) => {
+      var dmID;
       for (let im of res.ims) {
-        if (im.user === this.user_id) {
-          this.dm_id = im.id;
+        if (im.user === userID) {
+          dmID = im.id;
+          break;
         }
       }
 
-      if (this.dm_id) {
-        console.log('dm id found: ', this.dm_id);
+      if (dmID) {
+        console.log('DM id found: ', dmID);
+        return dmID; //send our dmID to the next promise
       } else {
-        console.error('dm id not found for user_id!');
+        throw new Error('DM id not found for ', userID);
       }
-    })
-    .then((res) => {
-      console.log("sending DM to channel: ", this.dm_id);
-      slackWebClient.chat.postMessage(this.dm_id ? this.dm_id : this.user_id, "New Starry Activity: ", optionalArgs)
+    }) //Send our DM now that we have the DM id
+    .then((dmID) => {
+      console.log("sending DM to channel: ", dmID);
+      let optionalArgs = {username: process.env.SLACK_BOT_NAME, attachments: attachments};
+      slackWebClient.chat.postMessage(dmID ? dmID : userID, "New Starry Activity: ", optionalArgs)
       .then((res) => {
         // `res` contains information about the posted message
         console.log('Message sent: ', res.ts);

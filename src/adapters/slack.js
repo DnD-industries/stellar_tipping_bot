@@ -1,8 +1,9 @@
-const express     = require('express')
-const bodyParser  = require('body-parser')
-const app         = express()
-const Adapter     = require('./abstract')
-const slmessage   = require('../slack_specific/slack-mesage')
+const express     = require('express');
+const bodyParser  = require('body-parser');
+const app         = express();
+const Adapter     = require('./abstract');
+const slmessage   = require('../slack_specific/slack-mesage');
+const slackUtils  = require('../utils/slack');
 
 /// Set up exress app
 app.set('port', (process.env.PORT || 5000));
@@ -21,8 +22,13 @@ app.post('/slack/tip', function (req, res) {
   console.log(msg);
   console.log("Unique user id: " + msg.uniqueUserID);
 
+  let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
+  console.log("recipient: ", recipientID);
   //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
-  msg.sendMessageAttachmentsToSlackUser(msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user"));
+  //Implement business logic and send DMs accordingly
+  msg.sendDMToSlackUser(msg.user_id, msg.formatSlackAttachment("Great tip!", "good", "XLM sent to user"));
+  
+  msg.sendDMToSlackUser(recipientID, msg.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
   // If the user is not registered, return an error appropriate. Maybe instruct them how to register
   // else if the user is registered
   // Check the amount against the user's current balance
