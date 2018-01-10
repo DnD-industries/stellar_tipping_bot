@@ -23,7 +23,7 @@ function configure(model, db) {
 
 
 module.exports = async () => {
-  const conn_url = `postgres://${process.env.PG_USER}:${process.env.PG_PASSWORD}@${process.env.PG_HOST}:${process.env.PG_PORT}/${process.env.PG_NAME}?pool=false`
+  const conn_url = (process.env.DATABASE_URL | `postgres://${process.env.PG_USER}:${process.env.PG_PASSWORD}@${process.env.PG_HOST}:${process.env.PG_PORT}/${process.env.PG_NAME}`) + `?pool=false`
   const db = await orm.connectAsync(conn_url)
 
   // +++ Model definitions
