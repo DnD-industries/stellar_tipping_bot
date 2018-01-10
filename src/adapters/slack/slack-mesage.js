@@ -50,7 +50,7 @@ class SLMessage {
   
   sendDMToSlackUser(userID, attachments){
     //Retrieve the dm id (between Starry and the user) for the user who sent us a message
-    slackWebClient.im.list()
+    return slackWebClient.im.list()
     .then((res) => {
       var dmID;
       for (let im of res.ims) {
