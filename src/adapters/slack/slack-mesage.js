@@ -48,7 +48,7 @@ class SLMessage {
     return JSON.stringify(attachment); 
   }
   
-  sendDMToSlackUser(userID, attachments){
+  async sendDMToSlackUser(userID, attachments){
     //Retrieve the dm id (between Starry and the user) for the user who sent us a message
     return slackWebClient.im.list()
     .then((res) => {
@@ -61,10 +61,10 @@ class SLMessage {
       }
 
       if (dmID) {
-        console.log('DM id found: ', dmID);
+        console.log('DM id found ', dmID);
         return dmID; //send our dmID to the next promise
       } else {
-        throw new Error('DM id not found for ', userID);
+        throw new Error('DM id not found for ' + userID);
       }
     }) //Send our DM now that we have the DM id
     .then((dmID) => {
@@ -75,9 +75,16 @@ class SLMessage {
         // `res` contains information about the posted message
         console.log('Message sent: ', res.ts);
       })
-      .catch(console.error);
+      .catch((err) => {
+        console.error(err);
+        return false;
+      });
+      return true;
     })
-    .catch(console.error);
+    .catch((err) => {
+      console.error(err);
+      return false;
+    });
   }
 
 }
