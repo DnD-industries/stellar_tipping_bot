@@ -4,6 +4,7 @@ const app         = express();
 const Adapter     = require('../abstract');
 const slmessage   = require('./slack-mesage');
 const slackUtils  = require('./utils');
+var server;
 
 /// Set up exress app
 app.set('port', (process.env.PORT || 5000));
@@ -14,6 +15,7 @@ app.use(bodyParser.urlencoded({extended: false}));
 //Application level middleware to perform token validation for slash requests coming from Slack
 app.use(function (req, res, next) {
   console.log('Request received at: ', Date.now());
+  console.log(req.header);
   console.log(req.body);
   //With the proper validation token from Slack, route the request accordingly.
   //Otherwise reply with a 401 status code 
@@ -25,7 +27,7 @@ app.use(function (req, res, next) {
 
 // Index route
 app.get('/', function (req, res) {
-  res.send('Hello world, I am a chat bot');
+  res.send('Hello world, I am Starry');
 });
 
 app.post('/slack/tip', function (req, res) {
@@ -88,6 +90,11 @@ app.post('/slack/register', function (req, res) {
   // Make sure no one else has already registered that same wallet address
   // Save to the database
   // Send them a message back (error if applicable)
+});
+
+// Spin up the server
+server = app.listen(app.get('port'), function() {
+  console.log('slackbot running on port', app.get('port'))
 });
 
 function formatMessage(txt) {
@@ -186,10 +193,10 @@ class Slack extends Adapter {
     // console.log('Start observing reddit private messages ...')
     // this.pollMessages()
 
-    // Spin up the server
-    app.listen(app.get('port'), function() {
+    /*// Spin up the server
+    server = app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'))
-    });
+    });*/
   }
 
   extractTipAmount (tipText) {
@@ -217,4 +224,5 @@ class Slack extends Adapter {
   }
 }
 
-module.exports = Slack
+module.exports.server = server;
+module.exports.Slack = Slack;

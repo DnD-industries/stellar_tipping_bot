@@ -1,6 +1,5 @@
 require('dotenv').config({path: process.env.NODE_ENV ? './.env' + process.env.NODE_ENV : './.env'})
 
-
 // +++ Adapters +
 const Reddit = require('./src/adapters/reddit')
 const Slack = require('./src/adapters/slack/index')
@@ -13,7 +12,7 @@ async function bootstrap () {
   let config = { models, stellar }
 
   const adapters = [
-    new Slack(config)
+    new Slack.Slack(config) //double Slack here because of module export in slack/index
   ]
 
   console.log("Alive and kickin'!")
