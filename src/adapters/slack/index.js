@@ -9,7 +9,19 @@ const slackUtils  = require('./utils');
 app.set('port', (process.env.PORT || 5000));
 
 // Process application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.urlencoded({extended: false}));
+
+//Application level middleware to perform token validation for slash requests coming from Slack
+app.use(function (req, res, next) {
+  console.log('Request received at: ', Date.now());
+  console.log(req.body);
+  //With the proper validation token from Slack, route the request accordingly.
+  //Otherwise reply with a 401 status code 
+  if (req.body.token === process.env.SLACK_VERIFICATION_TOKEN)
+    next();
+  else 
+    res.sendStatus(401); //Unauthorized
+});
 
 // Index route
 app.get('/', function (req, res) {
@@ -19,10 +31,10 @@ app.get('/', function (req, res) {
 app.post('/slack/tip', function (req, res) {
   console.log('Tip requested');
   let msg = new slmessage(req.body);
-  console.log(msg);
-  console.log("Unique user id: " + msg.uniqueUserID);
+  //console.log(msg);
 
   let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
+  console.log("sender: " + msg.user_id);
   console.log("recipient: ", recipientID);
   //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
   //Implement business logic and send DMs accordingly
@@ -47,7 +59,7 @@ app.post('/slack/tip', function (req, res) {
   // add the tip to the receiver's balance
   // send a success message to the sender
   // send a personal message to the receiver alerting them they received a tip
-  res.json(200);
+  res.sendStatus(200);
 
 });
 
@@ -70,8 +82,6 @@ app.post('/slack/register', function (req, res) {
 
   res.sendStatus(200);
 
-
-
   // If the user is already registered, send them a message back explaining (and that
   // If the user is not already registered
   // Validate their wallet address
@@ -79,8 +89,6 @@ app.post('/slack/register', function (req, res) {
   // Save to the database
   // Send them a message back (error if applicable)
 });
-
-
 
 function formatMessage(txt) {
   return txt +
@@ -183,8 +191,6 @@ class Slack extends Adapter {
       console.log('slackbot running on port', app.get('port'))
     });
   }
-
-
 
   extractTipAmount (tipText) {
     const matches =  tipText.match(/\+\+\+([\d\.]*)[\s{1}]?XLM/i)
