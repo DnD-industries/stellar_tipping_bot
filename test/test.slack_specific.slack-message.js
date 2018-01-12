@@ -11,7 +11,7 @@ describe('slack-message', async () => {
     	let userID = "user_id";
     	let msg = new message({team_id: teamID,
                               user_id: userID});
-      assert.equal(msg.uniqueUserID, userID+"-"+teamID);
+      assert.equal(msg.uniqueUserID, `${teamID}.${userID}`);
     })
   })
 

@@ -10,6 +10,8 @@ const StellarSdk     = require('stellar-sdk')
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
+const _REG_FAIL_SAME_WALLET = "The user has already registered with this wallet"
+const _REG_FAIL_WALLET_ALREADY_REGISTERED = "Another user has already registered with that wallet"
 
 
 /// Set up exress app
@@ -112,6 +114,10 @@ function formatMessage(txt) {
 
 
 class Slack extends Adapter {
+
+  static get REG_FAIL_SAME_WALLET() {
+    return _REG_FAIL_SAME_WALLET;
+  }
 
   static get REG_FAIL_WALLET_VALIDATION() {
     return _REG_FAIL_WALLET_VALIDATION;

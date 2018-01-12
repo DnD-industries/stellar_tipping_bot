@@ -18,7 +18,7 @@ class SLMessage {
   }
 
   get uniqueUserID() {
-    return this.user_id + "-" + this.team_id;
+    return `${this.team_id}.${this.user_id}`;
   }
 
   // attachmentColor = An optional value that can either be one of good, warning, danger, or any hex color code (eg. #439FE0). 

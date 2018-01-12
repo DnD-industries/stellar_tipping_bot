@@ -9,10 +9,25 @@ class TestableSlack extends Slack {
 describe('slackAdapter', async () => {
 
   let slackAdapter;
+  let accountWithWallet;
+  let accountWithoutWallet;
 
   beforeEach(async () => {
-      const config = await require('./setup')()
-      slackAdapter = new TestableSlack(config)
+    const config = await require('./setup')()
+    slackAdapter = new TestableSlack(config)
+
+    accountWithWallet = await Account.createAsync({
+      adapter: 'testing',
+      uniqueId: 'team.foo',
+      balance: '1.0000000',
+      walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB'
+    })
+
+    accountWithoutWallet = await Account.createAsync({
+      adapter: 'testing',
+      uniqueId: 'team.bar',
+      balance: '1.0000000'
+    })
   })
 
   // Validate their wallet address
@@ -37,15 +52,39 @@ describe('slackAdapter', async () => {
       })
     })
 
-    it ('should send a message back to the user and reject if they are already registered', () => {
-      assert.equal(true ,false)
-    })
-
     it ('should send a message back to the user and reject if a user has already registered with that wallet', () => {
+      let msg = new Message({
+        command : "register",
+        text    : "GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB",
+        team_id : "team",
+        user_id : "foo"
+      })
+
+      slackAdapter.handleRegistrationRequest(msg).catch((reason) => {
+        if(reason === Slack.REG_FAIL_WALLET_VALIDATION) {
+          done()
+        }
+      })
+    })
+
+    it ('should send a message back to the user and reject if someone else has already registered with that wallet', () => {
       assert.equal(true ,false)
     })
 
-    it ('should otherwise save the wallet info to the database for the user and send a message back to them', () => {
+    it (`should overwrite the user's current wallet info if they have a preexisting wallet, and send an appropriate message`, () => {
+      let msg = new Message({
+        command : "register",
+        text : "badwalletaddress013934888318"
+      })
+
+      slackAdapter.handleRegistrationRequest(msg).catch((reason) => {
+        if(reason === Slack.REG_FAIL_WALLET_VALIDATION) {
+          done()
+        }
+      })
+    })
+
+    it ('should otherwise save the wallet info to the database for the user and send an appropriate message back to them', () => {
       assert.equal(true ,false)
     })
   })
