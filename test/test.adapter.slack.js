@@ -1,5 +1,6 @@
 const assert = require('assert')
 const Slack = require('../src/adapters/slack/index')
+const Message = require('../src/adapters/slack/slack-mesage')
 
 class TestableSlack extends Slack {
   startServer () {}
@@ -23,8 +24,17 @@ describe('slackAdapter', async () => {
 
   describe('handle registration request', () => {
 
-    it ('should send a message back to the user and reject if their wallet fails validation', () => {
-      assert.equal(true ,false)
+    it ('should send a message back to the user and reject if their wallet fails validation', (done) => {
+      let msg = new Message({
+          command : "register",
+          text : "badwalletaddress013934888318"
+        })
+
+      slackAdapter.handleRegistrationRequest(msg).catch((reason) => {
+        if(reason === Slack.REG_FAIL_WALLET_VALIDATION) {
+          done()
+        }
+      })
     })
 
     it ('should send a message back to the user and reject if they are already registered', () => {

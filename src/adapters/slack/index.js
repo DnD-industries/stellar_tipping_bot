@@ -5,6 +5,12 @@ const Adapter     = require('../abstract');
 const slmessage   = require('./slack-mesage');
 const slackUtils  = require('./utils');
 const Promise     = require('../../../node_modules/bluebird')
+const StellarSdk     = require('stellar-sdk')
+
+
+// Constants
+const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
+
 
 /// Set up exress app
 app.set('port', (process.env.PORT || 5000));
@@ -70,7 +76,7 @@ app.post('/slack/register', function (req, res) {
   console.log(JSON.stringify(req.body))
   let msg = new slmessage(req.body);
 
-  handleRegistrationRequest(msg, res).then(() => {
+  this.handleRegistrationRequest(msg).then(() => {
     // Stuff we do when there is success / when the registration attempt is completed
   }).finally(() => {
     // What we do no matter what the outcome is
@@ -92,22 +98,6 @@ app.post('/slack/register', function (req, res) {
 
 });
 
-/**
- * handleRegistrationRequest(msg, res)
- *
- * @param msg an SLMessage derived from the original request object
- * @param res the Response object passed in to the original app.post call
- */
-async function handleRegistrationRequest(msg, res) {
-  // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-  if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
-
-  }
-  return Promise
-}
-
-
-
 function formatMessage(txt) {
   return txt +
       '\n\n\n\n' + `*This bot is in BETA Phase. Everything runs on the testnet. Do not send real XLM!*` +
@@ -120,7 +110,12 @@ function formatMessage(txt) {
       `[About Stellar](https://www.stellar.org/)`
 }
 
+
 class Slack extends Adapter {
+
+  static get REG_FAIL_WALLET_VALIDATION() {
+    return _REG_FAIL_WALLET_VALIDATION;
+  }
 
   async onTipWithInsufficientBalance (tip, amount) {
     // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
@@ -208,6 +203,25 @@ class Slack extends Adapter {
     app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'))
     });
+  }
+
+  /**
+   * handleRegistrationRequest(msg, res)
+   *
+   * @param msg an SLMessage derived from the original request object
+   * @param res the Response object passed in to the original app.post call
+   */
+  async handleRegistrationRequest(msg) {
+
+    if (!(msg.walletAddress && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletAddress))) {
+      return Promise.reject(_REG_FAIL_WALLET_VALIDATION)
+    }
+
+    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
+    if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
+
+    }
+    return Promise.resolve()
   }
 
 
