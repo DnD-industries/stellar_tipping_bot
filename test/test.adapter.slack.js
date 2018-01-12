@@ -15,6 +15,7 @@ describe('slackAdapter', async () => {
   beforeEach(async () => {
     const config = await require('./setup')()
     slackAdapter = new TestableSlack(config)
+    Account = config.models.account
 
     accountWithWallet = await Account.createAsync({
       adapter: 'testing',
