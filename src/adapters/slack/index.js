@@ -4,6 +4,7 @@ const app         = express();
 const Adapter     = require('../abstract');
 const slmessage   = require('./slack-mesage');
 const slackUtils  = require('./utils');
+const Promise     = require('../../../node_modules/bluebird')
 
 /// Set up exress app
 app.set('port', (process.env.PORT || 5000));
@@ -67,18 +68,43 @@ app.post('/slack/withdraw', function (req, res) {
 app.post('/slack/register', function (req, res) {
   console.log('someone wants to register!')
   console.log(JSON.stringify(req.body))
+  let msg = new slmessage(req.body);
+
+  handleRegistrationRequest(msg, res).then(() => {
+    // Stuff we do when there is success / when the registration attempt is completed
+  }).finally(() => {
+    // What we do no matter what the outcome is
+    res.sendStatus(200)
+  })
+
+  // Validate their wallet address
+  // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
+  // If the user is not already registered
+  // Make sure no one else has already registered that same wallet address
+  // Save to the database
+  // Send them a message back (error if applicable)
+
 
   res.sendStatus(200);
 
 
 
-  // If the user is already registered, send them a message back explaining (and that
-  // If the user is not already registered
-  // Validate their wallet address
-  // Make sure no one else has already registered that same wallet address
-  // Save to the database
-  // Send them a message back (error if applicable)
+
 });
+
+/**
+ * handleRegistrationRequest(msg, res)
+ *
+ * @param msg an SLMessage derived from the original request object
+ * @param res the Response object passed in to the original app.post call
+ */
+async function handleRegistrationRequest(msg, res) {
+  // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
+  if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
+
+  }
+  return Promise
+}
 
 
 
@@ -96,65 +122,57 @@ function formatMessage(txt) {
 
 class Slack extends Adapter {
 
-  async sendDepositConfirmation (sourceAccount, amount) {
-    await callReddit('composeMessage', {
-      to: sourceAccount.uniqueId,
-      subject: 'XLM Deposit',
-      text: formatMessage(`Thank you. ${amount} XLM have been sucessfully deposited to your account.`)
-    })
-  }
-
   async onTipWithInsufficientBalance (tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
 
   async onTipTransferFailed(tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
 
   async onTipReferenceError (tip, amount) {
-    await callReddit('reply', formatMessage(`Don't tip yourself please.`), tip.original)
+    // await callReddit('reply', formatMessage(`Don't tip yourself please.`), tip.original)
   }
 
   async onTip (tip, amount) {
-    console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
-    await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
+    // console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
+    // await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
   }
 
   async onWithdrawalReferenceError (uniqueId, address, amount, hash) {
-    console.log(`XML withdrawal failed - unknown error for ${uniqueId}.`)
-    exeucte('composeMessage', {
-      to: uniqueId,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`An unknown error occured. This shouldn't have happened. Please contact the bot.`)
-    })
+    // console.log(`XML withdrawal failed - unknown error for ${uniqueId}.`)
+    // exeucte('composeMessage', {
+    //   to: uniqueId,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`An unknown error occured. This shouldn't have happened. Please contact the bot.`)
+    // })
   }
 
   async onWithdrawalDestinationAccountDoesNotExist (uniqueId, address, amount, hash) {
-    console.log(`XML withdrawal failed - no public address for ${uniqueId}.`)
-    await callReddit('composeMessage', {
-      to: uniqueId,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`We could not withdraw. The requested public address does not exist.`)
-    })
+    // console.log(`XML withdrawal failed - no public address for ${uniqueId}.`)
+    // await callReddit('composeMessage', {
+    //   to: uniqueId,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`We could not withdraw. The requested public address does not exist.`)
+    // })
   }
 
   async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
-    console.log(`XML withdrawal failed - insufficient balance for ${uniqueId}.`)
-    await callReddit('composeMessage', {
-      to: address,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`We could not withdraw. You requested more than your current balance. Please adjust and try again.`)
-    })
+    // console.log(`XML withdrawal failed - insufficient balance for ${uniqueId}.`)
+    // await callReddit('composeMessage', {
+    //   to: address,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`We could not withdraw. You requested more than your current balance. Please adjust and try again.`)
+    // })
   }
 
   async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
-    console.log(`XML withdrawal failed - invalid address ${address}.`)
-    await callReddit('composeMessage', {
-      to: address,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`We could not withdraw. The given address is not valid.`)
-    })
+    // console.log(`XML withdrawal failed - invalid address ${address}.`)
+    // await callReddit('composeMessage', {
+    //   to: address,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`We could not withdraw. The given address is not valid.`)
+    // })
   }
 
   async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
@@ -162,11 +180,15 @@ class Slack extends Adapter {
   }
 
   async onWithdrawal (uniqueId, address, amount, hash) {
-    await callReddit('composeMessage', {
-      to: uniqueId,
-      subject: 'XLM Withdrawal',
-      text: formatMessage(`Thank's for your request. ${amount} XLM are on their way to ${address}.`)
-    })
+    // await callReddit('composeMessage', {
+    //   to: uniqueId,
+    //   subject: 'XLM Withdrawal',
+    //   text: formatMessage(`Thank's for your request. ${amount} XLM are on their way to ${address}.`)
+    // })
+  }
+
+  async onUserAttemptingToReRegister (account) {
+
   }
 
   constructor (config) {
@@ -178,12 +200,15 @@ class Slack extends Adapter {
     // console.log('Start observing reddit private messages ...')
     // this.pollMessages()
 
+    this.startServer()
+  }
+
+  startServer () {
     // Spin up the server
     app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'))
     });
   }
-
 
 
   extractTipAmount (tipText) {
