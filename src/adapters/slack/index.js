@@ -15,9 +15,9 @@ app.use(bodyParser.urlencoded({extended: false}));
 //Middleware to perform token validation for slash requests coming from Slack
 app.use(function (req, res, next) {
   if(process.env.MODE === "development"){
-    console.log('Request received at: ', Date.now());
+    console.log('Request received at', Date.now());
     console.log(req.headers);
-    console.log(req.body);
+    console.log(JSON.stringify(req.body));
   }
   
   //If this is a GET request, use the query token, otherwise look for it in the body
@@ -35,7 +35,6 @@ app.all('/', function (req, res) {
 app.post('/slack/tip', function (req, res) {
   console.log('Tip requested');
   let msg = new slmessage(req.body);
-  //console.log(msg);
 
   let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
   console.log("sender: " + msg.user_id);
@@ -69,7 +68,6 @@ app.post('/slack/tip', function (req, res) {
 
 app.post('/slack/withdraw', function (req, res) {
   console.log('someone wants to make a withdrawal!')
-  console.log(JSON.stringify(req.body))
   res.sendStatus(200);
 
   // If the user is not registered, return an error appropriate. Maybe instruct them how to register
@@ -82,8 +80,6 @@ app.post('/slack/withdraw', function (req, res) {
 
 app.post('/slack/register', function (req, res) {
   console.log('someone wants to register!')
-  console.log(JSON.stringify(req.body))
-
   res.sendStatus(200);
 
   // If the user is already registered, send them a message back explaining (and that
