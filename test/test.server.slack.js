@@ -1,7 +1,7 @@
 const assert = require('assert');
 const request = require('supertest');
 
-describe('slackServer', async () => {
+describe('Slack Server/Router', async () => {
   var slackServer;
 
   beforeEach(async () => {
@@ -18,7 +18,7 @@ describe('slackServer', async () => {
     slackServer.close(done);
   });
 
-  it('responds to GET requests with valid Slack token', function testSlash(done) {
+  it('responds to GET requests with valid Slack token', function testGETToken(done) {
     request(slackServer)
       .get('/')
       .set('Content-Type', 'application/x-www-form-urlencoded')
@@ -26,7 +26,7 @@ describe('slackServer', async () => {
       .expect("Hello world, I am Starry", done);
   });
     
-  it('responds to GET requests with 401 in absence of proper Slack authentication token', function testSlackToken(done) {
+  it('responds to GET requests with 401 in absence of proper Slack authentication token', function testInvalidGETToken(done) {
     console.log('test 401');
     request(slackServer)
       .get('/')
@@ -34,7 +34,7 @@ describe('slackServer', async () => {
       .expect(401, done);
   });
 
-  it('responds to POST requests with valid Slack token', function testSlash(done) {
+  it('responds to POST requests with valid Slack token', function testPOSTToken(done) {
     request(slackServer)
       .post('/')
       .set('Content-Type', 'application/x-www-form-urlencoded')
@@ -42,7 +42,7 @@ describe('slackServer', async () => {
       .expect("Hello world, I am Starry", done);
   });
     
-  it('responds to POST requests with 401 in absence of proper Slack authentication token', function testSlackToken(done) {
+  it('responds to POST requests with 401 in absence of proper Slack authentication token', function testInvalidPOSTToken(done) {
     console.log('test 401');
     request(slackServer)
       .post('/')
