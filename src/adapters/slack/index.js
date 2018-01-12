@@ -203,6 +203,8 @@ class Slack extends Adapter {
 
   startServer () {
 
+    const that = this;
+
     // Index route
     app.get('/', function (req, res) {
       res.send('Hello world, I am a chat bot');
@@ -261,7 +263,7 @@ class Slack extends Adapter {
       console.log(JSON.stringify(req.body))
       let msg = new slmessage(req.body);
 
-      this.handleRegistrationRequest(msg).then(() => {
+      that.handleRegistrationRequest(msg).then(() => {
         // Stuff we do when there is success / when the registration attempt is completed
       }).finally(() => {
         // What we do no matter what the outcome is
