@@ -1,6 +1,6 @@
 const assert = require('assert')
 const Slack = require('../src/adapters/slack/index')
-const Message = require('../src/adapters/slack/slack-mesage')
+const Message = require('../src/adapters/slack/slack-message')
 
 class TestableSlack extends Slack {
   startServer () {}

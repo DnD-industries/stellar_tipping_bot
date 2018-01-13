@@ -1,9 +1,11 @@
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const app         = express();
-const slmessage   = require('./slack-mesage');
+const slmessage   = require('./slack-message');
 const slackUtils  = require('./utils');
 const SlackClient = require('./client')
+// An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
+// In our case we use an xoxb bot token
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 
 class SlackServer {
@@ -83,7 +85,7 @@ class SlackServer {
       let msg = new slmessage(req.body);
       let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
       that.client.sendDMToSlackUser(msg.user_id, "This is coming from register");
-      msg.sendDMToSlackUser(recipientID, msg.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
+      that.client.sendAttachmentsToSlackUser(recipientID, msg.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
 
       // that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
       //   // What we do no matter what the outcome is
