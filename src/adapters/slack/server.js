@@ -85,7 +85,7 @@ class SlackServer {
       let msg = new slmessage(req.body);
       let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
       that.client.sendDMToSlackUser(msg.user_id, "This is coming from register");
-      that.client.sendAttachmentsToSlackUser(recipientID, msg.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
+      that.client.sendAttachmentsToSlackUser(recipientID, that.client.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
 
       // that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
       //   // What we do no matter what the outcome is

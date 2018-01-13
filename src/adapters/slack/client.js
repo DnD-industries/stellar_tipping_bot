@@ -23,6 +23,33 @@ class SlackClient extends WebClient {
         })
   }
 
+  // attachmentColor = An optional value that can either be one of good, warning, danger, or any hex color code (eg. #439FE0).
+  // This value is used to color the border along the left side of the message attachment.
+  // TODO: Add URLs for icons and images as appropriate
+  formatSlackAttachment(title, attachmentColor, plainTextBody, fieldsArray = []) {
+
+    let attachment = [
+      {
+        "fallback": plainTextBody,
+        "color": attachmentColor,
+        "author_name": "Starry",
+        "author_link": "http://flickr.com/bobby/",
+        "author_icon": "http://flickr.com/icons/bobby.jpg",
+        "title": title,
+        "title_link": "",
+        "text": plainTextBody,
+        "fields": fieldsArray,
+        "image_url": "http://my-website.com/path/to/image.jpg",
+        "thumb_url": "http://example.com/path/to/thumb.png",
+        "footer": "Starry Bot",
+        "footer_icon": "https://www.stellar.org/wp-content/themes/stellar/images/stellar-rocket-300.png",
+        "ts": Date.now()/1000
+      }
+    ];
+
+    return JSON.stringify(attachment);
+  }
+
   async sendDMToSlackUser(userID, text){
     //Retrieve the dm id (between Starry and the user) for the user who sent us a message
     return this.im.list()
