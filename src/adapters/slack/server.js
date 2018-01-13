@@ -13,6 +13,7 @@ class SlackServer {
    */
   constructor(slackAdapter) {
     this.adapter = slackAdapter
+    var that = this
 
     /// Set up express app
     app.set('port', (process.env.PORT || 5000));
@@ -78,7 +79,7 @@ class SlackServer {
       console.log(JSON.stringify(req.body))
       let msg = new slmessage(req.body);
 
-      this.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
+      that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
         // What we do no matter what the outcome is
         res.sendStatus(200).send(messageToRegisterer)
       }).catch((messageToRegisterer) => {
