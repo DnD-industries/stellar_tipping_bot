@@ -3,7 +3,8 @@ const bodyParser  = require('body-parser');
 const app         = express();
 const slmessage   = require('./slack-mesage');
 const slackUtils  = require('./utils');
-const Client      = require('./client')
+const SlackClient = require('./client')
+const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 
 class SlackServer {
 
@@ -12,8 +13,10 @@ class SlackServer {
    * @param slackAdapter A Slack:Adapter object
    */
   constructor(slackAdapter) {
-    this.adapter = slackAdapter
-    var that = this
+    var that = this;
+    this.adapter = slackAdapter;
+    this.client = new SlackClient(oauth_token);
+
 
     /// Set up express app
     app.set('port', (process.env.PORT || 5000));
@@ -78,13 +81,16 @@ class SlackServer {
       console.log('someone wants to register!')
       console.log(JSON.stringify(req.body))
       let msg = new slmessage(req.body);
+      let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
+      that.client.sendDMToSlackUser(msg.user_id, "This is coming from register");
+      msg.sendDMToSlackUser(recipientID, msg.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
 
-      that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
-        // What we do no matter what the outcome is
-        res.sendStatus(200).send(messageToRegisterer)
-      }).catch((messageToRegisterer) => {
-        res.sendStatus(401).send(messageToRegisterer)
-      })
+      // that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
+      //   // What we do no matter what the outcome is
+      //   res.sendStatus(200).send(messageToRegisterer)
+      // }).catch((messageToRegisterer) => {
+      //   res.sendStatus(401).send(messageToRegisterer)
+      // })
 
       // Validate their wallet address
       // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
