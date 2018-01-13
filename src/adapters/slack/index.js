@@ -41,9 +41,9 @@ app.post('/slack/tip', function (req, res) {
   console.log("recipient: ", recipientID);
   //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
   //Implement business logic and send DMs accordingly
-  msg.sendDMToSlackUser(msg.user_id, msg.formatSlackAttachment("Great tip!", "good", "XLM sent to user"));
+  msg.sendPlainTextDMToSlackUser(msg.user_id, "hi sender");
   
-  msg.sendDMToSlackUser(recipientID, msg.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
+  msg.sendPlainTextDMToSlackUser(recipientID, "hi recipient");
   // If the user is not registered, return an error appropriate. Maybe instruct them how to register
   // else if the user is registered
   // Check the amount against the user's current balance

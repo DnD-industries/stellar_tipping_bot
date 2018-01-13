@@ -48,43 +48,85 @@ class SLMessage {
     return JSON.stringify(attachment); 
   }
   
-  async sendDMToSlackUser(userID, attachments){
+  async sendPlainTextDMToSlackUser(userID, plainTextBody){
     //Retrieve the dm id (between Starry and the user) for the user who sent us a message
     return slackWebClient.im.list()
-    .then((res) => {
-      var dmID;
-      for (let im of res.ims) {
-        if (im.user === userID) {
-          dmID = im.id;
-          break;
-        }
-      }
-
-      if (dmID) {
-        console.log('DM id found ', dmID);
-        return dmID; //send our dmID to the next promise
-      } else {
-        throw new Error('DM id not found for ' + userID);
-      }
-    }) //Send our DM now that we have the DM id
-    .then((dmID) => {
-      console.log("sending DM to channel: ", dmID);
-      let optionalArgs = {username: process.env.SLACK_BOT_NAME, attachments: attachments};
-      slackWebClient.chat.postMessage(dmID ? dmID : userID, "New Starry Activity: ", optionalArgs)
       .then((res) => {
-        // `res` contains information about the posted message
-        console.log('Message sent: ', res.ts);
+        var dmID;
+        for (let im of res.ims) {
+          if (im.user === userID) {
+            dmID = im.id;
+            break;
+          }
+        }
+
+        if (dmID) {
+          console.log('DM id found ', dmID);
+          return Promise.resolve(dmID); //send our dmID to the next promise
+        } else {
+          let idNotFound = 'DM id not found for ' + userID;
+          console.log(idNotFound);
+          return Promise.reject(idNotFound);
+        }
+      }) //Send our DM now that we have the DM id
+      .then((dmID) => {
+        console.log("sending DM to channel: ", dmID);
+        return slackWebClient.chat.postMessage(dmID ? dmID : userID, plainTextBody)
+        .then((res) => {
+          // `res` contains information about the posted message
+          console.log('Message sent: ', res);
+          return Promise.resolve(res);
+        })
+        .catch((err) => {
+          console.error(err);
+          return Promise.reject(err);
+        });
       })
       .catch((err) => {
         console.error(err);
-        return false;
+        return Promise.reject(err);
       });
-      return true;
-    })
-    .catch((err) => {
-      console.error(err);
-      return false;
-    });
+  }
+
+  async sendDMToSlackUserWithAttachments(userID, attachments){
+    //Retrieve the dm id (between Starry and the user) for the user who sent us a message
+    return slackWebClient.im.list()
+      .then((res) => {
+        var dmID;
+        for (let im of res.ims) {
+          if (im.user === userID) {
+            dmID = im.id;
+            break;
+          }
+        }
+
+        if (dmID) {
+          console.log('DM id found ', dmID);
+          return Promise.resolve(dmID); //send our dmID to the next promise
+        } else {
+          let idNotFound = 'DM id not found for ' + userID;
+          console.log(idNotFound);
+          return Promise.reject(idNotFound);
+        }
+      }) //Send our DM now that we have the DM id
+      .then((dmID) => {
+        console.log("sending DM to channel: ", dmID);
+        let optionalArgs = {username: process.env.SLACK_BOT_NAME, attachments: attachments};
+        return slackWebClient.chat.postMessage(dmID ? dmID : userID, "New Starry Activity: ", optionalArgs)
+        .then((res) => {
+          // `res` contains information about the posted message
+          console.log('Message sent: ', res);
+          return Promise.resolve(res);
+        })
+        .catch((err) => {
+          console.error(err);
+          return Promise.reject(err);
+        });
+      })
+      .catch((err) => {
+        console.error(err);
+        return Promise.reject(err);
+      });
   }
 
 }
