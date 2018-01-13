@@ -1,10 +1,9 @@
 const express     = require('express');
 const bodyParser  = require('body-parser');
 const app         = express();
-const Adapter     = require('../abstract');
 const slmessage   = require('./slack-mesage');
 const slackUtils  = require('./utils');
-
+const Client      = require('./client')
 
 class SlackServer {
 
@@ -96,6 +95,11 @@ class SlackServer {
 
       // res.sendStatus(200);
 
+    });
+
+    // Spin up the server
+    app.listen(app.get('port'), function() {
+      console.log('slackbot running on port', app.get('port'))
     });
   }
 }
