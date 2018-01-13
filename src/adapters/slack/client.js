@@ -44,7 +44,6 @@ class SlackClient extends WebClient {
         }) //Send our DM now that we have the DM id
         .then((dmID) => {
           console.log("sending DM to channel: ", dmID);
-          let optionalArgs = {username: process.env.SLACK_BOT_NAME, attachments: attachments};
           this.chat.postMessage(dmID ? dmID : userID, text)
               .then((res) => {
                 // `res` contains information about the posted message
