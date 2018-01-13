@@ -4,9 +4,7 @@ const app         = express();
 const Adapter     = require('../abstract');
 const slmessage   = require('./slack-message');
 const slackUtils  = require('./utils');
-const Promise     = require('../../../node_modules/bluebird')
-const StellarSdk  = require('stellar-sdk')
-const SlackServer = require('./server')
+var server;
 
 
 // Constants
@@ -169,4 +167,4 @@ class Slack extends Adapter {
   }
 }
 
-module.exports = Slack
+module.exports = Slack;
