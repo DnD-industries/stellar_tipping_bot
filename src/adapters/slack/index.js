@@ -1,102 +1,14 @@
 const express     = require('express');
-const bodyParser  = require('body-parser');
 const app         = express();
+const bodyParser  = require('body-parser');
 const Adapter     = require('../abstract');
-const slmessage   = require('./slack-mesage');
+const slmessage   = require('./slack-message');
 const slackUtils  = require('./utils');
-var server;
 
-/// Set up exress app
-app.set('port', (process.env.PORT || 5000));
-
-// Process application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({extended: false}));
-
-//Middleware to perform token validation for slash requests coming from Slack
-app.use(function (req, res, next) {
-  if(process.env.MODE === "development"){
-    console.log('Request received at', Date.now());
-    console.log(req.headers);
-    console.log(JSON.stringify(req.body));
-  }
-  
-  //If this is a GET request, use the query token, otherwise look for it in the body
-  let token = req.method === "GET" ? req.query.token : req.body.token;
-  //With the proper validation token from Slack, route the request accordingly.
-  //Otherwise reply with a 401 status code 
-  token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.sendStatus(401).send("Invalid Slack token");
-});
-
-// Index GET route
-app.all('/', function (req, res) {
-  res.send('Hello world, I am Starry');
-});
-
-app.post('/slack/tip', function (req, res) {
-  console.log('Tip requested');
-  let msg = new slmessage(req.body);
-
-  let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
-  console.log("sender: " + msg.user_id);
-  console.log("recipient: ", recipientID);
-  //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
-  //Implement business logic and send DMs accordingly
-  msg.sendPlainTextDMToSlackUser(msg.user_id, "hi sender");
-  
-  msg.sendPlainTextDMToSlackUser(recipientID, "hi recipient");
-  // If the user is not registered, return an error appropriate. Maybe instruct them how to register
-  // else if the user is registered
-  // Check the amount against the user's current balance
-  // If the user's balance is not high enough, return an error containing the current balance
-  // If the user's balance is high enough, first identify the receiver by retreiving their user_id (UUID) then check if the receiver is already registered
-  // If a user does not exist in the db with their particular info,
-  // Add them to the database without a public wallet address (the real mark of not being registered)
-  // Save the tip info in the database
-  //
-  // Else-If a user DOES exist in the db with their particlar inof
-  // Make the transfer happen
-  // If failure
-  // send an appropriate message to the tipper
-  // If success
-  // remove the tip from the sender's balance
-  // add the tip to the receiver's balance
-  // send a success message to the sender
-  // send a personal message to the receiver alerting them they received a tip
-  res.sendStatus(200);
-
-});
-
-app.post('/slack/withdraw', function (req, res) {
-  console.log('someone wants to make a withdrawal!')
-  res.sendStatus(200);
-
-  // If the user is not registered, return an error appropriate. Maybe instruct them how to register
-  // else if the user is registered
-  // Check the amount against the user's current balance
-  // If the user's balance is not high enough, return an error containing the current balance
-  // If the user's balance is high enough, make the withdrawal and send a message depending on success or failure
-
-});
-
-app.post('/slack/register', function (req, res) {
-  console.log('someone wants to register!')
-  res.sendStatus(200);
-
-  // If the user is already registered, send them a message back explaining (and that
-  // If the user is not already registered
-  // Validate their wallet address
-  // Make sure no one else has already registered that same wallet address
-  // Save to the database
-  // Send them a message back (error if applicable)
-});
-
-// Spin up the server
-server = app.listen(app.get('port'), function() {
-  if(process.env.MODE === "development"){
-    console.log('slackbot running on port', app.get('port'))
-  }
-});
-
+// Constants
+const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
+const _REG_FAIL_SAME_WALLET = "The user has already registered with this wallet"
+const _REG_FAIL_WALLET_ALREADY_REGISTERED = "Another user has already registered with that wallet"
 
 function formatMessage(txt) {
   return txt +
@@ -112,65 +24,84 @@ function formatMessage(txt) {
 
 class Slack extends Adapter {
 
-  async sendDepositConfirmation (sourceAccount, amount) {
-    await callReddit('composeMessage', {
-      to: sourceAccount.uniqueId,
-      subject: 'XLM Deposit',
-      text: formatMessage(`Thank you. ${amount} XLM have been sucessfully deposited to your account.`)
-    })
+  static get REG_FAIL_SAME_WALLET() {
+    return _REG_FAIL_SAME_WALLET;
+  }
+
+  static get REG_FAIL_WALLET_VALIDATION() {
+    return _REG_FAIL_WALLET_VALIDATION;
+  }
+
+  /**
+   * handleRegistrationRequest(msg, res)
+   *
+   * @param msg an SLMessage derived from the original request object
+   * @param res the Response object passed in to the original app.post call
+   */
+  async handleRegistrationRequest(msg) {
+
+    if (!(msg.walletAddress && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletAddress))) {
+      return Promise.reject(_REG_FAIL_WALLET_VALIDATION)
+    }
+
+    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
+    if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
+
+    }
+    return Promise.resolve()
   }
 
   async onTipWithInsufficientBalance (tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
 
   async onTipTransferFailed(tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
 
   async onTipReferenceError (tip, amount) {
-    await callReddit('reply', formatMessage(`Don't tip yourself please.`), tip.original)
+    // await callReddit('reply', formatMessage(`Don't tip yourself please.`), tip.original)
   }
 
   async onTip (tip, amount) {
-    console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
-    await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
+    // console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
+    // await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
   }
 
   async onWithdrawalReferenceError (uniqueId, address, amount, hash) {
-    console.log(`XML withdrawal failed - unknown error for ${uniqueId}.`)
-    exeucte('composeMessage', {
-      to: uniqueId,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`An unknown error occured. This shouldn't have happened. Please contact the bot.`)
-    })
+    // console.log(`XML withdrawal failed - unknown error for ${uniqueId}.`)
+    // exeucte('composeMessage', {
+    //   to: uniqueId,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`An unknown error occured. This shouldn't have happened. Please contact the bot.`)
+    // })
   }
 
   async onWithdrawalDestinationAccountDoesNotExist (uniqueId, address, amount, hash) {
-    console.log(`XML withdrawal failed - no public address for ${uniqueId}.`)
-    await callReddit('composeMessage', {
-      to: uniqueId,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`We could not withdraw. The requested public address does not exist.`)
-    })
+    // console.log(`XML withdrawal failed - no public address for ${uniqueId}.`)
+    // await callReddit('composeMessage', {
+    //   to: uniqueId,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`We could not withdraw. The requested public address does not exist.`)
+    // })
   }
 
   async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
-    console.log(`XML withdrawal failed - insufficient balance for ${uniqueId}.`)
-    await callReddit('composeMessage', {
-      to: address,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`We could not withdraw. You requested more than your current balance. Please adjust and try again.`)
-    })
+    // console.log(`XML withdrawal failed - insufficient balance for ${uniqueId}.`)
+    // await callReddit('composeMessage', {
+    //   to: address,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`We could not withdraw. You requested more than your current balance. Please adjust and try again.`)
+    // })
   }
 
   async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
-    console.log(`XML withdrawal failed - invalid address ${address}.`)
-    await callReddit('composeMessage', {
-      to: address,
-      subject: 'XLM Withdrawal failed',
-      text: formatMessage(`We could not withdraw. The given address is not valid.`)
-    })
+    // console.log(`XML withdrawal failed - invalid address ${address}.`)
+    // await callReddit('composeMessage', {
+    //   to: address,
+    //   subject: 'XLM Withdrawal failed',
+    //   text: formatMessage(`We could not withdraw. The given address is not valid.`)
+    // })
   }
 
   async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
@@ -178,11 +109,15 @@ class Slack extends Adapter {
   }
 
   async onWithdrawal (uniqueId, address, amount, hash) {
-    await callReddit('composeMessage', {
-      to: uniqueId,
-      subject: 'XLM Withdrawal',
-      text: formatMessage(`Thank's for your request. ${amount} XLM are on their way to ${address}.`)
-    })
+    // await callReddit('composeMessage', {
+    //   to: uniqueId,
+    //   subject: 'XLM Withdrawal',
+    //   text: formatMessage(`Thank's for your request. ${amount} XLM are on their way to ${address}.`)
+    // })
+  }
+
+  async onUserAttemptingToReRegister (account) {
+
   }
 
   constructor (config) {
@@ -194,10 +129,6 @@ class Slack extends Adapter {
     // console.log('Start observing reddit private messages ...')
     // this.pollMessages()
 
-    /*// Spin up the server
-    server = app.listen(app.get('port'), function() {
-      console.log('slackbot running on port', app.get('port'))
-    });*/
   }
 
   extractTipAmount (tipText) {
@@ -225,5 +156,4 @@ class Slack extends Adapter {
   }
 }
 
-module.exports.server = server;
-module.exports.Slack = Slack;
+module.exports = Slack;

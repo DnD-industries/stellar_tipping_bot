@@ -5,7 +5,7 @@ const testTimeout = 5000; //milliseconds
 
 describe('slack-message', async () => {
  	require('dotenv').config({path: './.env.' + process.env.NODE_ENV });
- 	const message = require('../src/adapters/slack/slack-mesage');
+ 	const message = require('../src/adapters/slack/slack-message');
 
   describe('uniqueUserID', () => {
     it('should combine the user_id and team_id to create a unique ID', () => {
@@ -13,12 +13,11 @@ describe('slack-message', async () => {
     	let userID = "user_id";
     	let msg = new message({team_id: teamID,
                               user_id: userID});
-      assert.equal(msg.uniqueUserID, userID+"-"+teamID);
+      assert.equal(msg.uniqueUserID, `${teamID}.${userID}`);
     })
   })
 
   describe('sendDMToSlackUser', () => {
-
     it('should send an attachment DM on the StarryTest slack from Starry', () => {
     	let userID = "U8PTZ287N";
     	let msg = new message({user_id: userID});
@@ -62,6 +61,5 @@ describe('slack-message', async () => {
         console.log("RESULT:" + JSON.stringify(result));
       })
     }).timeout(testTimeout);
-    
   })
 })
