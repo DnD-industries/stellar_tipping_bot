@@ -1,5 +1,7 @@
-const assert = require('assert')
-const sutil = require('../src/adapters/slack/utils')
+const assert = require('assert');
+const expect = require('chai').expect;
+const sutil = require('../src/adapters/slack/utils');
+const testTimeout = 5000; //milliseconds
 
 describe('slack-message', async () => {
  	require('dotenv').config({path: './.env.' + process.env.NODE_ENV });
@@ -16,16 +18,50 @@ describe('slack-message', async () => {
   })
 
   describe('sendDMToSlackUser', () => {
-    it('should send a DM on the StarryTest slack from Starry', async () => {
+
+    it('should send an attachment DM on the StarryTest slack from Starry', () => {
     	let userID = "U8PTZ287N";
     	let msg = new message({user_id: userID});
-  		let result = await msg.sendDMToSlackUser(msg.user_id, msg.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUser"));
-    })
+  		return msg.sendDMToSlackUserWithAttachments(msg.user_id, msg.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUserWithAttachments"))
+      .then((result) => {
+        //console.log("RESULT:" + JSON.stringify(result));
+        expect(result.ok).to.equal(true);
+      }); 
+    }).timeout(testTimeout);
 
-    it('should fail to send a DM to an invalid userID on the StarryTest slack', () => {
+    it('should fail to send an attachment DM to an invalid userID on the StarryTest slack', () => {
     	let userID = "U1234567N";
     	let msg = new message({user_id: userID});
-  		return msg.sendDMToSlackUser(msg.user_id, msg.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUser"));
-    })
+  		return msg.sendDMToSlackUserWithAttachments(msg.user_id, msg.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUserWithAttachments"))
+      .then((result) => {
+        throw new Error('Promise was unexpectedly fulfilled. Result: ' + result);
+      })
+      .catch((result) => {
+        console.log("RESULT:" + JSON.stringify(result));
+      })
+    }).timeout(testTimeout);
+
+    it('should send a plain text DM on the StarryTest slack from Starry', () => {
+      let userID = "U8PTZ287N";
+      let msg = new message({user_id: userID});
+      return msg.sendPlainTextDMToSlackUser(msg.user_id, "Testing sendPlainTextDMToSlackUser")
+      .then((result) => {
+        //console.log("RESULT:" + JSON.stringify(result));
+        expect(result.ok).to.equal(true);
+      }); 
+    }).timeout(testTimeout);
+
+    it('should fail to send a plain text DM to an invalid userID on the StarryTest slack', () => {
+      let userID = "U1234567N";
+      let msg = new message({user_id: userID});
+      return msg.sendPlainTextDMToSlackUser(msg.user_id, "Testing sendPlainTextDMToSlackUser")
+      .then((result) => {
+        throw new Error('Promise was unexpectedly fulfilled. Result: ' + result);
+      })
+      .catch((result) => {
+        console.log("RESULT:" + JSON.stringify(result));
+      })
+    }).timeout(testTimeout);
+    
   })
 })
