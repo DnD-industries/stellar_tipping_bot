@@ -25,6 +25,21 @@ class SlackServer {
     // Process application/x-www-form-urlencoded
     app.use(bodyParser.urlencoded({extended: false}))
 
+    //Middleware to perform token validation for slash requests coming from Slack
+    app.use(function (req, res, next) {
+      if(process.env.MODE === "development"){
+        console.log('Request received at', Date.now());
+        console.log(req.headers);
+        console.log(JSON.stringify(req.body));
+      }
+      
+      //If this is a GET request, use the query token, otherwise look for it in the body
+      let token = req.method === "GET" ? req.query.token : req.body.token;
+      //With the proper validation token from Slack, route the request accordingly.
+      //Otherwise reply with a 401 status code 
+      token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.sendStatus(401).send("Invalid Slack token");
+    });
+
     // Index route
     app.get('/', function (req, res) {
       res.send('Hello world, I am a chat bot');
