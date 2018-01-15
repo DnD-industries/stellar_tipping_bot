@@ -2,9 +2,7 @@ const assert = require('assert')
 const Slack = require('../src/adapters/slack/index')
 const Message = require('../src/adapters/slack/slack-message')
 
-class TestableSlack extends Slack {
-  startServer () {}
-}
+class TestableSlack extends Slack {}
 
 describe('slackAdapter', async () => {
 

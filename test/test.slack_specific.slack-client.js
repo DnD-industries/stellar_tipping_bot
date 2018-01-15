@@ -1,7 +1,7 @@
 const assert = require('assert');
 const expect = require('chai').expect;
 const SlackClient = require('../src/adapters/slack/slack-client')
-const testTimeout = 5000; //milliseconds
+const testTimeout = 6000; //milliseconds
 
 describe('slack-message', async () => {
  	require('dotenv').config({path: './.env.' + process.env.NODE_ENV });

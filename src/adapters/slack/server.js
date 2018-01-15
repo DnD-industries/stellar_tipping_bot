@@ -1,6 +1,6 @@
 const express     = require('express');
-const bodyParser  = require('body-parser');
 const app         = express();
+const bodyParser  = require('body-parser');
 const slmessage   = require('./slack-message');
 const slackUtils  = require('./utils');
 const SlackClient = require('./slack-client')
@@ -15,7 +15,7 @@ class SlackServer {
    * @param slackAdapter A Slack:Adapter object
    */
   constructor(slackAdapter) {
-    var that = this;
+    var that = this; //what is this for??
     this.adapter = slackAdapter;
     this.client = new SlackClient(oauth_token);
 
@@ -41,8 +41,8 @@ class SlackServer {
     });
 
     // Index route
-    app.get('/', function (req, res) {
-      res.send('Hello world, I am a chat bot');
+    app.all('/', function (req, res) {
+      res.send('Hello world, I am Starry');
     });
 
     app.post('/slack/tip', function (req, res) {
@@ -121,9 +121,13 @@ class SlackServer {
     });
 
     // Spin up the server
-    app.listen(app.get('port'), function() {
+    this.server = app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'))
     });
+  }
+
+  close(done){
+    this.server.close(done);
   }
 }
 
