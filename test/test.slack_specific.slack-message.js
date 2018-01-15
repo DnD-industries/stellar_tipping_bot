@@ -1,6 +1,7 @@
 const assert = require('assert');
 const expect = require('chai').expect;
 const sutil = require('../src/adapters/slack/utils');
+const SlackClient = require('../src/adapters/slack/slack-client')
 const testTimeout = 5000; //milliseconds
 
 describe('slack-message', async () => {
@@ -18,10 +19,12 @@ describe('slack-message', async () => {
   })
 
   describe('sendDMToSlackUser', () => {
+    const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
+    let client = new SlackClient(oauth_token);
+
     it('should send an attachment DM on the StarryTest slack from Starry', () => {
     	let userID = "U8PTZ287N";
-    	let msg = new message({user_id: userID});
-  		return msg.sendDMToSlackUserWithAttachments(msg.user_id, msg.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUserWithAttachments"))
+      return client.sendDMToSlackUserWithAttachments(userID, client.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUserWithAttachments"))
       .then((result) => {
         //console.log("RESULT:" + JSON.stringify(result));
         expect(result.ok).to.equal(true);
@@ -30,8 +33,7 @@ describe('slack-message', async () => {
 
     it('should fail to send an attachment DM to an invalid userID on the StarryTest slack', () => {
     	let userID = "U1234567N";
-    	let msg = new message({user_id: userID});
-  		return msg.sendDMToSlackUserWithAttachments(msg.user_id, msg.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUserWithAttachments"))
+      return client.sendDMToSlackUserWithAttachments(userID, client.formatSlackAttachment("Test tip!", "good", "Testing sendDMToSlackUserWithAttachments"))
       .then((result) => {
         throw new Error('Promise was unexpectedly fulfilled. Result: ' + result);
       })
@@ -42,8 +44,7 @@ describe('slack-message', async () => {
 
     it('should send a plain text DM on the StarryTest slack from Starry', () => {
       let userID = "U8PTZ287N";
-      let msg = new message({user_id: userID});
-      return msg.sendPlainTextDMToSlackUser(msg.user_id, "Testing sendPlainTextDMToSlackUser")
+      return client.sendPlainTextDMToSlackUser(userID, "Testing sendPlainTextDMToSlackUser")
       .then((result) => {
         //console.log("RESULT:" + JSON.stringify(result));
         expect(result.ok).to.equal(true);
@@ -52,8 +53,7 @@ describe('slack-message', async () => {
 
     it('should fail to send a plain text DM to an invalid userID on the StarryTest slack', () => {
       let userID = "U1234567N";
-      let msg = new message({user_id: userID});
-      return msg.sendPlainTextDMToSlackUser(msg.user_id, "Testing sendPlainTextDMToSlackUser")
+      return client.sendPlainTextDMToSlackUser(userID, "Testing sendPlainTextDMToSlackUser")
       .then((result) => {
         throw new Error('Promise was unexpectedly fulfilled. Result: ' + result);
       })

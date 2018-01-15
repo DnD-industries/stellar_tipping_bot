@@ -3,7 +3,7 @@ const bodyParser  = require('body-parser');
 const app         = express();
 const slmessage   = require('./slack-message');
 const slackUtils  = require('./utils');
-const SlackClient = require('./client')
+const SlackClient = require('./slack-client')
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
