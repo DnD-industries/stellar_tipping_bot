@@ -85,7 +85,36 @@ class Adapter extends EventEmitter {
       // Override me
   }
 
-    /**
+  // *** +++ Registration related functions +
+
+  /**
+   * handleRegistrationRequest(msg, res)
+   *
+   * @param msg an SLMessage derived from the original request object
+   * @param res the Response object passed in to the original app.post call
+   */
+  async handleRegistrationRequest(msg) {
+
+    if (!(msg.walletAddress && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletAddress))) {
+      return this.onRegistrationBadWallet(msg.walletAddress)
+    }
+
+    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
+    if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
+
+    }
+    return Promise.resolve()
+  }
+
+
+  async onRegistrationBadWallet (walletAddressGiven) {
+    // TODO: Implement this
+  }
+
+
+
+
+  /**
      * // Being that each platform (Reddit, Twitter, Slack...) can have different
      * means of initiating the tipping process, and may even have multiple,
      * each adapter is responsible for handling the extraction of the tip amount

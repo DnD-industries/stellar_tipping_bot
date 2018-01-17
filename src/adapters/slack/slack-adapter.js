@@ -33,25 +33,6 @@ class Slack extends Adapter {
     return _REG_FAIL_WALLET_VALIDATION;
   }
 
-  /**
-   * handleRegistrationRequest(msg, res)
-   *
-   * @param msg an SLMessage derived from the original request object
-   * @param res the Response object passed in to the original app.post call
-   */
-  async handleRegistrationRequest(msg) {
-
-    if (!(msg.walletAddress && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletAddress))) {
-      return Promise.reject(_REG_FAIL_WALLET_VALIDATION)
-    }
-
-    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-    if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
-
-    }
-    return Promise.resolve()
-  }
-
   async onTipWithInsufficientBalance (tip, amount) {
     await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
