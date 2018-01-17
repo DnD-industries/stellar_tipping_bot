@@ -99,7 +99,7 @@ class SlackServer {
       let command = slackUtils.extractCommandParamsFromMessage(msg);
       console.log("After extraction")
       const messageToDisplay = await that.adapter.handleRegistrationRequest(command)
-      res.sendStatus(200).send(messageToDisplay)
+      res.send(messageToDisplay)
     });
 
     // Spin up the server
