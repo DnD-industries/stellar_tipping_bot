@@ -17,7 +17,7 @@ class SlackCommandUtils {
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
-                let targetId = params[0];
+                let targetId = this.extractUserIdFromCommand(params[0]);
                 amount = parseFloat(params[1]);
                 command = new Command.Tip(adapter, sourceId, targetId, amount);
                 break;
@@ -51,14 +51,6 @@ class SlackCommandUtils {
         let result = cmd.slice(cmd.indexOf("@") + 1, cmd.indexOf("|"));
         return result;
     }
-
-    /*extractAmountFromWithdrawCommand(spaceIndices) {
-        
-    }
-
-    extractAddressFromWithdrawCommand(spaceIndices) {
-
-    }*/
 
     findCommandParams(cmd){
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
