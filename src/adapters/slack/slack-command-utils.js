@@ -11,14 +11,9 @@ class SlackCommandUtils {
         let params = this.findCommandParams(msg.text); //Get the locations of our command params
         let amount;
         //Remove the lead slash, and fall into the appropriate command case
-        console.log(`Command is: ${msg.command}`)
-        const sansSlash = msg.command.split('/')[1]
-        console.log(`SansSlash is ${sansSlash}`)
-        switch(sansSlash) {
+        switch(msg.command.split('/')[1]) {
             case "register":
-                console.log("Inside register")
                 let walletPublicKey = params[0];
-                console.log(`Arguments are ${adapter}, ${sourceId}, ${walletPublicKey}`)
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
