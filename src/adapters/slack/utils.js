@@ -1,9 +1,21 @@
 "use strict";
+const command = require('../commands/command');
 
 class SlackUtils {
     
     //TODO:Implement logic to dynamically extract parameters from a command, based on which command it is
-    extractParamsFromCommand(cmd){}
+    extractParamsFromCommand(cmdType, ){
+        switch(cmdType) {
+            case register:
+                break;
+            case tip:
+                break;
+            case withdraw:
+                break;
+            default:
+                return 
+        }
+    }
     
     /**
      * Takes a string, which usually will be an escaped Slack userID string
@@ -16,11 +28,11 @@ class SlackUtils {
     extractUserIdFromCommand(cmd) {
         // If it doesn't contain @ and |, we're not interested. Just return what's given to us
         if(cmd.indexOf("@") < 0 || cmd.indexOf("|") < 0 ) {
-            return cmd
+            return cmd;
         }
-        let result = cmd.slice(cmd.indexOf("@") + 1, cmd.indexOf("|"))
-        return result
+        let result = cmd.slice(cmd.indexOf("@") + 1, cmd.indexOf("|"));
+        return result;
     }
 }
 
-module.exports = new SlackUtils()
+module.exports = new SlackUtils();

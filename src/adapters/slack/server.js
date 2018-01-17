@@ -18,7 +18,7 @@ class SlackServer {
     var that = this; // Allows us to keep reference to 'this' even in closures, wherein "this" will actually mean the closure we are inside of in that context
     this.adapter = slackAdapter;
     this.client = new slackClient(oauth_token);
-    /// Set up express app
+    // Set up express app
     app.set('port', (process.env.PORT || 5000));
 
     // Process application/x-www-form-urlencoded
@@ -46,7 +46,7 @@ class SlackServer {
 
     app.post('/slack/tip', function (req, res) {
       console.log('Tip requested');
-      let msg = new slmessage(req.body);
+      let msg = new slackMessage(req.body);
       console.log(msg);
       console.log("Unique user id: " + msg.uniqueUserID);
 
@@ -54,9 +54,9 @@ class SlackServer {
       console.log("recipient: ", recipientID);
       //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
       //Implement business logic and send DMs accordingly
-      that.client.sendDMToSlackUser(msg.user_id, "You sent a tip");
+      that.client.sendPlainTextDMToSlackUser(msg.user_id, "You sent a tip");
 
-      that.client.sendDMToSlackUser(recipientID, "Got tip");
+      that.client.sendPlainTextDMToSlackUser(recipientID, "Got tip");
       // If the user is not registered, return an error appropriate. Maybe instruct them how to register
       // else if the user is registered
       // Check the amount against the user's current balance
@@ -76,12 +76,11 @@ class SlackServer {
       // send a success message to the sender
       // send a personal message to the receiver alerting them they received a tip
       res.json(200);
-
     });
 
     app.post('/slack/withdraw', function (req, res) {
-      console.log('someone wants to make a withdrawal!')
-      console.log(JSON.stringify(req.body))
+      console.log('someone wants to make a withdrawal!');
+      console.log(JSON.stringify(req.body));
       res.sendStatus(200);
 
       // If the user is not registered, return an error appropriate. Maybe instruct them how to register
@@ -89,22 +88,20 @@ class SlackServer {
       // Check the amount against the user's current balance
       // If the user's balance is not high enough, return an error containing the current balance
       // If the user's balance is high enough, make the withdrawal and send a message depending on success or failure
-
     });
 
     app.post('/slack/register', async function (req, res) {
-      console.log('someone wants to register!')
-      console.log(JSON.stringify(req.body))
-      let msg = new slmessage(req.body);
+      console.log('someone wants to register!');
+      console.log(JSON.stringify(req.body));
+      let msg = new slackMessage(req.body);
       let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
 
       // If the adapter is the thing that actually does the sending to other users, and just returns
       // a message to this, the server object, all we need to do is tell the adapter what function
       // to call depending on the context
 
-
-      that.client.sendDMToSlackUser(msg.user_id, "This is coming from register");
-      that.client.sendAttachmentsToSlackUser(msg.user_id, that.client.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
+      that.client.sendPlainTextDMToSlackUser(msg.user_id, "This is coming from register");
+      that.client.sendDMToSlackUserWithAttachments(msg.user_id, that.client.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
 
       // Get message from adapter
 
@@ -115,11 +112,10 @@ class SlackServer {
       //   res.sendStatus(401).send(messageToRegisterer)
       // })
 
-
       const commandParams = slackUtils.extractParamsFromCommand(msg.command)
 
       if(StellarSdk.StrKey.isValidEd25519PublicKey(commandParams.walletAddress) == false) {
-        let messageToUser = await that.adapter.onRegisterBadPublicKey(commandParams.walletAddress)
+        let messageToUser = await that.adapter.onRegisterBadPublicKey(commandParams.walletAddress);
       }
       // Validate their wallet address
       // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
@@ -128,14 +124,12 @@ class SlackServer {
       // Save to the database
       // Send them a message back (error if applicable)
 
-
       // res.sendStatus(200);
-
     });
 
     // Spin up the server
     this.server = app.listen(app.get('port'), function() {
-      console.log('slackbot running on port', app.get('port'))
+      console.log('slackbot running on port', app.get('port'));
     });
   }
 
