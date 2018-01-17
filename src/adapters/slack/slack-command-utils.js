@@ -1,5 +1,5 @@
 "use strict";
-const command = require('../commands/command');
+const Command = require('../commands/command');
 const slackMessage = require('./slack-message');
 
 class SlackCommandUtils {
@@ -14,22 +14,22 @@ class SlackCommandUtils {
         switch(msg.command.slice(1)) {
             case "register":
                 let walletPublicKey = params[0];
-                command = new command.Register(adapter, sourceId, walletPublicKey);
+                command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
                 let targetId = params[0];
                 amount = parseFloat(params[1]);
-                command = new command.Tip(adapter, sourceId, targetId, amount);
+                command = new Command.Tip(adapter, sourceId, targetId, amount);
                 break;
             case "withdraw":
                 amount = parseFloat(params[0]);
                 let address = params.length > 1 ? params[1] : null;
-                command = new command.Withdraw(adapter, sourceId, amount, address);
+                command = new Command.Withdraw(adapter, sourceId, amount, address);
                 break;
             default:
                 console.error("Unknown command type:", msg.command);
                 //We don't know what type the command is, so return the generic super class
-                command = new command.Command(adapter, sourceId);
+                command = new Command.Command(adapter, sourceId);
                 break;
         }
         return command;
