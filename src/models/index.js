@@ -21,7 +21,6 @@ function configure(model, db) {
   return model
 }
 
-
 module.exports = async () => {
   let conn_url
   if(process.env.DATABASE_URL) {
