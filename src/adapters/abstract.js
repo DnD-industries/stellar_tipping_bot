@@ -94,14 +94,14 @@ class Adapter extends EventEmitter {
    */
   async handleRegistrationRequest(msg) {
 
-    if (!(msg.walletAddress && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletAddress))) {
-      return this.onRegistrationBadWallet(msg.walletAddress)
+    if (!(msg.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletPublicKey))) {
+      return this.onRegistrationBadWallet(msg.walletPublicKey)
     }
 
     // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-    const existingWallet = this.Account.walletAddressForUser(this.name, msg.uniqueUserID)
+    const existingWallet = await this.Account.walletAddressForUser(msg.adapter, msg.sourceId)
     if (existingWallet) {
-      return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletAddress)
+      return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletPublicKey)
     }
     return Promise.resolve()
   }

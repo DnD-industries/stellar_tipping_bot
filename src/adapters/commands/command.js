@@ -19,7 +19,6 @@ class Command {
 class Register extends Command {
   constructor(adapter, sourceId, walletPublicKey){
     super(adapter, sourceId);
-    //TODO: Validate that the public key is valid?
     this.walletPublicKey = walletPublicKey;
   }
 }
