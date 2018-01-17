@@ -100,6 +100,13 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument");
     })
 
+    it (`should not do the withdrawal and should return an appropriate message if the user provides an invalid public key`, async() => {
+      const badWalletAddress = "badWallet"
+      let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1, badWalletAddress)
+      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      assert.equal(returnedValue, `\`${badWalletAddress}\` is not a valid public key. Please try again with a valid public key.`);
+    })
+
     it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance`, async() => {
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 500)
       let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
