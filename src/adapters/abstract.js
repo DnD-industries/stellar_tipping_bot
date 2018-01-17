@@ -108,7 +108,9 @@ class Adapter extends EventEmitter {
 
     // If it's a new wallet, replace it
     if (existingWallet) {
+      console.log("existing wallet!");
       const account = await this.Account.getOrCreate(msg.adapters, msg.sourceId)
+      console.log("public key:", msg.walletPublicKey);
       await account.setWalletAddress(msg.walletPublicKey)
       return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletPublicKey)
     }

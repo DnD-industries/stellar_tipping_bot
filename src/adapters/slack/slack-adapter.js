@@ -3,7 +3,7 @@ const app         = express();
 const bodyParser  = require('body-parser');
 const Adapter     = require('../abstract');
 const slmessage   = require('./slack-message');
-const slackUtils  = require('./utils');
+const slackUtils  = require('./slack-command-utils');
 const slackClient = require('./slack-client');
 
 // Constants

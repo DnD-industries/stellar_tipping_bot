@@ -75,7 +75,7 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'team.foo', newWalletId)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      let refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
+      let refreshedAccount = await Account.getOrCreate('testing', 'team.foo');
       assert.equal(returnedValue, `${accountWithWallet.walletAddress} replaced by ${newWalletId}`);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
     })

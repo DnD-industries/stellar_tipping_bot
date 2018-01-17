@@ -2,7 +2,7 @@ const express       = require('express');
 const app           = express();
 const bodyParser    = require('body-parser');
 const slackMessage  = require('./slack-message');
-const slackUtils    = require('./utils');
+const slackUtils    = require('./slack-command-utils');
 const slackClient   = require('./slack-client');
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
@@ -112,7 +112,7 @@ class SlackServer {
       //   res.sendStatus(401).send(messageToRegisterer)
       // })
 
-      const commandParams = slackUtils.extractParamsFromCommand(msg.command)
+      const commandParams = slackUtils.extractParamsFromCommand(msg);
 
       if(StellarSdk.StrKey.isValidEd25519PublicKey(commandParams.walletAddress) == false) {
         let messageToUser = await that.adapter.onRegisterBadPublicKey(commandParams.walletAddress);
