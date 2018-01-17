@@ -9,6 +9,7 @@ class SlackCommandUtils {
         let sourceId    = msg.getUniqueUserID();
         let command;
         let params = this.findCommandParams(msg.text); //Get the locations of our command params
+        let amount;
         //Remove the lead slash, and fall into the appropriate command case
         switch(msg.command.slice(1)) {
             case register:
@@ -17,11 +18,11 @@ class SlackCommandUtils {
                 break;
             case tip:
                 let targetId = params[0];
-                let amount = parseFloat(params[1]);
+                amount = parseFloat(params[1]);
                 command = new command.Tip(adapter, sourceId, targetId, amount);
                 break;
             case withdraw:
-                let amount = parseFloat(params[0]);
+                amount = parseFloat(params[0]);
                 let address = params.length > 1 ? params[1] : null;
                 command = new command.Withdraw(adapter, sourceId, amount, address);
                 break;
