@@ -18,6 +18,7 @@ class SlackCommandUtils {
             case "register":
                 console.log("Inside register")
                 let walletPublicKey = params[0];
+                console.log(`Arguments are ${adapter}, ${sourceId}, ${walletPublicKey}`)
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
