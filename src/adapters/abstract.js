@@ -101,10 +101,15 @@ class Adapter extends EventEmitter {
     // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
     const existingWallet = await this.Account.walletAddressForUser(msg.adapter, msg.sourceId)
 
+    // If it's the same wallet, just send a message back
     if(existingWallet && existingWallet == msg.walletPublicKey) {
       return this.onRegistrationSameAsExistingWallet(existingWallet)
     }
+
+    // If it's a new wallet, replace it
     if (existingWallet) {
+      const account = await this.Account.getOrCreate(msg.adapters, msg.sourceId)
+      await account.setWalletAddress(msg.walletPublicKey)
       return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletPublicKey)
     }
 

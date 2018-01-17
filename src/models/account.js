@@ -175,10 +175,12 @@ module.exports = (db) => {
 
       setWalletAddress: async function (newAddress) {
         this.walletAddress = newAddress
-        await this.saveAsync().catch(e => {
-          console.error(`Error while setting public wallet address of Account object:\nNewAddress: ${newAddress}\nlException:${JSON.stringify(e)}`)
-          return Promise.reject(e)
-        })
+        try {
+          return await this.saveAsync()
+        } catch (e) {
+            console.error(`Error while setting public wallet address of Account object:\nNewAddress: ${newAddress}\nlException:${JSON.stringify(e)}`)
+            throw e
+        }
       }
     },
 

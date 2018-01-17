@@ -66,7 +66,7 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `Already registered ${accountWithWallet.walletAddress}`);
     })
 
-    it ('should send a message back to the user and reject if someone else has already registered with that wallet', () => {
+    it ('should send a message back to the userif someone else has already registered with that wallet', () => {
       assert.equal(true ,false)
     })
 
@@ -75,7 +75,9 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'team.foo', newWalletId)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
+      let refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
       assert.equal(returnedValue, `${accountWithWallet.walletAddress} replaced by ${newWalletId}`);
+      assert.equal(refreshedAccount.walletAddress, newWalletId);
     })
 
     it ('should otherwise save the wallet info to the database for the user and send an appropriate message back to them', () => {
