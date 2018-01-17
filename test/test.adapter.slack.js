@@ -71,11 +71,11 @@ describe('slackAdapter', async () => {
     })
 
     it (`should overwrite the user's current wallet info if they have a preexisting wallet, and send an appropriate message`, async () => {
-      let newWalletId = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN"
-      let msg = new Command.Register('testing', 'team.foo', newWalletId)
+      const newWalletId = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN"
+      const msg = new Command.Register('testing', 'team.foo', newWalletId)
 
-      let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      let refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
+      const returnedValue = await slackAdapter.handleRegistrationRequest(msg);
+      const refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
       assert.equal(returnedValue, `${accountWithWallet.walletAddress} replaced by ${newWalletId}`);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
     })
