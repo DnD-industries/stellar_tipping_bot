@@ -59,6 +59,7 @@ class SlackCommandUtils {
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
         console.log("In here AAA")
         const params = cmd.split(" ")
+        console.log("Now here")
         return params;
     }
 
