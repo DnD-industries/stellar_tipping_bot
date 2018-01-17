@@ -245,5 +245,19 @@ module.exports = (db) => {
     })
   }
 
+  // TODO: Double check to make sure this isn't going to do anything crazy.
+  // I guess it's possible a user on two separate slacks should be able to register
+  // the same wallet address? That might be prevented with this present functionality
+  Account.userForWalletAddress = async function (walletAddress) {
+    return await Account.withinTransaction(async () => {
+      let a = await Account.oneAsync({ walletAddress })
+      if (a) {
+        return a
+      } else {
+        return null
+      }
+    })
+  }
+
   return Account
 }
