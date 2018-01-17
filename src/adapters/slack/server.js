@@ -95,8 +95,9 @@ class SlackServer {
       console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
 
+      console.log("Here extraction")
       let command = slackUtils.extractCommandParamsFromMessage(msg);
-
+      console.log("After extraction")
       res.sendStatus(await that.adapter.handleRegistrationRequest(command))
     });
 
