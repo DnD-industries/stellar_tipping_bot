@@ -11,8 +11,7 @@ class SlackCommandUtils {
         let params = this.findCommandParams(msg.text); //Get the locations of our command params
         let amount;
         //Remove the lead slash, and fall into the appropriate command case
-        console.log(`Command is: ${msg.command}`)
-        switch(msg.command.slice(1)) {
+        switch(msg.command.split('/')[1]) {
             case "register":
                 let walletPublicKey = params[0];
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
