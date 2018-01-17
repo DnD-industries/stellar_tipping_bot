@@ -95,11 +95,9 @@ class SlackServer {
       console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
 
-      console.log("Here extraction")
       let command = slackUtils.extractCommandParamsFromMessage(msg);
-      console.log("After extraction")
-      const messageToDisplay = await that.adapter.handleRegistrationRequest(command)
-      res.send(messageToDisplay)
+
+      res.send(await that.adapter.handleRegistrationRequest(command))
     });
 
     // Spin up the server
