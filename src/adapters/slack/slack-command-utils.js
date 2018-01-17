@@ -61,20 +61,7 @@ class SlackCommandUtils {
 
     findCommandParams(cmd){
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
-        console.log("cmd after space removal:", cmd);
-        let spaceIndices = this.findCommandDelimiterIndices(cmd);
-        console.log("space indices", spaceIndices);
-        let params = [];
-        for (let i = 0; i < spaceIndices.length; i++) {
-            //Check to see if we are on the last param
-            if ((i+1) === spaceIndices.length) {
-            	console.log("last param index:", i);
-                params[i] = cmd.slice(cmd[spaceIndices[i]+1]); //Slice until the end of the cmd string
-            } else {
-                params[i] = cmd.slice(cmd[spaceIndices[i]+1], cmd[spaceIndices[i+1]]);
-            }
-        }
-        console.log("params:",params);
+        const params = cmd.split(" ")
         return params;
     }
 
