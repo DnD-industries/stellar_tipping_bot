@@ -41,8 +41,8 @@ class Withdraw extends Command {
 }
 
 module.exports = { 
-  Command   : Command,
-  Register  : Register,
-  Tip       : Tip,
-  Withdraw  : Withdraw
+  Command,
+  Register,
+  Tip,
+  Withdraw
 }
