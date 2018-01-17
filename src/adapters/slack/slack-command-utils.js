@@ -6,7 +6,7 @@ class SlackCommandUtils {
     //"command":"/tip","text":"<@U8PTZ287N|d> 123"
     extractCommandParamsFromMessage(msg) {
         let adapter     = "slack";
-        let sourceId    = msg.getUniqueUserID();
+        let sourceId    = msg.uniqueUserID;
         let command;
         let params = this.findCommandParams(msg.text); //Get the locations of our command params
         let amount;
