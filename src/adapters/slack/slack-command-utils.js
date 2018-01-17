@@ -12,16 +12,16 @@ class SlackCommandUtils {
         let amount;
         //Remove the lead slash, and fall into the appropriate command case
         switch(msg.command.slice(1)) {
-            case register:
+            case "register":
                 let walletPublicKey = params[0];
                 command = new command.Register(adapter, sourceId, walletPublicKey);
                 break;
-            case tip:
+            case "tip":
                 let targetId = params[0];
                 amount = parseFloat(params[1]);
                 command = new command.Tip(adapter, sourceId, targetId, amount);
                 break;
-            case withdraw:
+            case "withdraw":
                 amount = parseFloat(params[0]);
                 let address = params.length > 1 ? params[1] : null;
                 command = new command.Withdraw(adapter, sourceId, amount, address);
