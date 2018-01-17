@@ -91,7 +91,6 @@ class Adapter extends EventEmitter {
    * handleRegistrationRequest(msg, res)
    *
    * @param msg an SLMessage derived from the original request object
-   * @param res the Response object passed in to the original app.post call
    */
   async handleRegistrationRequest(msg) {
 
@@ -100,8 +99,9 @@ class Adapter extends EventEmitter {
     }
 
     // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-    if (this.Account.walletAddressForUser(this.name, msg.uniqueUserID)) {
-
+    const existingWallet = this.Account.walletAddressForUser(this.name, msg.uniqueUserID)
+    if (existingWallet) {
+      return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletAddress)
     }
     return Promise.resolve()
   }
@@ -111,7 +111,9 @@ class Adapter extends EventEmitter {
     // TODO: Implement this
   }
 
-
+  async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
+    // TODO: Implement this
+  }
 
 
   /**
