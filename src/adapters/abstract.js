@@ -86,25 +86,25 @@ class Adapter extends EventEmitter {
   }
 
   // *** +++ Registration related functions +
-
   async onRegistrationBadWallet (walletAddressGiven) {
-    // TODO: Implement this
+    return `${walletAddressGiven} is not a valid Public Key / wallet address`
   }
 
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    // TODO: Implement this
+    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``
   }
 
   async onRegistrationSameAsExistingWallet(walletAddress) {
-    // TODO: Implement this
+    return `You are already using the public key \`${walletAddress}\``
   }
 
   async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
-    // TODO: Implement this
+    // TODO: Factor contact info out into env vars or something
+    return `Another user has already registered the wallet address \`${walletAddress}\` If you think this is a mistake, please contact @dlohnes on Slack`
   }
 
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    // TODO: Implement this
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`ROBOT_ADDRESS\` to make funds available for use with the '/tip' command.`
   }
 
 
