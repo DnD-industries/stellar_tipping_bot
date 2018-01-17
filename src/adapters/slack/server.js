@@ -94,37 +94,10 @@ class SlackServer {
       console.log('someone wants to register!');
       console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
-      let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
 
-      // If the adapter is the thing that actually does the sending to other users, and just returns
-      // a message to this, the server object, all we need to do is tell the adapter what function
-      // to call depending on the context
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      that.client.sendPlainTextDMToSlackUser(msg.user_id, "This is coming from register");
-      that.client.sendDMToSlackUserWithAttachments(msg.user_id, that.client.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
-
-      // Get message from adapter
-
-      // that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
-      //   // What we do no matter what the outcome is
-      //   res.sendStatus(200).send(messageToRegisterer)
-      // }).catch((messageToRegisterer) => {
-      //   res.sendStatus(401).send(messageToRegisterer)
-      // })
-
-      const commandParams = slackUtils.extractParamsFromCommand(msg);
-
-      if(StellarSdk.StrKey.isValidEd25519PublicKey(commandParams.walletAddress) == false) {
-        let messageToUser = await that.adapter.onRegisterBadPublicKey(commandParams.walletAddress);
-      }
-      // Validate their wallet address
-      // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-      // If the user is not already registered
-      // Make sure no one else has already registered that same wallet address
-      // Save to the database
-      // Send them a message back (error if applicable)
-
-      // res.sendStatus(200);
+      res.sendStatus(await that.adapter.handleRegistrationRequest(command))
     });
 
     // Spin up the server
