@@ -78,23 +78,19 @@ class SlackServer {
       res.json(200);
     });
 
-    app.post('/slack/withdraw', function (req, res) {
+    app.post('/slack/withdraw', async function (req, res) {
       console.log('someone wants to make a withdrawal!');
       console.log(JSON.stringify(req.body));
-      res.sendStatus(200);
+      let msg = new slackMessage(req.body);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      // If the user is not registered, return an error appropriate. Maybe instruct them how to register
-      // else if the user is registered
-      // Check the amount against the user's current balance
-      // If the user's balance is not high enough, return an error containing the current balance
-      // If the user's balance is high enough, make the withdrawal and send a message depending on success or failure
+      res.send(await that.adapter.handleWithdrawalRequest(command));
     });
 
     app.post('/slack/register', async function (req, res) {
       console.log('someone wants to register!');
       console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
-
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
       res.send(await that.adapter.handleRegistrationRequest(command))

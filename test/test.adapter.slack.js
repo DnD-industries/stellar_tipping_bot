@@ -55,7 +55,6 @@ describe('slackAdapter', async () => {
 
     it ('should return a message to be sent back to the user if their wallet fails validation', async () => {
       let msg = new Command.Register('testing', 'someUserId', 'badwalletaddress013934888318')
-
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, "badWallet");
     })
@@ -91,6 +90,26 @@ describe('slackAdapter', async () => {
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, `Successfully registered user's first wallet: ${desiredWalletAddress}`);
+    })
+  })
+
+  describe(`handle withdrawal request`, () => {
+    it (`should not do the withdrawal and should return an appropriate message if the user is not registered`, async() => {
+      let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1)
+      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      assert.equal(returnedValue, "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument");
+    })
+
+    it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance`, async() => {
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 500)
+      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      assert.equal(returnedValue, "You requested to withdraw 500XLM but your wallet only contains 1XLM");
+    })
+
+    it (`should complete the withdrawal and should return an appropriate message if the  user has a sufficient balance`, async() => {
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
+      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      assert.equal(returnedValue, `You withdrew \`1XLM\` to your wallet at \`${accountWithWallet.walletAddress}\``);
     })
   })
 })
