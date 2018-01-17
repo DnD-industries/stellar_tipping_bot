@@ -4,6 +4,7 @@ const bodyParser  = require('body-parser');
 const Adapter     = require('../abstract');
 const slmessage   = require('./slack-message');
 const slackUtils  = require('./utils');
+const slackClient = require('./slack-client');
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
@@ -52,15 +53,15 @@ class Slack extends Adapter {
   }
 
   async onTipWithInsufficientBalance (tip, amount) {
-    // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
 
   async onTipTransferFailed(tip, amount) {
-    // await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
   }
 
   async onTipReferenceError (tip, amount) {
-    // await callReddit('reply', formatMessage(`Don't tip yourself please.`), tip.original)
+    await callReddit('reply', formatMessage(`While self love is encouraged, self tipping is not.`), tip.original)
   }
 
   async onTip (tip, amount) {
@@ -96,7 +97,7 @@ class Slack extends Adapter {
   }
 
   async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
-    // console.log(`XML withdrawal failed - invalid address ${address}.`)
+    // console.log(`XLM withdrawal failed - invalid address ${address}.`)
     // await callReddit('composeMessage', {
     //   to: address,
     //   subject: 'XLM Withdrawal failed',
@@ -121,13 +122,7 @@ class Slack extends Adapter {
   }
 
   constructor (config) {
-    super(config)
-
-    // console.log('Start observing subreddits ...')
-    // this.pollComments()
-    //
-    // console.log('Start observing reddit private messages ...')
-    // this.pollMessages()
+    super(config);
 
   }
 
@@ -137,22 +132,6 @@ class Slack extends Adapter {
       return matches[1]
     }
     return undefined
-  }
-
-  extractWithdrawal (body) {
-    const parts = body.slice(body.indexOf('<p>') + 3, body.indexOf('</p>')).split('\n')
-
-    if (parts.length === 2) {
-      const amount = parts[0].match(/([\d\.]*)/)[0]
-      const address = parts[1]
-
-      if (amount && address) {
-        return {
-          amount, address
-        }
-      }
-      return undefined
-    }
   }
 }
 

@@ -1,9 +1,9 @@
-const express     = require('express');
-const app         = express();
-const bodyParser  = require('body-parser');
-const slmessage   = require('./slack-message');
-const slackUtils  = require('./utils');
-const SlackClient = require('./slack-client')
+const express       = require('express');
+const app           = express();
+const bodyParser    = require('body-parser');
+const slackMessage  = require('./slack-message');
+const slackUtils    = require('./utils');
+const slackClient   = require('./slack-client');
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
@@ -15,10 +15,9 @@ class SlackServer {
    * @param slackAdapter A Slack:Adapter object
    */
   constructor(slackAdapter) {
-    var that = this; //what is this for??
+    var that = this; 
     this.adapter = slackAdapter;
-    this.client = new SlackClient(oauth_token);
-
+    this.client = new slackClient(oauth_token);
     /// Set up express app
     app.set('port', (process.env.PORT || 5000));
 

@@ -1,6 +1,6 @@
 const assert = require('assert');
 const request = require('supertest');
-const slack = require('../src/adapters/slack/index.js');
+const slack = require('../src/adapters/slack/slack-adapter');
 
 describe('Slack Server/Router Middleware', async () => {
   var slackServer;
