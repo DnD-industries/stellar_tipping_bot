@@ -10,7 +10,11 @@ class TestableSlack extends Slack {
   }
 
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    return `${oldWallet} - ${newWallet}`
+    return `${oldWallet} replaced by ${newWallet}`
+  }
+
+  async onRegistrationSameAsExistingWallet(walletAddress) {
+    return `Already registered ${walletAddress}`
   }
 }
 
@@ -56,15 +60,10 @@ describe('slackAdapter', async () => {
     })
 
     it ('should return a message to send back to the user if a user has already registered with that wallet', async () => {
-      // let msg = new Message({
-      //   command : "register",
-      //   text    : "GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB",
-      //   team_id : "team",
-      //   user_id : "foo"
-      // })
-      //
-      // let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      // assert.equal(returnedValue, "replacedOldWallet");
+      let msg = new Command.Register('testing', 'team.foo', accountWithWallet.walletAddress)
+
+      let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
+      assert.equal(returnedValue, `Already registered ${accountWithWallet.walletAddress}`);
     })
 
     it ('should send a message back to the user and reject if someone else has already registered with that wallet', () => {
@@ -72,10 +71,11 @@ describe('slackAdapter', async () => {
     })
 
     it (`should overwrite the user's current wallet info if they have a preexisting wallet, and send an appropriate message`, async () => {
-      let msg = new Command.Register('testing', 'team.foo', 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN')
+      let newWalletId = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN"
+      let msg = new Command.Register('testing', 'team.foo', newWalletId)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, "GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB - GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN");
+      assert.equal(returnedValue, `${accountWithWallet.walletAddress} replaced by ${newWalletId}`);
     })
 
     it ('should otherwise save the wallet info to the database for the user and send an appropriate message back to them', () => {

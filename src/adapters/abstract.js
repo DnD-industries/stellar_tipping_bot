@@ -100,10 +100,14 @@ class Adapter extends EventEmitter {
 
     // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
     const existingWallet = await this.Account.walletAddressForUser(msg.adapter, msg.sourceId)
+
+    if(existingWallet && existingWallet == msg.walletPublicKey) {
+      return this.onRegistrationSameAsExistingWallet(existingWallet)
+    }
     if (existingWallet) {
       return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletPublicKey)
     }
-    return Promise.resolve()
+
   }
 
 
@@ -112,6 +116,10 @@ class Adapter extends EventEmitter {
   }
 
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
+    // TODO: Implement this
+  }
+
+  async onRegistrationSameAsExistingWallet(walletAddress) {
     // TODO: Implement this
   }
 
