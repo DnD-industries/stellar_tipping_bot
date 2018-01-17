@@ -3,3 +3,4 @@
 node_modules
 backups
 .idea
+.DS_Store
