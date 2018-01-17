@@ -144,4 +144,16 @@ describe('models / account', async () => {
       assert.equal(usersWallet, null, "User should not have a wallet address")
     })
   })
+
+  describe('userForWalletAddress', () => {
+    it ('should return a user if someone has registered with that wallet', async () => {
+      const user = await Account.userForWalletAddress(accountWithWallet.walletAddress)
+      assert.equal(user.uniqueId, accountWithWallet.uniqueId)
+    })
+
+    it ('should return null if no user is registered for that wallet', async () => {
+      const user = await Account.userForWalletAddress("somedifferentunvalidatedwalletaddress")
+      assert.equal(user, null)
+    })
+  })
 })

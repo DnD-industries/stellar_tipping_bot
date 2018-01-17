@@ -87,37 +87,6 @@ class Adapter extends EventEmitter {
 
   // *** +++ Registration related functions +
 
-  /**
-   * handleRegistrationRequest(msg, res)
-   *
-   * @param msg an SLMessage derived from the original request object
-   */
-  async handleRegistrationRequest(msg) {
-
-    if (!(msg.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletPublicKey))) {
-      return this.onRegistrationBadWallet(msg.walletPublicKey)
-    }
-
-    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-    const existingWallet = await this.Account.walletAddressForUser(msg.adapter, msg.sourceId)
-
-    // If it's the same wallet, just send a message back
-    if(existingWallet && existingWallet == msg.walletPublicKey) {
-      return this.onRegistrationSameAsExistingWallet(existingWallet)
-    }
-
-    // If it's a new wallet, replace it
-    if (existingWallet) {
-      console.log("existing wallet!");
-      const account = await this.Account.getOrCreate(msg.adapters, msg.sourceId)
-      console.log("public key:", msg.walletPublicKey);
-      await account.setWalletAddress(msg.walletPublicKey)
-      return this.onRegistrationReplacedOldWallet(existingWallet, msg.walletPublicKey)
-    }
-
-  }
-
-
   async onRegistrationBadWallet (walletAddressGiven) {
     // TODO: Implement this
   }
@@ -127,6 +96,14 @@ class Adapter extends EventEmitter {
   }
 
   async onRegistrationSameAsExistingWallet(walletAddress) {
+    // TODO: Implement this
+  }
+
+  async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
+    // TODO: Implement this
+  }
+
+  async onRegistrationRegisteredFirstWallet(walletAddress) {
     // TODO: Implement this
   }
 
