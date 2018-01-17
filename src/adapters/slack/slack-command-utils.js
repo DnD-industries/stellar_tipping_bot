@@ -81,7 +81,9 @@ class SlackCommandUtils {
     //Output: "<user_id> 1234 myAddress"
     removeExtraSpacesFromCommand(cmd) {
         console.log("About to be replacing")
-        return cmd.replace(/\s\s+/g, ' '); //Regex to remove multiple spaces, tabs, etc and replace with a single space for ease of parsing
+        const replaced = cmd.replace(/\s\s+/g, ' '); //Regex to remove multiple spaces, tabs, etc and replace with a single space for ease of parsing
+        console.log(`Replaced is: ${replaced}`)
+        return replaced
     }
 }
 
