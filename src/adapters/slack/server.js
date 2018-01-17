@@ -15,7 +15,7 @@ class SlackServer {
    * @param slackAdapter A Slack:Adapter object
    */
   constructor(slackAdapter) {
-    var that = this; 
+    var that = this; // Allows us to keep reference to 'this' even in closures, wherein "this" will actually mean the closure we are inside of in that context
     this.adapter = slackAdapter;
     this.client = new slackClient(oauth_token);
     /// Set up express app
@@ -92,13 +92,21 @@ class SlackServer {
 
     });
 
-    app.post('/slack/register', function (req, res) {
+    app.post('/slack/register', async function (req, res) {
       console.log('someone wants to register!')
       console.log(JSON.stringify(req.body))
       let msg = new slmessage(req.body);
       let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
+
+      // If the adapter is the thing that actually does the sending to other users, and just returns
+      // a message to this, the server object, all we need to do is tell the adapter what function
+      // to call depending on the context
+
+
       that.client.sendDMToSlackUser(msg.user_id, "This is coming from register");
       that.client.sendAttachmentsToSlackUser(msg.user_id, that.client.formatSlackAttachment("Tip Received!", "good", "XLM sent to you!"));
+
+      // Get message from adapter
 
       // that.adapter.handleRegistrationRequest(msg).then((messageToRegisterer) => {
       //   // What we do no matter what the outcome is
@@ -107,6 +115,12 @@ class SlackServer {
       //   res.sendStatus(401).send(messageToRegisterer)
       // })
 
+
+      const commandParams = slackUtils.extractParamsFromCommand(msg.command)
+
+      if(StellarSdk.StrKey.isValidEd25519PublicKey(commandParams.walletAddress) == false) {
+        let messageToUser = await that.adapter.onRegisterBadPublicKey(commandParams.walletAddress)
+      }
       // Validate their wallet address
       // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
       // If the user is not already registered
