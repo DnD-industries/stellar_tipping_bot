@@ -44,20 +44,16 @@ class SlackCommandUtils {
      * See: https://api.slack.com/slash-commands#how_do_commands_work
      */
     extractUserIdFromCommand(cmd) {
-        console.log("Over here 1111")
         // If it doesn't contain @ and |, we're not interested. Just return what's given to us
         if(cmd.indexOf("@") < 0 || cmd.indexOf("|") < 0 ) {
-            console.log("In here #2")
             return cmd;
         }
-        console.log("In here Sorta");
         let result = cmd.slice(cmd.indexOf("@") + 1, cmd.indexOf("|"));
         return result;
     }
 
     findCommandParams(cmd){
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
-        console.log("In here AAA")
         const params = cmd.split(" ")
         return params;
     }
@@ -66,10 +62,8 @@ class SlackCommandUtils {
     //Example: findCommandDelimitersIndicesCommand("<user_id> 1234 myAddress")
     //Output: [9, 14]
     findCommandDelimiterIndices(cmd){
-        console.log("In da here")
         let indices = [];
         for(let i=0; i<cmd.length;i++) {
-            console.log("In here #1")
             if (cmd[i] === " ") indices.push(i);
         }
         return indices; 
@@ -79,7 +73,6 @@ class SlackCommandUtils {
     //Example: removeExtraSpacesFromCommand("<user_id>   1234      myAddress")
     //Output: "<user_id> 1234 myAddress"
     removeExtraSpacesFromCommand(cmd) {
-        console.log("About to be replacing")
         return cmd.replace(/\s\s+/g, ' '); //Regex to remove multiple spaces, tabs, etc and replace with a single space for ease of parsing
     }
 }
