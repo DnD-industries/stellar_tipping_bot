@@ -101,40 +101,40 @@ class Slack extends Adapter {
 
 
   /**
-   * handleRegistrationRequest(msg, res)
+   * handleRegistrationRequest(command)
    *
-   * @param msg an SLMessage derived from the original request object
+   * @param command a Registration command object
    */
-  async handleRegistrationRequest(msg) {
+  async handleRegistrationRequest(command) {
 
-    if (!(msg.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(msg.walletPublicKey))) {
-      return this.onRegistrationBadWallet(msg.walletPublicKey)
+    if (!(command.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(command.walletPublicKey))) {
+      return this.onRegistrationBadWallet(command.walletPublicKey)
     }
 
     // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
-    const usersExistingWallet = await this.Account.walletAddressForUser(msg.adapter, msg.sourceId)
+    const usersExistingWallet = await this.Account.walletAddressForUser(command.adapter, command.sourceId)
 
     // If it's the same wallet, just send a message back
-    if(usersExistingWallet && usersExistingWallet == msg.walletPublicKey) {
+    if(usersExistingWallet && usersExistingWallet == command.walletPublicKey) {
       return this.onRegistrationSameAsExistingWallet(usersExistingWallet)
     }
 
     // Check to see if a user already exists with that wallet
-    const userWithWalletId = await this.Account.userForWalletAddress(msg.walletPublicKey)
+    const userWithWalletId = await this.Account.userForWalletAddress(command.walletPublicKey)
     if(userWithWalletId) {
-      return this.onRegistrationOtherUserHasRegisteredWallet(msg.walletPublicKey)
+      return this.onRegistrationOtherUserHasRegisteredWallet(command.walletPublicKey)
     }
 
     // In both remaining cases, we save the new wallet
-    const account = await this.Account.getOrCreate(msg.adapter, msg.sourceId)
-    await account.setWalletAddress(msg.walletPublicKey)
+    const account = await this.Account.getOrCreate(command.adapter, command.sourceId)
+    await account.setWalletAddress(command.walletPublicKey)
 
     // If we replaced an old wallet, send the appropriate message
     if (usersExistingWallet) {
-      return this.onRegistrationReplacedOldWallet(usersExistingWallet, msg.walletPublicKey)
+      return this.onRegistrationReplacedOldWallet(usersExistingWallet, command.walletPublicKey)
     } else {
       // Otherwise, we've simply saved the user's first wallet
-      return this.onRegistrationRegisteredFirstWallet(msg.walletPublicKey)
+      return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
   }
 
