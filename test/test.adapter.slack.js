@@ -34,6 +34,10 @@ describe('slackAdapter', async () => {
 
   beforeEach(async () => {
     const config = await require('./setup')()
+    config.stellar = {
+      createTransaction : function() {},
+      send : function() {}
+    }
     slackAdapter = new TestableSlack(config);
     Account = config.models.account;
 
@@ -116,7 +120,7 @@ describe('slackAdapter', async () => {
     it (`should complete the withdrawal and should return an appropriate message if the  user has a sufficient balance`, async() => {
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
       let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
-      assert.equal(returnedValue, `You withdrew \`1XLM\` to your wallet at \`${accountWithWallet.walletAddress}\``);
+      assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\``);
     })
   })
 })

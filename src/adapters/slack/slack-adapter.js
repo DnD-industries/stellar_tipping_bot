@@ -87,11 +87,7 @@ class Slack extends Adapter {
   }
 
   async onWithdrawal (uniqueId, address, amount, hash) {
-    // await callReddit('composeMessage', {
-    //   to: uniqueId,
-    //   subject: 'XLM Withdrawal',
-    //   text: formatMessage(`Thank's for your request. ${amount} XLM are on their way to ${address}.`)
-    // })
+    return `You withdrew \`${Utils.formatNumber(amount)} XLM\` to your wallet at \`${address}\``
   }
 
 

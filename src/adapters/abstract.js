@@ -220,7 +220,7 @@ class Adapter extends EventEmitter {
     // Withdraw
     try {
       await target.withdraw(this.config.stellar, address, withdrawalAmount, hash)
-      this.onWithdrawal(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawal(uniqueId, address, fixedAmount, hash)
     } catch (exc) {
       if (exc === 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash)
@@ -231,6 +231,7 @@ class Adapter extends EventEmitter {
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {
         return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash)
       }
+      // throw (exc)
     }
   }
 
