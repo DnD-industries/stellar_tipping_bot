@@ -153,6 +153,7 @@ class Slack extends Adapter {
   constructor (config) {
     super(config);
 
+    this.name = 'slack';
   }
 
   extractTipAmount (tipText) {
