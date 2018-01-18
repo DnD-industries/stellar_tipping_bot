@@ -57,6 +57,11 @@ class Adapter extends EventEmitter {
     this.emit('withdrawalDestinationAccountDoesNotExist', uniqueId, address, amount, hash)
   }
 
+  async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
+    // Override this or listen to events!
+    this.emit('withdrawalNoAddressProvided', uniqueId, address, amount, hash)
+  }
+
   async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
     // Override this or listen to events!
     this.emit('withdrawalFailedWithInsufficientBalance', uniqueId, address, amount, hash)
@@ -195,10 +200,12 @@ class Adapter extends EventEmitter {
     const uniqueId = withdrawalRequest.uniqueId
     const hash = withdrawalRequest.hash
     const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId)
-    if(typeof address === 'undefined' || address === null) {
-      return Promise.reject(new Error(`Tried to make a withdrawal request with no valid address in args or attached to user\nRequest: ${JSON.stringify(withdrawalRequest)}`))
-    }
     const fixedAmount = withdrawalAmount.toFixed(7)
+
+    if(typeof address === 'undefined' || address === null) {
+      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash)
+    }
+
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
       return this.onWithdrawalInvalidAddress(uniqueId, address, fixedAmount, hash)
