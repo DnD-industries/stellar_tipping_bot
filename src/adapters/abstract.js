@@ -206,13 +206,14 @@ class Adapter extends EventEmitter {
     const uniqueId = withdrawalRequest.uniqueId
     const hash = withdrawalRequest.hash
     const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId)
+    const amountRequested = withdrawalRequest.amount
     let withdrawalAmount;
     try {
-      withdrawalAmount = new Big(withdrawalRequest.amount)
+      withdrawalAmount = new Big(amountRequested)
     } catch (e) {
       console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`)
-      console.log(`Withdrawal request amount is ${withdrawalRequest.amount}`)
-      return this.onWithdrawalInvalidAmountProvided(uniqueId, address, withdrawalRequest.amount, hash)
+      console.log(`Withdrawal request amount is ${amountRequested}`)
+      return this.onWithdrawalInvalidAmountProvided(uniqueId, address, amountRequested, hash)
     }
     const fixedAmount = withdrawalAmount.toFixed(7)
 
