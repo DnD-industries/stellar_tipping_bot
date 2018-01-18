@@ -83,12 +83,7 @@ class Slack extends Adapter {
   }
 
   async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
-    // console.log(`XLM withdrawal failed - invalid address ${address}.`)
-    // await callReddit('composeMessage', {
-    //   to: address,
-    //   subject: 'XLM Withdrawal failed',
-    //   text: formatMessage(`We could not withdraw. The given address is not valid.`)
-    // })
+    return `\`${address}\` is not a valid public key. Please try again with a valid public key.`
   }
 
   async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
