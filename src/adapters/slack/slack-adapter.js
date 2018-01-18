@@ -51,6 +51,10 @@ class Slack extends Adapter {
     // await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
   }
 
+  async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
+    return "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument"
+  }
+
   async onWithdrawalReferenceError (uniqueId, address, amount, hash) {
     // console.log(`XML withdrawal failed - unknown error for ${uniqueId}.`)
     // exeucte('composeMessage', {
