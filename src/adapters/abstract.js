@@ -211,6 +211,7 @@ class Adapter extends EventEmitter {
       withdrawalAmount = new Big(withdrawalRequest.amount)
     } catch (e) {
       console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`)
+      console.log(`Withdrawal request amount is ${withdrawalRequest.amount}`)
       return this.onWithdrawalInvalidAmountProvided(uniqueId, address, withdrawalRequest.amount, hash)
     }
     const fixedAmount = withdrawalAmount.toFixed(7)
