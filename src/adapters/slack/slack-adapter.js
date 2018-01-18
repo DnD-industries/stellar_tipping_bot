@@ -144,11 +144,14 @@ class Slack extends Adapter {
    * @param command a Withdrawal Command object
    */
   async handleWithdrawalRequest(command) {
-    // If the user is not registered, return an error appropriate. Maybe instruct them how to register
-    // else if the user is registered
-    // Check the amount against the user's current balance
-    // If the user's balance is not high enough, return an error containing the current balance
-    // If the user's balance is high enough, make the withdrawal and send a message depending on success or failure
+    return this.receiveWithdrawalRequest(
+        {
+          adapter   : this.name,
+          uniqueId  : command.sourceId,
+          address   : command.address,
+          amount    : command.amount,
+          hash      : command.hash
+        })
   }
 
   constructor (config) {
