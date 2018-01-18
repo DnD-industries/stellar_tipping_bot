@@ -108,9 +108,9 @@ describe('slackAdapter', async () => {
     })
 
     it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance`, async() => {
-      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 500)
+      let command = new Command.Withdraw(accountWithWallet.adapter, accountWithWallet.uniqueId, 500.0142)
       let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
-      assert.equal(returnedValue, "You requested to withdraw 500XLM but your wallet only contains 1XLM");
+      assert.equal(returnedValue, "You requested to withdraw \`500.0142 XLM\` but your wallet only contains \`1 XLM\`");
     })
 
     it (`should complete the withdrawal and should return an appropriate message if the  user has a sufficient balance`, async() => {

@@ -214,7 +214,7 @@ class Adapter extends EventEmitter {
     // Fetch the account
     const target = await this.Account.getOrCreate(adapter, uniqueId)
     if (!target.canPay(withdrawalAmount)) {
-      return this.onWithdrawalFailedWithInsufficientBalance(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance)
     }
 
     // Withdraw

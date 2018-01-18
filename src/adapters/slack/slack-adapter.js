@@ -6,6 +6,7 @@ const slmessage   = require('./slack-message');
 const slackUtils  = require('./slack-command-utils');
 const slackClient = require('./slack-client');
 const StellarSdk = require('stellar-sdk')
+const Utils       = require('../../utils')
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
@@ -73,13 +74,8 @@ class Slack extends Adapter {
     // })
   }
 
-  async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
-    // console.log(`XML withdrawal failed - insufficient balance for ${uniqueId}.`)
-    // await callReddit('composeMessage', {
-    //   to: address,
-    //   subject: 'XLM Withdrawal failed',
-    //   text: formatMessage(`We could not withdraw. You requested more than your current balance. Please adjust and try again.`)
-    // })
+  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
+    return `You requested to withdraw \`${Utils.formatNumber(amountRequested)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
   async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
@@ -146,7 +142,7 @@ class Slack extends Adapter {
   async handleWithdrawalRequest(command) {
     return this.receiveWithdrawalRequest(
         {
-          adapter   : this.name,
+          adapter   : command.adapter,
           uniqueId  : command.sourceId,
           address   : command.address,
           amount    : command.amount,

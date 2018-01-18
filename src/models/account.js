@@ -32,6 +32,10 @@ module.exports = (db) => {
         return balance.gte(required)
       },
 
+      floatBalance: function () {
+        const balance = new Big(this.balance)
+      },
+
       /**
        * Transfers money to the target account.
        *
