@@ -62,6 +62,11 @@ class Adapter extends EventEmitter {
     this.emit('withdrawalNoAddressProvided', uniqueId, address, amount, hash)
   }
 
+  async onWithdrawalInvalidAmountProvided (uniqueId, address, amount, hash) {
+    // Override this or listen to events!
+    this.emit('withdrawalInvalidAmountProvided', uniqueId, address, amount, hash)
+  }
+
   async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
     // Override this or listen to events!
     this.emit('withdrawalFailedWithInsufficientBalance', uniqueId, address, amount, hash)
@@ -195,11 +200,19 @@ class Adapter extends EventEmitter {
    * }
    */
   async receiveWithdrawalRequest (withdrawalRequest) {
-    const withdrawalAmount = new Big(withdrawalRequest.amount)
+
+
     const adapter = withdrawalRequest.adapter
     const uniqueId = withdrawalRequest.uniqueId
     const hash = withdrawalRequest.hash
     const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId)
+    let withdrawalAmount;
+    try {
+      withdrawalAmount = new Big(withdrawalRequest.amount)
+    } catch (e) {
+      console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`)
+      return this.onWithdrawalInvalidAmountProvided(uniqueId, address, withdrawalRequest.amount, hash)
+    }
     const fixedAmount = withdrawalAmount.toFixed(7)
 
     if(typeof address === 'undefined' || address === null) {

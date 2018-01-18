@@ -3,7 +3,7 @@ const Slack = require('../src/adapters/slack/slack-adapter')
 const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
 
-
+// TODO: Get rid of this
 class TestableSlack extends Slack {
   async onRegistrationBadWallet (walletAddressGiven) {
     return "badWallet"
@@ -121,6 +121,13 @@ describe('slackAdapter', async () => {
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
       let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
       assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\``);
+    })
+
+    it (`should return an appropriate message if the  user supplies a string in place of a number`, async() => {
+      let amount = 'asdf'
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, amount)
+      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      assert.equal(returnedValue, `\`${amount}\` is not a valid withdrawal amount. Please try again.`);
     })
   })
 })

@@ -86,6 +86,10 @@ class Slack extends Adapter {
     this.emit('withdrawalSubmissionFailed ', uniqueId, address, amount, hash)
   }
 
+  async onWithdrawalInvalidAmountProvided (uniqueId, address, amount, hash) {
+    return `\`${amount}\` is not a valid withdrawal amount. Please try again.`
+  }
+
   async onWithdrawal (uniqueId, address, amount, hash) {
     return `You withdrew \`${Utils.formatNumber(amount)} XLM\` to your wallet at \`${address}\``
   }
