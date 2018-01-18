@@ -143,6 +143,7 @@ class Slack extends Adapter {
    *
    * @param command a Withdrawal Command object
    */
+  // TODO: This is a really bad code smell. Two things with the same intended behavior. 
   async handleWithdrawalRequest(command) {
     return this.receiveWithdrawalRequest(
         {
