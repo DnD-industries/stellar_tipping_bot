@@ -133,21 +133,6 @@ class Slack extends Adapter {
     }
   }
 
-  /**
-   * handleRegistrationRequest(command)
-   *
-   * @param command a Withdrawal Command object
-   */
-  // TODO: This is a really bad code smell. Two things with the same intended behavior. 
-  async handleWithdrawalRequest(command) {
-    return this.receiveWithdrawalRequest(
-        {
-          adapter   : command.adapter,
-          uniqueId  : command.sourceId,
-          address   : command.address,
-          amount    : command.amount,
-          hash      : command.hash
-        })
   }
 
   constructor (config) {
