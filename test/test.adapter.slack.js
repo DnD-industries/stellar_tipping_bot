@@ -4,29 +4,6 @@ const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
 const utils = require('../src/utils')
 
-// TODO: Get rid of this
-class TestableSlack extends Slack {
-  async onRegistrationBadWallet (walletAddressGiven) {
-    return "badWallet"
-  }
-
-  async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    return `${oldWallet} replaced by ${newWallet}`
-  }
-
-  async onRegistrationSameAsExistingWallet(walletAddress) {
-    return `Already registered ${walletAddress}`
-  }
-
-  async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
-    return `Another user has already registered ${walletAddress}`
-  }
-
-  async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return `Successfully registered user's first wallet: ${walletAddress}`
-  }
-}
-
 describe('slackAdapter', async () => {
 
   let slackAdapter;
@@ -39,7 +16,7 @@ describe('slackAdapter', async () => {
       createTransaction : function() {},
       send : function() {}
     }
-    slackAdapter = new TestableSlack(config);
+    slackAdapter = new Slack(config);
     Account = config.models.account;
 
     accountWithWallet = await Account.createAsync({
@@ -59,9 +36,10 @@ describe('slackAdapter', async () => {
   describe('handle registration request', () => {
 
     it ('should return a message to be sent back to the user if their wallet fails validation', async () => {
-      let msg = new Command.Register('testing', 'someUserId', 'badwalletaddress013934888318')
+      const badWalletAddress = 'badwalletaddress013934888318';
+      let msg = new Command.Register('testing', 'someUserId', badWalletAddress)
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, "badWallet");
+      assert.equal(returnedValue, `${badWalletAddress} is not a valid Public Key / wallet address`);
     })
 
     it ('should return a message to send back to the user if this user has already registered with that wallet', async () => {
@@ -69,14 +47,13 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'team.foo', sameAddressAsOtherAccount)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Already registered ${accountWithWallet.walletAddress}`);
+      assert.equal(returnedValue, `You are already using the public key \`${accountWithWallet.walletAddress}\``);
     })
 
     it ('should send a message back to the user if someone else has already registered with that wallet', async () => {
       let msg = new Command.Register('testing', 'newTeam.someNewUserId', accountWithWallet.walletAddress)
-
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Another user has already registered ${accountWithWallet.walletAddress}`);
+      assert.equal(returnedValue, `Another user has already registered the wallet address \`${accountWithWallet.walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`);
     })
 
     // TODO: Make sure this updates the 'updatedAt' value of the Account object
@@ -85,7 +62,7 @@ describe('slackAdapter', async () => {
       const msg = new Command.Register('testing', 'team.foo', newWalletId)
       const returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       const refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
-      assert.equal(returnedValue, `${accountWithWallet.walletAddress} replaced by ${newWalletId}`);
+      assert.equal(returnedValue, `Your old wallet \`${accountWithWallet.walletAddress}\` has been replaced by \`${newWalletId}\``);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
     })
 
@@ -94,7 +71,7 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Successfully registered user's first wallet: ${desiredWalletAddress}`);
+      assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`ROBOT_ADDRESS\` to make funds available for use with the '/tip' command.`);
     })
   })
 
@@ -161,7 +138,10 @@ describe('slackAdapter', async () => {
     })
 
     it (`should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
-      assert(false)
+      let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
+      let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert.equal(returnedValue, `You successfully tipped \`${utils.formatNumber(amount)} XLM\``)
     })
   })
 })

@@ -116,7 +116,7 @@ class Adapter extends EventEmitter {
 
   async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
     // TODO: Factor contact info out into env vars or something
-    return `Another user has already registered the wallet address \`${walletAddress}\` If you think this is a mistake, please contact @dlohnes on Slack`
+    return `Another user has already registered the wallet address \`${walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`
   }
 
   async onRegistrationRegisteredFirstWallet(walletAddress) {

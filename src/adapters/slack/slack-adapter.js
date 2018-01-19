@@ -3,6 +3,7 @@ const slackClient = require('./slack-client');
 const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
+const Command     = require('../commands/command')
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
@@ -44,7 +45,14 @@ class Slack extends Adapter {
     return `What is the sound of one tipper tipping?`
   }
 
+  /**
+   *
+   * @param tip {Command.Tip}
+   * @param amount {float}
+   * @returns {Promise<string>}
+   */
   async onTip (tip, amount) {
+    this.client.sendPlainTextDMToSlackUser(tip.targetId, `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
     return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
