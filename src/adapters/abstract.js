@@ -132,17 +132,7 @@ class Adapter extends EventEmitter {
   // }
 
   /**
-   *  Should receive a tip object like:
-   *
-   *  {
-   *    adapter: "adapter_name", (e.g. "reddit")
-   *    sourceId: "unique_source_id", (e.g. reddit username)
-   *    targetId: "foo_bar" // the target id
-   *    amount: "123.12",,
-   *    hash: "asfcewef" // some kind of hash, e.g. comment hash, must be unique per sourceId
-   *  }
-   *
-   *  You'll receive the tip object within every hook, so you can add stuff you need in the callbacks
+   *  Should receive a Command.Tip object
    */
   async receivePotentialTip (tip) {
       // Let's see if the source has a sufficient balance
