@@ -28,6 +28,73 @@ module.exports = (db) => {
       createdAt: orm.enforce.required('createdAt is required'),
       hash: [orm.enforce.unique('Hash already exists.'), orm.enforce.required()]
     },
+    methods: {
+      /**
+       * Withdraw money from the main account to the requested account by the user.
+       *
+       * You can get the stellar object from the adapter config.
+       *
+       * to should be a public address
+       * withdrawalAmount can be a string or a Big
+       * hash should just be something unique - we use the msg id from reddit,
+       * but a uuid4 or sth like that would work as well.
+       */
+      refund: async function (stellar, to, withdrawalAmount, hash) {
+        const Transaction = db.models.transaction
+        const Action = db.models.action
+
+        return await Account.withinTransaction(async () => {
+          if (!this.canPay(withdrawalAmount)) {
+            throw new Error('Unsufficient balance. Always check with `canPay` before withdrawing money!')
+          }
+          const sourceBalance = new Big(this.balance)
+          const amount = new Big(withdrawalAmount)
+          this.balance = sourceBalance.minus(amount).toFixed(7)
+          const refundBalance = new Big(this.balance)
+
+          const now = new Date()
+          const doc = {
+            memoId: 'XLM Tipping bot',
+            amount: amount.toFixed(7),
+            createdAt: now.toISOString(),
+            asset: 'native',
+            source: stellar.address,
+            target: to,
+            hash: hash,
+            type: 'withdrawal'
+          }
+          const txExists = await Transaction.existsAsync({
+            hash: hash,
+            type: 'withdrawal',
+            target: to
+          })
+
+          if (txExists) {
+            // Withdrawal already happened within a concurrent transaction, let's skip
+            this.balance = refundBalance.plus(amount).toFixed(7)
+            throw 'DUPLICATE_WITHDRAWAL'
+          }
+
+          try {
+            const tx = await stellar.createTransaction(to, withdrawalAmount.toFixed(7), hash)
+            await stellar.send(tx)
+          } catch (exc) {
+            this.balance = refundBalance.plus(amount).toFixed(7)
+            throw exc
+          }
+
+          await this.saveAsync()
+          await Transaction.createAsync(doc)
+          await Action.createAsync({
+            hash: hash,
+            type: 'withdrawal',
+            sourceaccount_id: this.id,
+            amount: amount.toFixed(7),
+            address: to
+          })
+        })
+      }
+    },
     hooks: {
       beforeSave: function () {
         if (!this.credited) {
@@ -57,8 +124,8 @@ module.exports = (db) => {
               const adapter = accountParts[0]
               const uniqueId = accountParts[1]
 
-              //If this is from reddit, then use the memo parameters to parse the deposit
-              if(adapter === "reddit" || (process.env.MODE === "testing" && adapter === "testing")){
+              //If this transaction/memo is from reddit, then use the memo parameters to parse the deposit
+              if(adapter === "reddit"){
                 const userWithUniqueId = await Account.getOrCreate(adapter, uniqueId);
                 //If we found our user with the given adapter and uniqueId, credit the deposit.
                 //If we haven't found our user, we'll try again below using the public wallet id.
@@ -66,18 +133,23 @@ module.exports = (db) => {
                   Transaction.creditDepositToAccount(this, userWithUniqueId);
                   return; //Return, as we found our account
                 }
-              } 
+              } else {
+                console.error("Unrecognized transaction memo: '" + this.memoId + "'. Searching by public wallet address...")
+              }
             }
           }
 
           const userWithWalletId = await Account.userForWalletAddress(this.source);
-          //If there is no user registered with this public wallet address we need to refund the deposit.
-          if(!userWithWalletId){
-            Transaction.events.emit('REFUND', this, amount);
-          } else {
+          if(userWithWalletId){
             //We found a user with the public wallet address.
             //Credit the deposit to the appropriate account.
+            console.log("found user:",JSON.stringify(userWithWalletId));
+            console.log("crediting deposit from address:",this.source);
             Transaction.creditDepositToAccount(this, userWithWalletId);
+          } else {
+            //If there is no user registered with this public wallet address we need to refund the deposit.
+            console.error("Unrecognized source wallet address in deposit transaction, issuing a refund.")
+            Transaction.events.emit('REFUND', this, amount);
           }
         }
       }
