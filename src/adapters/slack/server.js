@@ -84,7 +84,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleWithdrawalRequest(command));
+      res.send(await that.adapter.receiveWithdrawalRequest(command));
     });
 
     app.post('/slack/register', async function (req, res) {

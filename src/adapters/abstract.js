@@ -26,6 +26,12 @@ class Adapter extends EventEmitter {
     this.emit('deposit', sourceAccount, amount)
   }
 
+  /**
+   *
+   * @param potentialTip The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipWithInsufficientBalance (potentialTip, amount) {
     // Override this or listen to events!
     this.emit('tipWithInsufficientBalance', potentialTip, amount)
@@ -110,7 +116,7 @@ class Adapter extends EventEmitter {
 
   async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
     // TODO: Factor contact info out into env vars or something
-    return `Another user has already registered the wallet address \`${walletAddress}\` If you think this is a mistake, please contact @dlohnes on Slack`
+    return `Another user has already registered the wallet address \`${walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`
   }
 
   async onRegistrationRegisteredFirstWallet(walletAddress) {
@@ -132,17 +138,7 @@ class Adapter extends EventEmitter {
   // }
 
   /**
-   *  Should receive a tip object like:
-   *
-   *  {
-   *    adapter: "adapter_name", (e.g. "reddit")
-   *    sourceId: "unique_source_id", (e.g. reddit username)
-   *    targetId: "foo_bar" // the target id
-   *    amount: "123.12",,
-   *    hash: "asfcewef" // some kind of hash, e.g. comment hash, must be unique per sourceId
-   *  }
-   *
-   *  You'll receive the tip object within every hook, so you can add stuff you need in the callbacks
+   *  Should receive a Command.Tip object
    */
   async receivePotentialTip (tip) {
       // Let's see if the source has a sufficient balance
@@ -161,15 +157,14 @@ class Adapter extends EventEmitter {
       const target = await this.Account.getOrCreate(tip.adapter, tip.targetId)
 
       // ... and tip.
-      source.transfer(target, payment, hash)
-        .then(() => {
-          this.onTip(tip, payment.toFixed(7))
-        })
-        .catch((exc) => {
-          if (exc !== 'DUPLICATE_TRANSFER') {
-            this.onTipTransferFailed(tip, payment.toFixed(7))
-          }
-        })
+    try {
+        await source.transfer(target, payment, hash)
+        return this.onTip(tip, payment.toFixed(7))
+    } catch (exc) {
+        if (exc !== 'DUPLICATE_TRANSFER') {
+          this.onTipTransferFailed(tip, payment.toFixed(7))
+        }
+    }
   }
 
   /**

@@ -1,6 +1,7 @@
 const assert = require('assert')
 const Adapter = require('../src/adapters/abstract')
 const Big = require('big.js')
+const Command = require('../src/adapters/commands/command');
 
 describe('adapter', async () => {
 
@@ -261,12 +262,7 @@ describe('adapter', async () => {
   describe('receivePotentialTip', () => {
 
     it ('should call onTipWithInsufficientBalance if source cant pay', (done) => {
-      let tip = {
-        amount: '1.12',
-        adapter: 'testing',
-        sourceId: 'foo',
-        hash: 'hash'
-      }
+      let tip = new Command.Tip('testing', 'foo', 'target', '1.12')
 
       adapter.on('tipWithInsufficientBalance', () => done())
       adapter.receivePotentialTip(tip)
@@ -279,13 +275,7 @@ describe('adapter', async () => {
         uniqueId: 'foo',
         balance: '5.0000000'
       }).then(() => {
-        let tip = {
-          amount: '1',
-          adapter: 'testing',
-          sourceId: 'foo',
-          targetId: 'foo',
-          hash: 'hash'
-        }
+        let tip = new Command.Tip('testing', 'foo', 'foo', '1')
         adapter.on('tipReferenceError', () => done())
         adapter.receivePotentialTip(tip)
       })
@@ -304,13 +294,9 @@ describe('adapter', async () => {
         hash: 'hash'
       })
 
-      let tip = {
-          amount: '1',
-          adapter: 'testing',
-          sourceId: 'foo',
-          targetId: 'bar',
-          hash: 'hash'
-      }
+      let tip = new Command.Tip('testing', 'foo', 'bar', '1')
+      tip.hash = 'hash'
+
       await adapter.receivePotentialTip(tip)
 
       source = await adapter.Account.oneAsync({adapter: 'testing', uniqueId: 'foo'})
@@ -328,19 +314,14 @@ describe('adapter', async () => {
         uniqueId: 'foo',
         balance: '5.0000000'
       }).then(() => {
-        let tip = {
-          amount: '1',
-          adapter: 'testing',
-          sourceId: 'foo',
-          targetId: 'bar',
-          hash: 'hash'
-        }
+        let tip = new Command.Tip('testing', 'foo', 'bar', '1')
+
         adapter.on('tip', async (tip, amount) => {
           assert.equal('1.0000000', amount)
 
           source = await adapter.Account.oneAsync({adapter: 'testing', uniqueId: 'foo'})
           target = await adapter.Account.oneAsync({adapter: 'testing', uniqueId: 'bar'})
-          action = await adapter.config.models.action.oneAsync({sourceaccount_id: source.id, hash: 'hash', type: 'transfer'})
+          action = await adapter.config.models.action.oneAsync({sourceaccount_id: source.id, hash: tip.hash, type: 'transfer'})
 
           assert.equal(source.balance, '4.0000000')
           assert.equal(target.balance, '1.0000000')
@@ -349,7 +330,7 @@ describe('adapter', async () => {
           assert.equal(action.sourceaccount_id, source.id)
           assert.equal(action.amount, '1.0000000')
           assert.equal(action.type, 'transfer')
-          assert.equal(action.hash, 'hash')
+          assert.equal(action.hash, tip.hash)
 
           done()
         })

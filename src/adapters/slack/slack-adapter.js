@@ -1,12 +1,9 @@
-const express     = require('express');
-const app         = express();
-const bodyParser  = require('body-parser');
 const Adapter     = require('../abstract');
-const slmessage   = require('./slack-message');
-const slackUtils  = require('./slack-command-utils');
 const slackClient = require('./slack-client');
 const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
+const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
+const Command     = require('../commands/command')
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
@@ -36,7 +33,8 @@ class Slack extends Adapter {
   }
 
   async onTipWithInsufficientBalance (tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
+    return `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(account.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``
   }
 
   async onTipTransferFailed(tip, amount) {
@@ -44,12 +42,18 @@ class Slack extends Adapter {
   }
 
   async onTipReferenceError (tip, amount) {
-    await callReddit('reply', formatMessage(`While self love is encouraged, self tipping is not.`), tip.original)
+    return `What is the sound of one tipper tipping?`
   }
 
+  /**
+   *
+   * @param tip {Command.Tip}
+   * @param amount {float}
+   * @returns {Promise<string>}
+   */
   async onTip (tip, amount) {
-    // console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
-    // await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
+    this.client.sendPlainTextDMToSlackUser(tip.targetId, `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
+    return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
   async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
@@ -133,27 +137,11 @@ class Slack extends Adapter {
     }
   }
 
-  /**
-   * handleRegistrationRequest(command)
-   *
-   * @param command a Withdrawal Command object
-   */
-  // TODO: This is a really bad code smell. Two things with the same intended behavior. 
-  async handleWithdrawalRequest(command) {
-    return this.receiveWithdrawalRequest(
-        {
-          adapter   : command.adapter,
-          uniqueId  : command.sourceId,
-          address   : command.address,
-          amount    : command.amount,
-          hash      : command.hash
-        })
-  }
-
   constructor (config) {
     super(config);
 
     this.name = 'slack';
+    this.client = new slackClient(oauth_token);
   }
 
   extractTipAmount (tipText) {
