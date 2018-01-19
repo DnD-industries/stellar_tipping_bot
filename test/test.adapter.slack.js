@@ -4,6 +4,13 @@ const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
 const utils = require('../src/utils')
 
+class TestableSlack extends Slack {
+  constructor (config) {
+    super(config);
+    this.client.sendPlainTextDMToSlackUser = sinon.spy();
+  }
+}
+
 describe('slackAdapter', async () => {
 
   let slackAdapter;
@@ -16,7 +23,7 @@ describe('slackAdapter', async () => {
       createTransaction : function() {},
       send : function() {}
     }
-    slackAdapter = new Slack(config);
+    slackAdapter = new TestableSlack(config);
     Account = config.models.account;
 
     accountWithWallet = await Account.createAsync({
@@ -141,6 +148,7 @@ describe('slackAdapter', async () => {
       let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert(slackAdapter.client.sendPlainTextDMToSlackUser.called, "The client ")
       assert.equal(returnedValue, `You successfully tipped \`${utils.formatNumber(amount)} XLM\``)
     })
   })
