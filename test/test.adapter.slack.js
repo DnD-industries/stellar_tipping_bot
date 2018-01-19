@@ -130,4 +130,22 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `\`${amount}\` is not a valid withdrawal amount. Please try again.`);
     })
   })
+
+  describe(`receive potential tip`, () => {
+    it (`should return an error message if the user's balance is not high enough`, async() => {
+      assert(false)
+    })
+
+    it (`should return a confirmation message to the tipper once the tip has gone through`, async() => {
+      assert(false)
+    })
+
+    it (`should send a message with detailed sign up instructions to any tip receiver who is not yet registered after the tip goes through`, async() => {
+      assert(false)
+    })
+
+    it (`should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
+      assert(false)
+    })
+  })
 })
