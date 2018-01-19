@@ -1,10 +1,4 @@
-const express     = require('express');
-const app         = express();
-const bodyParser  = require('body-parser');
 const Adapter     = require('../abstract');
-const slmessage   = require('./slack-message');
-const slackUtils  = require('./slack-command-utils');
-const slackClient = require('./slack-client');
 const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
 
