@@ -133,8 +133,6 @@ class Slack extends Adapter {
     }
   }
 
-  }
-
   constructor (config) {
     super(config);
 
