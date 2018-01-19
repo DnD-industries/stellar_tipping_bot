@@ -17,11 +17,11 @@ module.exports = async function (models) {
     StellarSdk.Network.useTestNetwork()
   }
 
-  latestTx = await Transaction.latest()
+  // latestTx = await Transaction.latest();
 
-  if (latestTx) {
-    callBuilder.cursor(latestTx.cursor)
-  }
+  // if (latestTx) {
+  //   callBuilder.cursor(latestTx.cursor)
+  // }
 
   callBuilder.stream({
     onmessage: (record) => {
@@ -56,9 +56,9 @@ module.exports = async function (models) {
               type: 'deposit'
             })
 
-            console.log(`Incoming txOriginal: `,JSON.stringify(txn))
-            console.log(`Incoming record: `,JSON.stringify(record))
-            console.log(`Incoming txInstance:`, JSON.stringify(txInstance))
+            //console.log(`Incoming txOriginal: `,JSON.stringify(txn))
+            console.log(`INCOMING_TRANSACTION: `, JSON.stringify(record))
+            //console.log(`Incoming txInstance:`, JSON.stringify(txInstance))
             events.emit('INCOMING_TRANSACTION', txInstance)
           } catch (exc) {
             console.log('Unable to commit transaction.')

@@ -17,8 +17,7 @@ module.exports = (db) => {
       amount: String,
       asset: String,
       hash: String,
-      credited: Boolean,
-      refunded: Boolean
+      credited: Boolean
     }, {
     validations : {
       source : orm.enforce.required('source is required'),
@@ -112,7 +111,7 @@ module.exports = (db) => {
           //***If the CLOSE_DEPOSIT env variable is activated, refund ALL new deposits***
           if(process.env.CLOSE_DEPOSITS.toLowerCase() === "true"){
             console.log("DEPOSITS CLOSED, refunding transaction:", JSON.stringify(this));
-            Transaction.events.emit('REFUND', this, amount);
+            Transaction.events.emit('REFUND', this, this.amount);
             return;
           }
 
@@ -148,7 +147,7 @@ module.exports = (db) => {
           } else {
             //If there is no user registered with this public wallet address we need to refund the deposit.
             console.error("Unrecognized source wallet address in deposit transaction, issuing a refund.")
-            Transaction.events.emit('REFUND', this, amount);
+            Transaction.events.emit('REFUND', this, this.amount);
           }
         }
       }
@@ -168,9 +167,11 @@ module.exports = (db) => {
   Transaction.latest = function () {
     return new Promise((resolve, reject) => {
       this.find({type: 'deposit'}).order('-createdAt').run((err, results) => {
-        if (err) {
+        if (err || !results) {
+          console.log("reject latest")
           reject(err)
         }
+        console.log("resolve latest")
         resolve(results[0])
       })
     })
