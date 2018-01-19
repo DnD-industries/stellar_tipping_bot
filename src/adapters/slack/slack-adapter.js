@@ -1,6 +1,8 @@
 const Adapter     = require('../abstract');
+const slackClient = require('./slack-client');
 const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
+const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
@@ -131,6 +133,7 @@ class Slack extends Adapter {
     super(config);
 
     this.name = 'slack';
+    this.client = new slackClient(oauth_token);
   }
 
   extractTipAmount (tipText) {
