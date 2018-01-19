@@ -32,7 +32,8 @@ class Slack extends Adapter {
   }
 
   async onTipWithInsufficientBalance (tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
+    return `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(account.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``
   }
 
   async onTipTransferFailed(tip, amount) {

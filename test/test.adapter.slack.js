@@ -2,6 +2,7 @@ const assert = require('assert')
 const Slack = require('../src/adapters/slack/slack-adapter')
 const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
+const utils = require('../src/utils')
 
 // TODO: Get rid of this
 class TestableSlack extends Slack {
@@ -133,7 +134,10 @@ describe('slackAdapter', async () => {
 
   describe(`receive potential tip`, () => {
     it (`should return an error message if the user's balance is not high enough`, async() => {
-      assert(false)
+      let amount = 1000
+      let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert.equal(`Sorry, your tip could not be processed. Your account only contains \`${utils.formatNumber(accountWithWallet.balance)} XLM\` but you tried to send \`${utils.formatNumber(amount)} XLM\``, returnedValue)
     })
 
     it (`should return a confirmation message to the tipper once the tip has gone through`, async() => {
