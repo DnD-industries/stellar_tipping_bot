@@ -157,15 +157,14 @@ class Adapter extends EventEmitter {
       const target = await this.Account.getOrCreate(tip.adapter, tip.targetId)
 
       // ... and tip.
-      source.transfer(target, payment, hash)
-        .then(() => {
-          this.onTip(tip, payment.toFixed(7))
-        })
-        .catch((exc) => {
-          if (exc !== 'DUPLICATE_TRANSFER') {
-            this.onTipTransferFailed(tip, payment.toFixed(7))
-          }
-        })
+    try {
+        await source.transfer(target, payment, hash)
+        return this.onTip(tip, payment.toFixed(7))
+    } catch (exc) {
+        if (exc !== 'DUPLICATE_TRANSFER') {
+          this.onTipTransferFailed(tip, payment.toFixed(7))
+        }
+    }
   }
 
   /**
