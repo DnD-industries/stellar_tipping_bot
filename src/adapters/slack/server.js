@@ -44,7 +44,7 @@ class SlackServer {
       res.send('Hello world, I am Starry');
     });
 
-    app.post('/slack/tip', function (req, res) {
+    app.post('/slack/tip', async function (req, res) {
       console.log('Tip requested');
       let msg = new slackMessage(req.body);
       console.log(msg);
@@ -52,30 +52,9 @@ class SlackServer {
 
       let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
       console.log("recipient: ", recipientID);
-      //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
-      //Implement business logic and send DMs accordingly
-      that.client.sendPlainTextDMToSlackUser(msg.user_id, "You sent a tip");
 
-      that.client.sendPlainTextDMToSlackUser(recipientID, "Got tip");
-      // If the user is not registered, return an error appropriate. Maybe instruct them how to register
-      // else if the user is registered
-      // Check the amount against the user's current balance
-      // If the user's balance is not high enough, return an error containing the current balance
-      // If the user's balance is high enough, first identify the receiver by retreiving their user_id (UUID) then check if the receiver is already registered
-      // If a user does not exist in the db with their particular info,
-      // Add them to the database without a public wallet address (the real mark of not being registered)
-      // Save the tip info in the database
-      //
-      // Else-If a user DOES exist in the db with their particlar inof
-      // Make the transfer happen
-      // If failure
-      // send an appropriate message to the tipper
-      // If success
-      // remove the tip from the sender's balance
-      // add the tip to the receiver's balance
-      // send a success message to the sender
-      // send a personal message to the receiver alerting them they received a tip
-      res.json(200);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+      res.send(await that.adapter.receivePotentialTip(command));
     });
 
     app.post('/slack/withdraw', async function (req, res) {
