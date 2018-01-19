@@ -218,8 +218,8 @@ module.exports = (db) => {
   })
 
   /**
-   * Transaction save get or create.
-   * doc if optional (adapter and uniqueId are taken if not given)
+   * Account save get or create.
+   * doc is optional (adapter and uniqueId are taken if not given)
    */
   Account.getOrCreate = async function (adapter, uniqueId, doc) {
     return await Account.withinTransaction(async () => {

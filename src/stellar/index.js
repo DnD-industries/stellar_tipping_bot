@@ -10,6 +10,7 @@ module.exports = async function (models) {
   const Account = models.account
   const events = new EventEmitter()
 
+  console.log("publickey:", publicKey);
   if (process.env.MODE === 'production') {
     StellarSdk.Network.usePublicNetwork()
   } else {
@@ -35,6 +36,7 @@ module.exports = async function (models) {
              // you a non-native asset, some options for handling it are
              // 1. Trade the asset to native and credit that amount
              // 2. Send it back to the customer
+             // 3. If the tx comes from a known address, add it to the balance for that account 
 
              // We haven't implemented that yet! fairx.io to come!
              console.log('Trying to send non-XLM credit.')
@@ -54,7 +56,9 @@ module.exports = async function (models) {
               type: 'deposit'
             })
 
-            console.log(`Incoming txn: ${txInstance.amount}`)
+            console.log(`Incoming txOriginal: `,JSON.stringify(txn))
+            console.log(`Incoming record: `,JSON.stringify(record))
+            console.log(`Incoming txInstance:`, JSON.stringify(txInstance))
             events.emit('INCOMING_TRANSACTION', txInstance)
           } catch (exc) {
             console.log('Unable to commit transaction.')
@@ -73,6 +77,10 @@ module.exports = async function (models) {
   return {
     address: publicKey,
     events: events,
+
+    //If the wallet is not in our db, we need to refund the payment (minus tx fee) with a memo
+    //Step one: determine if wallet is not in our db
+    //Step two: refund the paymen with memo using Stellar SDK
 
     /**
      * Build a transaction into the network.
