@@ -26,6 +26,12 @@ class Adapter extends EventEmitter {
     this.emit('deposit', sourceAccount, amount)
   }
 
+  /**
+   *
+   * @param potentialTip The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipWithInsufficientBalance (potentialTip, amount) {
     // Override this or listen to events!
     this.emit('tipWithInsufficientBalance', potentialTip, amount)
