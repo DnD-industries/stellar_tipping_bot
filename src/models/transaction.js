@@ -93,7 +93,7 @@ module.exports = (db) => {
       //       address: to
       //     })
       //   })
-      }
+      //}
     },
     hooks: {
       beforeSave: function () {
@@ -109,7 +109,7 @@ module.exports = (db) => {
         if (success && !this.credited && this.type === 'deposit') {
           const Account = db.models.account
 
-          //***If the CLOSE_DEPOSIT env variable is activated, refund all deposits***
+          //***If the CLOSE_DEPOSIT env variable is activated, refund ALL new deposits***
           if(process.env.CLOSE_DEPOSITS.toLowerCase() === "true"){
             console.log("DEPOSITS CLOSED, refunding transaction:", JSON.stringify(this));
             Transaction.events.emit('REFUND', this, amount);
@@ -120,7 +120,6 @@ module.exports = (db) => {
           if (this.memoId) {
             const accountParts = this.memoId.replace(/\s/g, '').split('/')
             if (accountParts.length === 2) {
-              //console.log("accountParts",accountParts)
               const adapter = accountParts[0]
               const uniqueId = accountParts[1]
 
