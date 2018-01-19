@@ -149,7 +149,7 @@ describe('slackAdapter', async () => {
       let recipientId = 'team.new'
       let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
-      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(recipientId, `Someone tipped you \`${utils.formatNumber(amount)} XLM\``), "The client ")
+      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(recipientId, `Someone tipped you \`${utils.formatNumber(amount)} XLM\``), "The client should receive a message telling it to DM the recipient once the tip goes through")
       assert.equal(returnedValue, `You successfully tipped \`${utils.formatNumber(amount)} XLM\``)
     })
   })
