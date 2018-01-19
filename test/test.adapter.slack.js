@@ -140,15 +140,27 @@ describe('slackAdapter', async () => {
       assert.equal(`Sorry, your tip could not be processed. Your account only contains \`${utils.formatNumber(accountWithWallet.balance)} XLM\` but you tried to send \`${utils.formatNumber(amount)} XLM\``, returnedValue)
     })
 
+    it (`should return a koan if the tipper tips them self`, async() => {
+      let amount = 1
+      let command = new Command.Tip('testing', 'team.foo', 'team.foo', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert.equal(returnedValue, `What is the sound of one tipper tipping?`)
+    })
+
     it (`should return a confirmation message to the tipper once the tip has gone through`, async() => {
-      assert(false)
+      let amount = 1
+      let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      const tippedAccount = await Account.getOrCreate('testing', 'team.new')
+      // assert.equal(tippedAccount.balance, 1)
+      assert.equal(returnedValue, `You successfully tipped \`${utils.formatNumber(amount)} XLM\``)
     })
 
     it (`should send a message with detailed sign up instructions to any tip receiver who is not yet registered after the tip goes through`, async() => {
       assert(false)
     })
 
-    it (`should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
+    it (  `should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
       assert(false)
     })
   })

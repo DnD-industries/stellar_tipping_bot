@@ -41,12 +41,11 @@ class Slack extends Adapter {
   }
 
   async onTipReferenceError (tip, amount) {
-    await callReddit('reply', formatMessage(`While self love is encouraged, self tipping is not.`), tip.original)
+    return `What is the sound of one tipper tipping?`
   }
 
   async onTip (tip, amount) {
-    // console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
-    // await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
+    return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
   async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
