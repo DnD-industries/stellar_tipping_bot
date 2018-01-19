@@ -36,7 +36,7 @@ class SlackServer {
       let token = req.method === "GET" ? req.query.token : req.body.token;
       //With the proper validation token from Slack, route the request accordingly.
       //Otherwise reply with a 401 status code 
-      token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.sendStatus(401).send("Invalid Slack token");
+      token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
     });
 
     // Index route
