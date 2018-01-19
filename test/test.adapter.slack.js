@@ -148,11 +148,11 @@ describe('slackAdapter', async () => {
     })
 
     it (`should return a confirmation message to the tipper once the tip has gone through`, async() => {
-      let amount = 1
+      let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
       const tippedAccount = await Account.getOrCreate('testing', 'team.new')
-      // assert.equal(tippedAccount.balance, 1)
+      assert.equal(tippedAccount.balance, amount)
       assert.equal(returnedValue, `You successfully tipped \`${utils.formatNumber(amount)} XLM\``)
     })
 
@@ -160,7 +160,7 @@ describe('slackAdapter', async () => {
       assert(false)
     })
 
-    it (  `should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
+    it (`should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
       assert(false)
     })
   })
