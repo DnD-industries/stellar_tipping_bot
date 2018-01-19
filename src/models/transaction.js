@@ -43,12 +43,13 @@ module.exports = (db) => {
           const Account = db.models.account
 
           //***If the CLOSE_DEPOSIT env variable is activated, refund all deposits***
-          if(process.env.CLOSE_DEPOSITS === "true"){
+          if(process.env.CLOSE_DEPOSITS.toLowerCase() === "true"){
             console.log("DEPOSITS CLOSED, refunding transaction:", JSON.stringify(this));
             Transaction.events.emit('REFUND', this, amount);
             return;
           }
 
+          //Check for the presence of a memo in this transaction
           if (this.memoId) {
             const accountParts = this.memoId.replace(/\s/g, '').split('/')
             if (accountParts.length === 2) {
@@ -62,16 +63,8 @@ module.exports = (db) => {
                 //If we found our user with the given adapter and uniqueId, credit the deposit.
                 //If we haven't found our user, we'll try again below using the public wallet id.
                 if (userWithUniqueId) {
-                  //Transaction.creditDepositToAccount(this, userWithUniqueId);
-                try {
-                  await userWithUniqueId.deposit(this);
-                } catch (exc) {
-                  if (exc !== 'DUPLICATE_DEPOSIT') {
-                    throw exc;
-                  }
-                }
-
-                return; //Return, as we found our account
+                  Transaction.creditDepositToAccount(this, userWithUniqueId);
+                  return; //Return, as we found our account
                 }
               } 
             }
@@ -84,30 +77,22 @@ module.exports = (db) => {
           } else {
             //We found a user with the public wallet address.
             //Credit the deposit to the appropriate account.
-            //Transaction.creditDepositToAccount(this, userWithWalletId);
-
-            try {
-              await userWithWalletId.deposit(this);
-            } catch (exc) {
-              if (exc !== 'DUPLICATE_DEPOSIT') {
-                throw exc;
-              }
-            }
+            Transaction.creditDepositToAccount(this, userWithWalletId);
           }
         }
       }
     },
   })
 
-  // Transaction.creditDepositToAccount = async function (transaction, user) {
-  //   try {
-  //     return await user.deposit(transaction);
-  //   } catch (exc) {
-  //     if (exc !== 'DUPLICATE_DEPOSIT') {
-  //       throw exc;
-  //     }
-  //   }
-  // }
+  Transaction.creditDepositToAccount = async function (transaction, user) {
+    try {
+      return await user.deposit(transaction);
+    } catch (exc) {
+      if (exc !== 'DUPLICATE_DEPOSIT') {
+        throw exc;
+      }
+    }
+  }
 
   Transaction.latest = function () {
     return new Promise((resolve, reject) => {
