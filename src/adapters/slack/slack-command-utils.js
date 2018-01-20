@@ -4,6 +4,10 @@ const slackMessage = require('./slack-message');
 
 class SlackCommandUtils {
     //"command":"/tip","text":"<@U8PTZ287N|d> 123"
+  /**
+   * @param msg {SLMessage}
+   * @returns {Command}
+   */
     extractCommandParamsFromMessage(msg) {
         let adapter     = "slack";
         let sourceId    = msg.uniqueUserID;
@@ -34,15 +38,19 @@ class SlackCommandUtils {
         }
         return command;
     }
-    
-    /**
-     * Takes a string, which usually will be an escaped Slack userID string
-     * such as "<@U12345678|dlohnes>". In this case, U12345678 is the slack
-     * user ID unique to this person IN THIS TEAM. In order to generate
-     * a truly unique user ID, we'll need to append the team ID as well.
-     *
-     * See: https://api.slack.com/slash-commands#how_do_commands_work
-     */
+
+  /**
+   *
+   * Takes a string, which usually will be an escaped Slack userID string
+   * such as "<@U12345678|dlohnes>". In this case, U12345678 is the slack
+   * user ID unique to this person IN THIS TEAM. In order to generate
+   * a truly unique user ID, we'll need to append the team ID as well.
+   *
+   * See: https://api.slack.com/slash-commands#how_do_commands_work
+   *
+   * @param cmd {Command}
+   * @returns {string}
+   */
     extractUserIdFromCommand(cmd) {
         // If it doesn't contain @ and |, we're not interested. Just return what's given to us
         if(cmd.indexOf("@") < 0 || cmd.indexOf("|") < 0 ) {
@@ -52,6 +60,11 @@ class SlackCommandUtils {
         return result;
     }
 
+  /**
+   *
+   * @param cmd
+   * @returns {string[]}
+   */
     findCommandParams(cmd){
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
         const params = cmd.split(" ")
