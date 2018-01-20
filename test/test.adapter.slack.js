@@ -78,7 +78,7 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`ROBOT_ADDRESS\` to make funds available for use with the '/tip' command.`);
+      assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
     })
   })
 

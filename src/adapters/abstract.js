@@ -120,7 +120,7 @@ class Adapter extends EventEmitter {
   }
 
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`ROBOT_ADDRESS\` to make funds available for use with the '/tip' command.`
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`
   }
 
 
