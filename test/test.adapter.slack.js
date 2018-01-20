@@ -158,4 +158,18 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
     })
   })
+
+  describe('receive Balance Request', () => {
+    it('should return the user`s account balance and instructions on how to register if they are not registered', async () => {
+      let balanceCommand = new Command.Balance(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId, accountWithoutWallet.walletAddress)
+      const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
+      assert.equal(returned, `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${accountWithoutWallet.balance}\'`)
+    })
+
+    it(`should return the user's wallet address & account balance if they are registered`, async () => {
+      let balanceCommand = new Command.Balance(accountWithWallet.adapter, accountWithWallet.uniqueId, accountWithWallet.walletAddress)
+      const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
+      assert.equal(returned, `Your wallet address is: \`${accountWithWallet.walletAddress}\`\nYour balance is: \'${accountWithWallet.balance}\'`)
+    })
+  })
 })

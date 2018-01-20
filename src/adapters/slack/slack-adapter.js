@@ -143,6 +143,20 @@ class Slack extends Adapter {
       return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
   }
+  /**
+   *
+   * @param cmd {Balance}
+   * @returns {Promise<void>}
+   */
+  async receiveBalanceRequest (cmd) {
+    const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
+    if(!account.walletAddress) {
+      return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
+    } else {
+      return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
+    }
+  }
+
 
   constructor (config) {
     super(config);

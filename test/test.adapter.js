@@ -2,19 +2,27 @@ const assert = require('assert')
 const Adapter = require('../src/adapters/abstract')
 const Big = require('big.js')
 const Command = require('../src/adapters/commands/command');
+const Utils = require('../src/utils')
 
 describe('adapter', async () => {
 
   let adapter;
-
+  let accountWithWallet;
   beforeEach(async () => {
     const config = await require('./setup')()
     adapter = new Adapter(config)
+    let Account = adapter.config.models.account;
+    accountWithWallet = await Account.createAsync({
+      adapter: 'testing',
+      uniqueId: 'goodwallet',
+      balance: '1.0000000',
+      walletAddress: 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+    })
   })
 
   describe('deposit', () => {
     it ('should call onDeposit when the adapter is correct', (done) => {
-      const Account = adapter.config.models.account
+      const Account = adapter.config.models.account;
 
       adapter.on('deposit', () => done())
       adapter.name = 'testing'
@@ -263,10 +271,8 @@ describe('adapter', async () => {
 
     it ('should call onTipWithInsufficientBalance if source cant pay', (done) => {
       let tip = new Command.Tip('testing', 'foo', 'target', '1.12')
-
       adapter.on('tipWithInsufficientBalance', () => done())
       adapter.receivePotentialTip(tip)
-
     })
 
     it ('should reject with onTipReferenceError if one tips herself', (done) => {
@@ -358,4 +364,6 @@ describe('adapter', async () => {
       }
     })
   })
+
+
 })

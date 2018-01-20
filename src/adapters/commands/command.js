@@ -21,6 +21,7 @@ class Register extends Command {
   constructor(adapter, sourceId, walletPublicKey){
     super(adapter, sourceId);
     this.walletPublicKey = walletPublicKey;
+    this.type = "register";
   }
 }
 
@@ -29,6 +30,7 @@ class Tip extends Command {
     super(adapter, sourceId);
     this.targetId = targetId;
     this.amount   = amount;
+    this.type = "tip";
   }
 }
 
@@ -37,6 +39,15 @@ class Withdraw extends Command {
     super(adapter, sourceId);
     this.amount   = amount;
     this.address  = address;
+    this.type = "withdraw";
+  }
+}
+
+class Balance extends Command {
+  constructor(adapter, sourceId, address = null){
+    super(adapter, sourceId);
+    this.address = address;
+    this.type = "balance";
   }
 }
 
@@ -44,5 +55,6 @@ module.exports = {
   Command,
   Register,
   Tip,
-  Withdraw
+  Withdraw,
+  Balance
 }

@@ -75,6 +75,15 @@ class SlackServer {
       res.send(await that.adapter.handleRegistrationRequest(command))
     });
 
+    app.post('/slack/balance', async function (req, res) {
+      console.log('someone wants to check their balance');
+      console.log(JSON.stringify(req.body));
+      let msg = new slackMessage(req.body);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      res.send(await that.adapter.receiveBalanceRequest(command));
+    });
+
     // Spin up the server
     this.server = app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'));

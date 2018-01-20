@@ -246,6 +246,15 @@ class Adapter extends EventEmitter {
   }
 
   /**
+   *
+   * @param cmd {Balance}
+   * @returns {Promise<void>}
+   */
+  async receiveBalanceRequest (cmd) {
+    this.emit('receiveBalanceRequest', cmd)
+  }
+
+  /**
    * Validates the options provided and gives back an objet wher the key is the request option
    * and the value is the value which will be set on an account.
    *

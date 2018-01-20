@@ -14,21 +14,29 @@ class SlackCommandUtils {
         let command;
         let params = this.findCommandParams(msg.text); //Get the locations of our command params
         let amount;
+        let address;
+        let targetId;
+        let walletPublicKey;
         //Remove the lead slash, and fall into the appropriate command case
         switch(msg.command.split('/')[1]) {
             case "register":
-                let walletPublicKey = params[0];
+                walletPublicKey = params[0];
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
-                let targetId = this.extractUserIdFromCommand(params[0]);
+                targetId = this.extractUserIdFromCommand(params[0]);
                 amount = parseFloat(params[1]);
                 command = new Command.Tip(adapter, sourceId, targetId, amount);
                 break;
             case "withdraw":
                 amount = parseFloat(params[0]);
-                let address = params.length > 1 ? params[1] : null;
+                address = params.length > 1 ? params[1] : null;
                 command = new Command.Withdraw(adapter, sourceId, amount, address);
+                break;
+            case "balance":
+                amount = parseFloat(params[0]);
+                address = params.length > 1 ? params[1] : null;
+                command = new Command.Balance(adapter, sourceId, address);
                 break;
             default:
                 console.error("Unknown command type:", msg.command);
