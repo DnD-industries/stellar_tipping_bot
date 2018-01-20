@@ -33,7 +33,7 @@ describe('models / transaction', async () => {
             type: 'deposit'
       });
 
-      await utils.sleep(10);
+      await utils.sleep(100);
 
       const acc = await Account.oneAsync({ adapter: 'reddit', uniqueId: 'foo'});
       assert.equal('6.5000000', acc.balance);
@@ -65,7 +65,7 @@ describe('models / transaction', async () => {
           type: 'deposit'
     });
 
-    await utils.sleep(10);
+    await utils.sleep(100);
 
     const acc = await Account.oneAsync({ adapter: 'slack', uniqueId: 'foo'});
     assert.equal('6.5000000', acc.balance);
@@ -96,14 +96,14 @@ describe('models / transaction', async () => {
           type: 'deposit'
     });
 
-    await utils.sleep(10);
+    await utils.sleep(100);
 
     const acc = await Account.oneAsync({ adapter: 'testing', uniqueId: 'foo'});
     assert.equal('1.5000000', acc.balance);
 
     const txn = await Transaction.oneAsync({ hash: 'hash' });
     assert.ok(!txn.credited);
-    assert.ok(txn.refunded);
+    assert.ok(txn.refunded, "Expected to fail until refunds are complete");
   });
 
   describe('CLOSE_DEPOSITS flag', () => {
@@ -130,14 +130,14 @@ describe('models / transaction', async () => {
             type: 'deposit'
       });
 
-      await utils.sleep(10);
+      await utils.sleep(100);
 
       const acc = await Account.oneAsync({ adapter: 'testing', uniqueId: 'foo'});
       assert.equal('1.5000000', acc.balance);
 
       const txn = await Transaction.oneAsync({ hash: 'hash' });
       assert.ok(!txn.credited);
-      assert.ok(txn.refunded);
+      assert.ok(txn.refunded, "Expected to fail until refunds are complete");
       process.env.CLOSE_DEPOSITS = "false";
     });
   });

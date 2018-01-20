@@ -11,18 +11,21 @@ module.exports = async function (models) {
   const events = new EventEmitter()
 
   console.log("publickey:", publicKey);
+  process.env.STELLAR_PUBLIC_KEY = publicKey; //set the public key associated with our private key, for use elsewhere
+
   if (process.env.MODE === 'production') {
     StellarSdk.Network.usePublicNetwork()
   } else {
     StellarSdk.Network.useTestNetwork()
   }
 
-  // latestTx = await Transaction.latest();
-
-  // if (latestTx) {
-  //   callBuilder.cursor(latestTx.cursor)
-  // }
-
+  //Retrieve the latest transaction involving our public key from the db
+  latestTx = await Transaction.latest();
+  //If we found a transaction in our db, use the latest, otherwise use the paging token defined in .env
+  const startingCursor = latestTx ? latestTx.cursor : process.env.STELLAR_CURSOR_PAGING_TOKEN;
+  console.log("Starting stream from Horizon from paging token:", startingCursor);
+  callBuilder.cursor(startingCursor);
+  
   callBuilder.stream({
     onmessage: (record) => {
       record.transaction()

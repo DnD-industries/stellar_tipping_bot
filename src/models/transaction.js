@@ -168,11 +168,11 @@ module.exports = (db) => {
     return new Promise((resolve, reject) => {
       this.find({type: 'deposit'}).order('-createdAt').run((err, results) => {
         if (err || !results) {
-          console.log("reject latest")
-          reject(err)
+          console.log("reject latest:", err);
+          reject(err);
         }
-        console.log("resolve latest")
-        resolve(results[0])
+        console.log("resolve latest");
+        resolve(results[0]);
       })
     })
   }
