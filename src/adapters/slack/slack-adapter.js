@@ -94,20 +94,20 @@ class Slack extends Adapter {
     return `You requested to withdraw \`${Utils.formatNumber(amountRequested)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
-  async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
-    return `\`${address}\` is not a valid public key. Please try again with a valid public key.`
+  async onWithdrawalInvalidAddress (withdrawal) {
+    return `\`${withdrawal.address}\` is not a valid public key. Please try again with a valid public key.`
   }
 
-  async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
-    this.emit('withdrawalSubmissionFailed ', uniqueId, address, amount, hash)
+  async onWithdrawalSubmissionFailed (withdrawal) {
+    this.emit('withdrawalSubmissionFailed ', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalInvalidAmountProvided (uniqueId, address, amount, hash) {
-    return `\`${amount}\` is not a valid withdrawal amount. Please try again.`
+  async onWithdrawalInvalidAmountProvided (withdrawal) {
+    return `\`${withdrawal.amount}\` is not a valid withdrawal amount. Please try again.`
   }
 
-  async onWithdrawal (uniqueId, address, amount, hash) {
-    return `You withdrew \`${Utils.formatNumber(amount)} XLM\` to your wallet at \`${address}\``
+  async onWithdrawal (withdrawal, address) {
+    return `You withdrew \`${Utils.formatNumber(withdrawal.amount)} XLM\` to your wallet at \`${address}\``
   }
 
 

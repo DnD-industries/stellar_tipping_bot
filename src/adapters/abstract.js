@@ -28,7 +28,7 @@ class Adapter extends EventEmitter {
 
   /**
    *
-   * @param potentialTip The Command.Tip object created from the tip request
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
    * @param amount The tip amount fixed to 7 decimal places
    * @returns {Promise<void>}
    */
@@ -37,68 +37,83 @@ class Adapter extends EventEmitter {
     this.emit('tipWithInsufficientBalance', potentialTip, amount)
   }
 
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipTransferFailed (potentialTip, amount) {
     // Override this or listen to events!
     this.emit('tipTransferFailed', potentialTip, amount)
   }
 
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipReferenceError (potentialTip, amount) {
     // Override this or listen to events!
     this.emit('tipReferenceError', potentialTip, amount)
   }
 
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTip (potentialTip, amount) {
     // Override this or listen to events!
     this.emit('tip', potentialTip, amount)
   }
 
   // *** +++ Withdrawael Hook Functions +
-  async onWithdrawalReferenceError (uniqueId, address, amount, hash) {
+  /**
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalReferenceError (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalReferenceError', uniqueId, address, amount, hash)
+    this.emit('withdrawalReferenceError', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalDestinationAccountDoesNotExist (uniqueId, address, amount, hash) {
+  async onWithdrawalDestinationAccountDoesNotExist (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalDestinationAccountDoesNotExist', uniqueId, address, amount, hash)
+    this.emit('withdrawalDestinationAccountDoesNotExist', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
+  async onWithdrawalNoAddressProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalNoAddressProvided', uniqueId, address, amount, hash)
+    this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalInvalidAmountProvided (uniqueId, address, amount, hash) {
+  async onWithdrawalInvalidAmountProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalInvalidAmountProvided', uniqueId, address, amount, hash)
+    this.emit('withdrawalInvalidAmountProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
+  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
     // Override this or listen to events!
-    this.emit('withdrawalFailedWithInsufficientBalance', uniqueId, address, amount, hash)
+    this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance)
   }
 
-  async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
+  async onWithdrawalSubmissionFailed (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalSubmissionFailed', uniqueId, address, amount, hash)
+    this.emit('withdrawalSubmissionFailed', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
+  async onWithdrawalInvalidAddress (withdrawal) {
     // Override this or listen to events!
-   this.emit('withdrawalInvalidAddress', uniqueId, address, amount, hash)
+   this.emit('withdrawalInvalidAddress', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawal (uniqueId, address, amount, hash) {
+  async onWithdrawal (withdrawal, address) {
     // Override this or listen to events!
-    this.emit('withdrawal', uniqueId, address, amount, hash)
-  }
-
-  async sendDepositConfirmation (sourceAccount, amount) {
-      // Override me
-  }
-
-  async sendTransferConfirmation (sourceAccount, amount) {
-      // Override me
+    this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash)
   }
 
   // *** +++ Registration related functions +
@@ -166,23 +181,11 @@ class Adapter extends EventEmitter {
   }
 
   /**
-   * Extract should be the result of utils.extractWithdrawal
    *
-   * Hash should be a unique id (e.g. the message id)
-   *
-   * Should receive an object like this:
-   *
-   * {
-   *     adapter: 'reddit',
-   *     uniqueId: 'the-dark-coder'
-   *     address?: 'aStellarAddress', // optional
-   *     amount: '12.12'
-   *     hash: 'aUniqueHash'
-   * }
+   * @param withdrawalRequest {Withdraw}
+   * @returns {Promise<void>}
    */
   async receiveWithdrawalRequest (withdrawalRequest) {
-
-
     const adapter = withdrawalRequest.adapter
     const uniqueId = withdrawalRequest.uniqueId
     const hash = withdrawalRequest.hash
@@ -194,7 +197,7 @@ class Adapter extends EventEmitter {
     } catch (e) {
       console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`)
       console.log(`Withdrawal request amount is ${amountRequested}`)
-      return this.onWithdrawalInvalidAmountProvided(uniqueId, address, amountRequested, hash)
+      return this.onWithdrawalInvalidAmountProvided(withdrawalRequest)
     }
     const fixedAmount = withdrawalAmount.toFixed(7)
 
@@ -204,7 +207,7 @@ class Adapter extends EventEmitter {
 
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
-      return this.onWithdrawalInvalidAddress(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawalInvalidAddress(withdrawalRequest)
     }
 
     // Fetch the account
@@ -216,7 +219,7 @@ class Adapter extends EventEmitter {
     // Withdraw
     try {
       await target.withdraw(this.config.stellar, address, withdrawalAmount, hash)
-      return this.onWithdrawal(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawal(withdrawalRequest, address)
     } catch (exc) {
       if (exc === 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash)
