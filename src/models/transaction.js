@@ -1,6 +1,6 @@
 const orm = require('orm')
 const Big = require('big.js')
-
+const utils = require('../utils')
 
 module.exports = (db) => {
 
@@ -12,12 +12,13 @@ module.exports = (db) => {
       target: String,
       cursor: String,
       memoId: String,
-      type: ['deposit', 'withdrawal'],
+      type: ['deposit', 'withdrawal', 'refund'],
       createdAt: String,
       amount: String,
       asset: String,
       hash: String,
-      credited: Boolean
+      credited: Boolean,
+      refunded: Boolean
     }, {
     validations : {
       source : orm.enforce.required('source is required'),
@@ -28,71 +29,70 @@ module.exports = (db) => {
       hash: [orm.enforce.unique('Hash already exists.'), orm.enforce.required()]
     },
     methods: {
-      // /**
-      //  * Refund money from the main account to the source public account of the transaction
-      //  *
-      //  * You can get the stellar object from the adapter config.
-      //  *
-      //  * to should be a public address
-      //  * withdrawalAmount can be a string or a Big
-      //  * hash should just be something unique - we use the msg id from reddit,
-      //  * but a uuid4 or sth like that would work as well.
-      //  */
-      // refund: async function (stellar, to, withdrawalAmount, hash) {
-      //   const Transaction = db.models.transaction
-      //   const Action = db.models.action
+      /**
+       * Refund money from the main account to the source public account of the transaction
+       *
+       * You can get the stellar object from the adapter config.
+       *
+       * to should be a public address
+       * refundAmount can be a string or a Big
+       * hash should just be something unique 
+       */
+      refund: async function (stellar, to, refundAmount) {
+        const Transaction = db.models.transaction
+        const Action = db.models.action
 
-      //   return await Account.withinTransaction(async () => {
-      //     if (!this.canPay(withdrawalAmount)) {
-      //       throw new Error('Insufficient balance. Always check with `canPay` before withdrawing money!')
-      //     }
-      //     const sourceBalance = new Big(this.balance)
-      //     const amount = new Big(withdrawalAmount)
-      //     this.balance = sourceBalance.minus(amount).toFixed(7)
-      //     const refundBalance = new Big(this.balance)
+        return await Transaction.withinTransaction(async () => {
+          const memo = 'XLM tipping bot refund, originating tx id: ' + this.hash
+          const amount = new Big(refundAmount);
+          const now = new Date();
+          const hash = utils.uuidv4();
 
-      //     const now = new Date()
-      //     const doc = {
-      //       memoId: 'XLM Tipping bot',
-      //       amount: amount.toFixed(7),
-      //       createdAt: now.toISOString(),
-      //       asset: 'native',
-      //       source: stellar.address,
-      //       target: to,
-      //       hash: hash,
-      //       type: 'withdrawal'
-      //     }
-      //     const txExists = await Transaction.existsAsync({
-      //       hash: hash,
-      //       type: 'withdrawal',
-      //       target: to
-      //     })
+          //Do a check here to make sure the account we're sending to in fact does not exist in our db
 
-      //     if (txExists) {
-      //       // Withdrawal already happened within a concurrent transaction, let's skip
-      //       this.balance = refundBalance.plus(amount).toFixed(7)
-      //       throw 'DUPLICATE_WITHDRAWAL'
-      //     }
+          const doc = {
+            memoId: memo,
+            amount: amount.toFixed(7),
+            createdAt: now.toISOString(),
+            asset: 'native',
+            source: stellar.address,
+            target: to,
+            hash: hash,
+            type: 'refund'
+          };
 
-      //     try {
-      //       const tx = await stellar.createTransaction(to, withdrawalAmount.toFixed(7), hash)
-      //       await stellar.send(tx)
-      //     } catch (exc) {
-      //       this.balance = refundBalance.plus(amount).toFixed(7)
-      //       throw exc
-      //     }
+          const txExists = await Transaction.existsAsync({
+            hash: hash,
+            type: 'withdrawal',
+            target: to
+          });
 
-      //     await this.saveAsync()
-      //     await Transaction.createAsync(doc)
-      //     await Action.createAsync({
-      //       hash: hash,
-      //       type: 'withdrawal',
-      //       sourceaccount_id: this.id,
-      //       amount: amount.toFixed(7),
-      //       address: to
-      //     })
-      //   })
-      //}
+          if (txExists) {
+            // Tx already happened within a concurrent transaction, let's skip
+            this.balance = refundBalance.plus(amount).toFixed(7);
+            throw 'DUPLICATE_WITHDRAWAL';
+          }
+
+          try {
+            const tx = await stellar.createTransaction(to, refundAmount.toFixed(7), hash, memo);
+            const sentTransaction = await stellar.send(tx);
+          } catch (exc) {
+            throw exc;
+          }
+
+          this.credited = false;
+          this.refunded = true;
+          await this.saveAsync();
+          await Transaction.createAsync(doc);
+          await Action.createAsync({
+            hash: hash,
+            type: 'withdrawal',
+            sourceaccount_id: this.id,
+            amount: amount.toFixed(7),
+            address: to
+          });
+        })
+      }
     },
     hooks: {
       beforeSave: function () {
