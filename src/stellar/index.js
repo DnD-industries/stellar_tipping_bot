@@ -93,7 +93,7 @@ module.exports = async function (models) {
      * hash should just be something unique - we use the msg id from reddit,
      * but a uuid4 or sth like that would work as well.
      */
-    createTransaction: function (to, amount, hash) {
+    createTransaction: function (to, amount, hash, memo = "") {
       let data = {to, amount, hash}
       return new Promise(function (resolve, reject) {
         // Do not deposit to self, it wouldn't make sense
@@ -127,7 +127,7 @@ module.exports = async function (models) {
               }))
               // A memo allows you to add your own metadata to a transaction. It's
               // optional and does not affect how Stellar treats the transaction.
-              .addMemo(StellarSdk.Memo.text('XLM Tipping bot'))
+              .addMemo(StellarSdk.Memo.text(memo.length ? memo : "XLM Tipping Bot"))
               .build()
             // Sign the transaction to prove you are actually the person sending it.
             transaction.sign(keyPair)
@@ -143,12 +143,13 @@ module.exports = async function (models) {
     send: async function (tx) {
       return new Promise(async (resolve, reject) => {
         try {
-          await server.submitTransaction(tx)
-          resolve()
+          const transactionResult = await server.submitTransaction(tx);
+          console.log("Horizon tx result: ", transactionResult);
+          resolve(transactionResult);
         } catch (exc) {
-          console.log('WITHDRAWAL_SUBMISSION_FAILED')
-          console.log(exc)
-          reject('WITHDRAWAL_SUBMISSION_FAILED')
+          console.log('WITHDRAWAL_SUBMISSION_FAILED');
+          console.log(exc);
+          reject('WITHDRAWAL_SUBMISSION_FAILED');
         }
       })
     }
