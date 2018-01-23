@@ -40,7 +40,8 @@ class Tip extends Command {
 
 /**
  * Withdraw allows users to take XLM out of the tipping bot and be delivered either to their default wallet
- * which was given previously to the Register command, or can also be given as a separate argument in the Withdraw command
+ * which was given previously via the Register command, or can also be given as an argument when the Withdraw command is made.
+ *
  */
 class Withdraw extends Command {
   constructor(adapter, sourceId, amount, address = null){
