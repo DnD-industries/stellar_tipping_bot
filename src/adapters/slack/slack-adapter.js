@@ -22,6 +22,11 @@ function formatMessage(txt) {
       `[About Stellar](https://www.stellar.org/)`
 }
 
+
+/**
+ * The Slack adapter itself is actually what is responsible for generating
+ * messages during particular events (such as when a user withdraws XLM, or doesn't have a high enough balance).
+ */
 class Slack extends Adapter {
 
   static get REG_FAIL_SAME_WALLET() {
