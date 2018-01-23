@@ -139,6 +139,7 @@ module.exports = async function (models) {
 
     /**
      * Send a transaction into the horizon network
+     * TODO: Verify that we are calling with the proper argument in reject(). Looks to me like this is a general function, not just for withdrawing.
      */
     send: async function (tx) {
       return new Promise(async (resolve, reject) => {

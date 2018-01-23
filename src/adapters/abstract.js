@@ -21,6 +21,13 @@ class Adapter extends EventEmitter {
   }
 
   // *** +++ Deposit Hook Functions +
+
+  /**
+   *
+   * @param sourceAccount The uniqueId of the account which made the deposit
+   * @param amount The amount in XLM of the deposit
+   * @returns {Promise<void>}
+   */
   async onDeposit (sourceAccount, amount) {
     // Override this or listen to events!
     this.emit('deposit', sourceAccount, amount)
@@ -81,65 +88,146 @@ class Adapter extends EventEmitter {
     this.emit('withdrawalReferenceError', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   *
+   * Called when the public key address you're trying to withdraw to doesn't exist
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
   async onWithdrawalDestinationAccountDoesNotExist (withdrawal) {
     // Override this or listen to events!
     this.emit('withdrawalDestinationAccountDoesNotExist', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   *
+   * Called when you try to withdraw with no address
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
   async onWithdrawalNoAddressProvided (withdrawal) {
     // Override this or listen to events!
     this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   *
+   * Called when you try to make a withdraw with an invalid amount, such as "asdf"
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
   async onWithdrawalInvalidAmountProvided (withdrawal) {
     // Override this or listen to events!
     this.emit('withdrawalInvalidAmountProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   *
+   * Called when the user does not have a high enough balance to complete their withdrawal.
+   * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
   async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
     // Override this or listen to events!
     this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance)
   }
 
+  /**
+   * Called when, for any reason, we attempt to withdraw but sending the transaction to the Horizon server fails.
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
   async onWithdrawalSubmissionFailed (withdrawal) {
     // Override this or listen to events!
     this.emit('withdrawalSubmissionFailed', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   *
+   * Called when you try to withdraw with any invalid address (should only occur when the address is provided as an additional argument / is not retreived directly from the Account db).
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
   async onWithdrawalInvalidAddress (withdrawal) {
     // Override this or listen to events!
    this.emit('withdrawalInvalidAddress', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   * Called on a successfull withdrawal
+   * @param withdrawal {Withdraw}
+   * @param address {String} The address to which the withdrawal was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {Promise<void>}
+   */
   async onWithdrawal (withdrawal, address) {
     // Override this or listen to events!
     this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash)
   }
 
   // *** +++ Registration related functions +
+  /**
+   * Called when the user tries to register with an invalid wallet address.
+   *
+   * @param walletAddressGiven
+   * @returns {Promise<string>}
+   */
   async onRegistrationBadWallet (walletAddressGiven) {
     return `${walletAddressGiven} is not a valid Public Key / wallet address`
   }
 
+  /**
+   * Called when the user successfully registers and replaces their old wallet with a new wallet.
+   *
+   * @param oldWallet {String} The old wallet which has now been replaced
+   * @param newWallet {String} The new wallet address of the user
+   * @returns {Promise<string>}
+   */
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
     return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``
   }
 
+  /**
+   * Called when the user tries to register with the wallet they are already registered with.
+   *
+   * @param walletAddress {String} The wallet address the user was trying to replace with the same value
+   * @returns {Promise<string>}
+   */
   async onRegistrationSameAsExistingWallet(walletAddress) {
     return `You are already using the public key \`${walletAddress}\``
   }
 
+  /**
+   * Called when the user tries to register a wallet address which another user has already registered.
+   *
+   * @param walletAddress {String} The wallet address which the user was trying to replace.
+   * @returns {Promise<string>}
+   */
   async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
     // TODO: Factor contact info out into env vars or something
     return `Another user has already registered the wallet address \`${walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`
   }
 
+  /**
+   * Called when the user registers a wallet for the first time i.e. they did not previously have a wallet address.
+   *
+   * @param walletAddress {String} The wallet address the user has registered.
+   * @returns {Promise<string>}
+   */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
     return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`
   }
 
   /**
-   *  Should receive a Command.Tip object
+   * Will transfer the tip provided if possible, otherwise will call the appropriate function on the adapter
+   * in the event that there is an insufficient balance or other issue.
+   * @param tip {Tip}
+   * @returns {Promise<void>}
    */
   async receivePotentialTip (tip) {
       // Let's see if the source has a sufficient balance
@@ -181,6 +269,8 @@ class Adapter extends EventEmitter {
   }
 
   /**
+   * Will cause the bot to send the requested amount of XLM to the withdrawer's provided wallet address if possible,
+   * otherwise will call the appropriate function on the adapter in the event that there is an insufficient balance or other issue.
    *
    * @param withdrawalRequest {Withdraw}
    * @returns {Promise<void>}
@@ -244,17 +334,19 @@ class Adapter extends EventEmitter {
   }
 
   /**
-   * Validates the options provided and gives back an objet wher the key is the request option
+   * * Validates the options provided and gives back an object wher the key is the request option
    * and the value is the value which will be set on an account.
    *
    * Feel free to do any validation you like. Just be sure to handle errors / rejections to your liking.
    *
    * Technically 'options' can look like anything you want, but right now we only support changing wallet address.
    *
-   * {
+   *  * {
    *     walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB',
    * }
    *
+   * @param options
+   * @returns {{walletAddress: string|string|string|*|null|string}}
    */
     setAccountOptions(options) {
       let walletAddr = options.walletAddress
