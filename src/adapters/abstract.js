@@ -123,20 +123,6 @@ class Adapter extends EventEmitter {
     return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`
   }
 
-
-  /**
-     * // Being that each platform (Reddit, Twitter, Slack...) can have different
-     * means of initiating the tipping process, and may even have multiple,
-     * each adapter is responsible for handling the extraction of the tip amount
-     * from users' commands.
-     * @param tipText The original command given by the tipbot user
-     */
-  // extractTipAmount (tipText) {
-  //   // Override me
-  //     console.error("Abstract extractTipAmount() should not get called")
-  //     return undefined
-  // }
-
   /**
    *  Should receive a Command.Tip object
    */
