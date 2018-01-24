@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/DnD-industries/stellar_tipping_bot.svg?branch=dev)](https://travis-ci.org/DnD-industries/stellar_tipping_bot)
+
 # Starry - A Stellar tipbot for Slack
 
 ## Description
