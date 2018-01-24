@@ -34,7 +34,7 @@ describe('adapter', async () => {
       }).then((account) => Account.events.emit('DEPOSIT', account, new Big('50')))
     })
 
-    it ('should not call onDeposit when the adapter is correct', () => {
+    it ('should not call onDeposit when the adapter is incorrect', () => {
       const Account = adapter.config.models.account
 
       adapter.on('deposit', () => { throw new Error() })
@@ -47,6 +47,27 @@ describe('adapter', async () => {
       }).then((account) => Account.events.emit('DEPOSIT', account, '50'))
     })
   })
+
+  // describe('refund', () => {
+  //   it ('should call onRefund when a transaction refund event is emitted', (done) => {
+  //     const Account = adapter.config.models.account;
+
+  //     adapter.on('REFUND', () => done())
+  //     adapter.name = 'testing'
+
+  //     Transaction.createAsync({
+  //       memoId: "",
+  //       amount: record.amount,
+  //       createdAt: new Date(record.created_at),
+  //       asset: record.asset_type,
+  //       cursor: record.paging_token,
+  //       source: record.from,
+  //       target: record.to,
+  //       hash: record.transaction_hash,
+  //       type: 'deposit'
+  //     }).then((transaction) => Transaction.events.emit('REFUND', transaction))
+  //   })
+  // })
 
   describe('receiveWithdrawalRequest', () => {
 

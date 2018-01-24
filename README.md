@@ -1,5 +1,5 @@
 # Starry - A Stellar tipbot for Slack
-
+[![Build Status](https://travis-ci.org/DnD-industries/stellar_tipping_bot.svg?branch=dev)](https://travis-ci.org/DnD-industries/stellar_tipping_bot)
 ## Description
 Starry is a tipbot which allows Slack participants to send tips directly to other Slack participants without ever compromising their private keys by placing them on a 3rd party server. 
 
