@@ -96,6 +96,7 @@ class Adapter extends EventEmitter {
 
   // *** +++ Withdrawael Hook Functions +
   /**
+   * Gets called when there is a problem submitting the transaction to the Horizon server with the Stellar SDK.
    *
    * @param withdrawal {Withdraw}
    * @returns {Promise<void>}
@@ -124,9 +125,9 @@ class Adapter extends EventEmitter {
    * @param withdrawal {Withdraw}
    * @returns {Promise<void>}
    */
-  async onWithdrawalNoAddressProvided (withdrawal) {
+  async onWithdrawalNoAddressProvided (withdrawal, address) {
     // Override this or listen to events!
-    this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
+      this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -309,7 +310,7 @@ class Adapter extends EventEmitter {
     const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
-      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash);
+        return this.onWithdrawalNoAddressProvided(withdrawalRequest, address);
     }
 
 

@@ -5,52 +5,45 @@ const Utils       = require('../../utils')
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const Command     = require('../commands/command')
 
-// Constants
-const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
-const _REG_FAIL_SAME_WALLET = "The user has already registered with this wallet"
-const _REG_FAIL_WALLET_ALREADY_REGISTERED = "Another user has already registered with that wallet"
-
-function formatMessage(txt) {
-  return txt +
-      '\n\n\n\n' + `*This bot is in BETA Phase. Everything runs on the testnet. Do not send real XLM!*` +
-      '\n\n\n\n' +
-      `[Deposit](https://www.reddit.com/user/stellar_bot/comments/7o2ex9/deposit/) | ` +
-      `[Withdraw](https://np.reddit.com/message/compose/?to=${process.env.REDDIT_USER}&subject=Withdraw&message=Amount%20XLM%0Aaddress%20here) | ` +
-      `[Balance](https://np.reddit.com/message/compose/?to=${process.env.REDDIT_USER}&subject=Balance&message=Tell%20me%20my%20XLM%20Balance!) | ` +
-      `[Help](https://www.reddit.com/user/stellar_bot/comments/7o2gnd/help/) | ` +
-      `[Donate](https://www.reddit.com/user/stellar_bot/comments/7o2ffl/donate/) | ` +
-      `[About Stellar](https://www.stellar.org/)`
-}
-
-
 /**
  * The Slack adapter itself is actually what is responsible for generating
  * messages during particular events (such as when a user withdraws XLM, or doesn't have a high enough balance).
  */
 class Slack extends Adapter {
 
-  static get REG_FAIL_SAME_WALLET() {
-    return _REG_FAIL_SAME_WALLET;
-  }
-
-  static get REG_FAIL_WALLET_VALIDATION() {
-    return _REG_FAIL_WALLET_VALIDATION;
-  }
-
   async onTipWithInsufficientBalance (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
     return `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(account.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``
   }
 
+  // TODO: Put this under test.
+  /**
+   * Called when our attempt at placing the tip transaction through Horizon fails for some reason.
+   * Could be a non-responsive server, or any number of reasons.
+   * @param tip
+   * @param amount
+   * @returns {Promise<string>}
+   */
   async onTipTransferFailed(tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    return "There was an error while trying to send your tip. Please try again."
   }
 
+  /**
+   * Called when the user attempts to tip themself.
+   * // TODO: Should probably come up with a less generic sounding name than this.
+   *
+   * @param tip {Tip}
+   * @param amount The amount which the user tried to tip
+   * @returns {Promise<string>}
+   */
   async onTipReferenceError (tip, amount) {
     return `What is the sound of one tipper tipping?`
   }
 
   /**
+   * Called when the tip goes through successfully.
+   * For the Slack Adapter, a DM will get sent to the tip recipient whose content depends on whether or not they are already registered.
+   * Text is also returned so that the Slack Server can respond with an appropriate message.
    *
    * @param tip {Tip}
    * @param amount {float}
@@ -68,44 +61,91 @@ class Slack extends Adapter {
     return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
-  async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
+  /**
+   *
+   * @param withdrawal {Withdraw}
+   * @param address
+   * @returns {Promise<string>}
+   */
+  // TODO: Refactor {Withdraw}
+  async onWithdrawalNoAddressProvided (withdrawal, address) {
     return "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument"
   }
 
-  async onWithdrawalReferenceError (uniqueId, address, amount, hash) {
-    // console.log(`XML withdrawal failed - unknown error for ${uniqueId}.`)
-    // exeucte('composeMessage', {
-    //   to: uniqueId,
-    //   subject: 'XLM Withdrawal failed',
-    //   text: formatMessage(`An unknown error occured. This shouldn't have happened. Please contact the bot.`)
-    // })
+
+  /**
+   * Gets called if ever a withdraw command is sent which provides the Tip Bot's own wallet address
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  // TODO: Implement this. We may want to refund to users in the event this happens?
+  async onWithdrawalReferenceError (withdrawal) {
+
   }
 
-  async onWithdrawalDestinationAccountDoesNotExist (uniqueId, address, amount, hash) {
-    // console.log(`XML withdrawal failed - no public address for ${uniqueId}.`)
-    // await callReddit('composeMessage', {
-    //   to: uniqueId,
-    //   subject: 'XLM Withdrawal failed',
-    //   text: formatMessage(`We could not withdraw. The requested public address does not exist.`)
-    // })
+  /**
+   * Called when the Stellar SDK determines that the destination for a withdrawal doesn't yet actually exist.
+   * Note that this is distinct from onWithdrawalInvalidAddress. You can have a valid address that doesn't exist.
+   * TODO: We should definitely implement this. Otherwise, we're paying for transactions that are bound to fail.
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalDestinationAccountDoesNotExist (withdrawal) {
+
   }
 
+  /**
+   * Called when the user submits a withdrawal but doesn't have enough XLM in balance to cover the amount.
+   *
+   * @param amountRequested The user's amount requested to withdraw in XLM
+   * @param balance The user's current balance in XLM
+   * @returns {Promise<string>}
+   */
   async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
     return `You requested to withdraw \`${Utils.formatNumber(amountRequested)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
+  /**
+   * Called when the user attempts to withdraw to an invalid address. Should only occur when supplying
+   * a secondary wallet address, which is to say validation should prevent users from registering
+   * an invalid address (though they may be able to register a non-existant address).
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<string>}
+   */
   async onWithdrawalInvalidAddress (withdrawal) {
     return `\`${withdrawal.address}\` is not a valid public key. Please try again with a valid public key.`
   }
 
+  /**
+   * Gets called when there is a problem submitting the transaction to the Horizon server with the Stellar SDK.
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   * // TODO: Implement this
+   */
   async onWithdrawalSubmissionFailed (withdrawal) {
     this.emit('withdrawalSubmissionFailed ', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
+  /**
+   * Called when the user provides an invalid withdrawal amount, such as a string containing letters.
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<string>}
+   */
   async onWithdrawalInvalidAmountProvided (withdrawal) {
     return `\`${withdrawal.amount}\` is not a valid withdrawal amount. Please try again.`
   }
 
+  /**
+   * Called when a user successfully withdraws any amount of XLM.
+   *
+   * @param withdrawal {Withdraw}
+   * @param address {String}
+   * @returns {Promise<string>}
+   */
   async onWithdrawal (withdrawal, address) {
     return `You withdrew \`${Utils.formatNumber(withdrawal.amount)} XLM\` to your wallet at \`${address}\``
   }
@@ -116,7 +156,7 @@ class Slack extends Adapter {
    *
    * @param command a Registration command object
    */
-  async handleRegistrationRequest(command) {
+  async handleRegistrationRequest(command) {``
 
     if (!(command.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(command.walletPublicKey))) {
       return this.onRegistrationBadWallet(command.walletPublicKey)
@@ -162,21 +202,12 @@ class Slack extends Adapter {
     }
   }
 
-
   constructor (config) {
     super(config);
-
     this.name = 'slack';
     this.client = new slackClient(oauth_token);
   }
 
-  extractTipAmount (tipText) {
-    const matches =  tipText.match(/\+\+\+([\d\.]*)[\s{1}]?XLM/i)
-    if (matches) {
-      return matches[1]
-    }
-    return undefined
-  }
 }
 
 module.exports = Slack;
