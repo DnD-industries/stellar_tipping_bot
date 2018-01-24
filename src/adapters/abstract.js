@@ -7,17 +7,24 @@ const Promise = require('../../node_modules/bluebird')
 class Adapter extends EventEmitter {
 
   constructor (config) {
-    super()
+    super();
 
-    this.config = config
+    this.config = config;
 
-    this.Account = config.models.account
+    this.Account = config.models.account;
+    this.Transaction = config.models.transaction;
 
     this.Account.events.on('DEPOSIT', (sourceAccount, amount) => {
       if (this.name === sourceAccount.adapter) {
-        this.onDeposit(sourceAccount, amount.toFixed(7))
+        this.onDeposit(sourceAccount, amount.toFixed(7));
+
+        //TODO: notify user of received deposit
       }
-    })
+    });
+
+    this.Transaction.events.on('REFUND', (transaction) => {
+      this.onRefund(transaction);
+    });
   }
 
   // *** +++ Deposit Hook Functions +
@@ -30,7 +37,17 @@ class Adapter extends EventEmitter {
    */
   async onDeposit (sourceAccount, amount) {
     // Override this or listen to events!
-    this.emit('deposit', sourceAccount, amount)
+    this.emit('deposit', sourceAccount, amount);
+  }
+
+  async onRefund (transaction) {
+    // Override this or listen to events!
+    this.emit('refund', transaction);
+    try {
+      await transaction.refund(this.config.stellar, transaction);
+    } catch (exc) {
+      console.log("refund exception:", exc);
+    }
   }
 
   /**
@@ -41,7 +58,7 @@ class Adapter extends EventEmitter {
    */
   async onTipWithInsufficientBalance (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tipWithInsufficientBalance', potentialTip, amount)
+    this.emit('tipWithInsufficientBalance', potentialTip, amount);
   }
 
   /**
@@ -52,7 +69,7 @@ class Adapter extends EventEmitter {
    */
   async onTipTransferFailed (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tipTransferFailed', potentialTip, amount)
+    this.emit('tipTransferFailed', potentialTip, amount);
   }
 
   /**
@@ -63,7 +80,7 @@ class Adapter extends EventEmitter {
    */
   async onTipReferenceError (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tipReferenceError', potentialTip, amount)
+    this.emit('tipReferenceError', potentialTip, amount);
   }
 
   /**
@@ -74,7 +91,7 @@ class Adapter extends EventEmitter {
    */
   async onTip (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tip', potentialTip, amount)
+    this.emit('tip', potentialTip, amount);
   }
 
   // *** +++ Withdrawael Hook Functions +
@@ -85,7 +102,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalReferenceError (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalReferenceError', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    this.emit('withdrawalReferenceError', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -97,7 +114,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalDestinationAccountDoesNotExist (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalDestinationAccountDoesNotExist', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    this.emit('withdrawalDestinationAccountDoesNotExist', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -109,7 +126,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalNoAddressProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -121,7 +138,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalInvalidAmountProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalInvalidAmountProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    this.emit('withdrawalInvalidAmountProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -134,7 +151,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
     // Override this or listen to events!
-    this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance)
+    this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance);
   }
 
   /**
@@ -144,7 +161,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalSubmissionFailed (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalSubmissionFailed', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    this.emit('withdrawalSubmissionFailed', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -156,7 +173,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalInvalidAddress (withdrawal) {
     // Override this or listen to events!
-   this.emit('withdrawalInvalidAddress', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+   this.emit('withdrawalInvalidAddress', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -167,7 +184,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawal (withdrawal, address) {
     // Override this or listen to events!
-    this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash)
+    this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
   }
 
   // *** +++ Registration related functions +
@@ -178,7 +195,7 @@ class Adapter extends EventEmitter {
    * @returns {Promise<string>}
    */
   async onRegistrationBadWallet (walletAddressGiven) {
-    return `${walletAddressGiven} is not a valid Public Key / wallet address`
+    return `${walletAddressGiven} is not a valid Public Key / wallet address`;
   }
 
   /**
@@ -189,7 +206,7 @@ class Adapter extends EventEmitter {
    * @returns {Promise<string>}
    */
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``
+    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``;
   }
 
   /**
@@ -199,7 +216,7 @@ class Adapter extends EventEmitter {
    * @returns {Promise<string>}
    */
   async onRegistrationSameAsExistingWallet(walletAddress) {
-    return `You are already using the public key \`${walletAddress}\``
+    return `You are already using the public key \`${walletAddress}\``;
   }
 
   /**
@@ -210,7 +227,7 @@ class Adapter extends EventEmitter {
    */
   async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
     // TODO: Factor contact info out into env vars or something
-    return `Another user has already registered the wallet address \`${walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`
+    return `Another user has already registered the wallet address \`${walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`;
   }
 
   /**
@@ -220,7 +237,7 @@ class Adapter extends EventEmitter {
    * @returns {Promise<string>}
    */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`;
   }
 
   /**
@@ -231,27 +248,27 @@ class Adapter extends EventEmitter {
    */
   async receivePotentialTip (tip) {
       // Let's see if the source has a sufficient balance
-      const source = await this.Account.getOrCreate(tip.adapter, tip.sourceId)
-      const payment = new Big(tip.amount)
-      const hash = tip.hash
+      const source = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
+      const payment = new Big(tip.amount);
+      const hash = tip.hash;
 
       if (!source.canPay(payment)) {
-        return this.onTipWithInsufficientBalance(tip, payment.toFixed(7))
+        return this.onTipWithInsufficientBalance(tip, payment.toFixed(7));
       }
 
       if (tip.sourceId === tip.targetId) {
-        return this.onTipReferenceError(tip, payment.toFixed(7))
+        return this.onTipReferenceError(tip, payment.toFixed(7));
       }
 
-      const target = await this.Account.getOrCreate(tip.adapter, tip.targetId)
+      const target = await this.Account.getOrCreate(tip.adapter, tip.targetId);
 
       // ... and tip.
     try {
-        await source.transfer(target, payment, hash)
-        return this.onTip(tip, payment.toFixed(7))
+        await source.transfer(target, payment, hash);
+        return this.onTip(tip, payment.toFixed(7));
     } catch (exc) {
         if (exc !== 'DUPLICATE_TRANSFER') {
-          this.onTipTransferFailed(tip, payment.toFixed(7))
+          this.onTipTransferFailed(tip, payment.toFixed(7));
         }
     }
   }
@@ -263,8 +280,8 @@ class Adapter extends EventEmitter {
    */
   requestBalance (adapter, uniqueId) {
     return new Promise(async (resolve, reject) => {
-      const target = await this.Account.getOrCreate(adapter, uniqueId)
-      resolve(target.balance)
+      const target = await this.Account.getOrCreate(adapter, uniqueId);
+      resolve(target.balance);
     })
   }
 
@@ -276,49 +293,49 @@ class Adapter extends EventEmitter {
    * @returns {Promise<void>}
    */
   async receiveWithdrawalRequest (withdrawalRequest) {
-    const adapter = withdrawalRequest.adapter
-    const uniqueId = withdrawalRequest.uniqueId
-    const hash = withdrawalRequest.hash
-    const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId)
-    const amountRequested = withdrawalRequest.amount
+    const adapter = withdrawalRequest.adapter;
+    const uniqueId = withdrawalRequest.uniqueId;
+    const hash = withdrawalRequest.hash;
+    const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId);
+    const amountRequested = withdrawalRequest.amount;
     let withdrawalAmount;
     try {
-      withdrawalAmount = new Big(amountRequested)
+      withdrawalAmount = new Big(amountRequested);
     } catch (e) {
-      console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`)
-      console.log(`Withdrawal request amount is ${amountRequested}`)
-      return this.onWithdrawalInvalidAmountProvided(withdrawalRequest)
+      console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`);
+      console.log(`Withdrawal request amount is ${amountRequested}`);
+      return this.onWithdrawalInvalidAmountProvided(withdrawalRequest);
     }
-    const fixedAmount = withdrawalAmount.toFixed(7)
+    const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
-      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash);
     }
 
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
-      return this.onWithdrawalInvalidAddress(withdrawalRequest)
+      return this.onWithdrawalInvalidAddress(withdrawalRequest);
     }
 
     // Fetch the account
-    const target = await this.Account.getOrCreate(adapter, uniqueId)
+    const target = await this.Account.getOrCreate(adapter, uniqueId);
     if (!target.canPay(withdrawalAmount)) {
-      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance)
+      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance);
     }
 
     // Withdraw
     try {
-      await target.withdraw(this.config.stellar, address, withdrawalAmount, hash)
-      return this.onWithdrawal(withdrawalRequest, address)
+      await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
+      return this.onWithdrawal(withdrawalRequest, address);
     } catch (exc) {
       if (exc === 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
-        return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash)
+        return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_REFERENCE_ERROR') {
-        return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash)
+        return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {
-        return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash)
+        return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash);
       }
       // throw (exc)
     }
@@ -330,7 +347,7 @@ class Adapter extends EventEmitter {
    * @returns {Promise<void>}
    */
   async receiveBalanceRequest (cmd) {
-    this.emit('receiveBalanceRequest', cmd)
+    this.emit('receiveBalanceRequest', cmd);
   }
 
   /**
@@ -349,14 +366,14 @@ class Adapter extends EventEmitter {
    * @returns {{walletAddress: string|string|string|*|null|string}}
    */
     setAccountOptions(options) {
-      let walletAddr = options.walletAddress
+      let walletAddr = options.walletAddress;
       if(!StellarSdk.StrKey.isValidEd25519PublicKey(walletAddr)) {
-        throw new Error("setAccountOptions was given a bad public key")
+        throw new Error("setAccountOptions was given a bad public key");
       }
       // We could just return `options` here, but in the interest
       // of future proofing / illustrating what we're more likely to do later as
       // options are added...
-      return {walletAddress : walletAddr}
+      return {walletAddress : walletAddr};
   }
 }
 

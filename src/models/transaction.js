@@ -1,6 +1,7 @@
 const orm = require('orm')
 const Big = require('big.js')
 const utils = require('../utils')
+const md5 = require('md5');
 
 module.exports = (db) => {
 
@@ -32,64 +33,65 @@ module.exports = (db) => {
       /**
        * Refund money from the main account to the source public account of the transaction
        *
-       * You can get the stellar object from the adapter config.
+       * You get the stellar object from the adapter config.
        *
-       * to should be a public address
-       * refundAmount can be a string or a Big
-       * hash should just be something unique 
+       * @param stellar The stellar object to send the refund with
+       * @param transaction The transaction to be refunded
+       * @returns {Promise<void>}
        */
-      refund: async function (stellar, to, refundAmount) {
-        const Transaction = db.models.transaction
-        const Action = db.models.action
+      refund: async function (stellar, transaction) {
+        const Transaction = db.models.transaction;
+        const Action      = db.models.action;
+        const Account     = db.models.account;
 
         return await Transaction.withinTransaction(async () => {
-          const memo = 'XLM tipping bot refund, originating tx id: ' + this.hash
-          const amount = new Big(refundAmount);
+          const memo = 'Tipping bot refund: ' + this.hash.substring(0,6);
+          const amount = new Big(transaction.amount) - 0.00001; //TODO: Grab the tx fee dynamically from Horizon
           const now = new Date();
-          const hash = utils.uuidv4();
+          const tempHash = md5(transaction.source + amount + now);
+          console.log("tempHash:", tempHash);
+          //TODO: Validate that the tx we're refunding in fact does not have an associated account it can be credited to
+          //accountsExists = await Account.oneAsync({ adapter, uniqueId })
 
-          //Do a check here to make sure the account we're sending to in fact does not exist in our db
-
-          const doc = {
+          const refundTransaction = {
             memoId: memo,
             amount: amount.toFixed(7),
             createdAt: now.toISOString(),
             asset: 'native',
             source: stellar.address,
-            target: to,
-            hash: hash,
+            target: transaction.source,
+            hash: tempHash,
             type: 'refund'
           };
 
           const txExists = await Transaction.existsAsync({
-            hash: hash,
-            type: 'withdrawal',
-            target: to
+            hash: tempHash
           });
 
           if (txExists) {
             // Tx already happened within a concurrent transaction, let's skip
-            this.balance = refundBalance.plus(amount).toFixed(7);
-            throw 'DUPLICATE_WITHDRAWAL';
+            throw 'DUPLICATE_REFUND';
           }
 
           try {
-            const tx = await stellar.createTransaction(to, refundAmount.toFixed(7), hash, memo);
+            const tx = await stellar.createTransaction(transaction.source, amount.toFixed(7), tempHash, memo);
             const sentTransaction = await stellar.send(tx);
+            refundTransaction.hash = sentTransaction.hash; //assign the tx id from the stellar network
           } catch (exc) {
             throw exc;
           }
 
+
           this.credited = false;
           this.refunded = true;
           await this.saveAsync();
-          await Transaction.createAsync(doc);
+          await Transaction.createAsync(refundTransaction);
           await Action.createAsync({
-            hash: hash,
-            type: 'withdrawal',
+            hash: refundTransaction.hash,
             sourceaccount_id: this.id,
+            type: 'refund',
             amount: amount.toFixed(7),
-            address: to
+            address: transaction.source
           });
         })
       }
@@ -105,13 +107,14 @@ module.exports = (db) => {
         }
       },
       afterSave: async function (success) {
-        if (success && !this.credited && this.type === 'deposit') {
-          const Account = db.models.account
+        if (success && !this.credited && !this.refunded && this.type === 'deposit') {
+          console.log("afterSave: ", JSON.stringify(this));
+          const Account = db.models.account;
 
           //***If the CLOSE_DEPOSIT env variable is activated, refund ALL new deposits***
           if(process.env.CLOSE_DEPOSITS.toLowerCase() === "true"){
             console.log("DEPOSITS CLOSED, refunding transaction:", JSON.stringify(this));
-            Transaction.events.emit('REFUND', this, this.amount);
+            Transaction.events.emit('REFUND', this);
             return;
           }
 
@@ -119,8 +122,8 @@ module.exports = (db) => {
           if (this.memoId) {
             const accountParts = this.memoId.replace(/\s/g, '').split('/')
             if (accountParts.length === 2) {
-              const adapter = accountParts[0]
-              const uniqueId = accountParts[1]
+              const adapter = accountParts[0];
+              const uniqueId = accountParts[1];
 
               //If this transaction/memo is from reddit, then use the memo parameters to parse the deposit
               if(adapter === "reddit"){
@@ -132,7 +135,7 @@ module.exports = (db) => {
                   return; //Return, as we found our account
                 }
               } else {
-                console.error("Unrecognized transaction memo: '" + this.memoId + "'. Searching by public wallet address...")
+                console.error("Unrecognized transaction memo: '" + this.memoId + "'. Searching by public wallet address...");
               }
             }
           }
@@ -146,8 +149,8 @@ module.exports = (db) => {
             Transaction.creditDepositToAccount(this, userWithWalletId);
           } else {
             //If there is no user registered with this public wallet address we need to refund the deposit.
-            console.error("Unrecognized source wallet address in deposit transaction, issuing a refund.")
-            Transaction.events.emit('REFUND', this, this.amount);
+            console.error("Unrecognized source wallet address in deposit transaction, issuing a refund.");
+            Transaction.events.emit('REFUND', this);
           }
         }
       }

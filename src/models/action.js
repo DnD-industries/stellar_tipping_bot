@@ -29,7 +29,7 @@ module.exports = (db) => {
     }
   })
 
-  Action.hasOne('sourceAccount', db.models.account, { required: true, reverse: 'sourceActions' })
+  Action.hasOne('sourceAccount', db.models.account, { reverse: 'sourceActions' })
   Action.hasOne('targetAccount', db.models.account, { reverse: 'targetActions' })
 
   return Action

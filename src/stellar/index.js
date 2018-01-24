@@ -98,7 +98,7 @@ module.exports = async function (models) {
       return new Promise(function (resolve, reject) {
         // Do not deposit to self, it wouldn't make sense
         if (to === publicKey) {
-          data = 'WITHDRAWAL_REFERENCE_ERROR'
+          data = 'TRANSACTION_REFERENCE_ERROR'
           return reject(data)
         }
 
@@ -108,7 +108,7 @@ module.exports = async function (models) {
         server.loadAccount(to)
           // If the account is not found, surface a nicer error message for logging.
           .catch(StellarSdk.NotFoundError, function (error) {
-            data = 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST'
+            data = 'DESTINATION_ACCOUNT_DOES_NOT_EXIST'
             return reject(data)
           })
           // If there was no error, load up-to-date information on your account.
@@ -127,7 +127,7 @@ module.exports = async function (models) {
               }))
               // A memo allows you to add your own metadata to a transaction. It's
               // optional and does not affect how Stellar treats the transaction.
-              .addMemo(StellarSdk.Memo.text(memo.length ? memo : "XLM Tipping Bot"))
+              .addMemo(StellarSdk.Memo.text(memo.length ? memo.substring(0,27) : "XLM Tipping Bot"))
               .build()
             // Sign the transaction to prove you are actually the person sending it.
             transaction.sign(keyPair)
@@ -146,11 +146,11 @@ module.exports = async function (models) {
         try {
           const transactionResult = await server.submitTransaction(tx);
           console.log("Horizon tx result: ", transactionResult);
-          resolve(transactionResult);
+          return resolve(JSON.stringify(transactionResult));
         } catch (exc) {
           console.log('WITHDRAWAL_SUBMISSION_FAILED');
           console.log(exc);
-          reject('WITHDRAWAL_SUBMISSION_FAILED');
+          return reject('WITHDRAWAL_SUBMISSION_FAILED');
         }
       })
     }
