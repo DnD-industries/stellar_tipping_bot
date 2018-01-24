@@ -64,11 +64,10 @@ class Slack extends Adapter {
   /**
    *
    * @param withdrawal {Withdraw}
-   * @param address
    * @returns {Promise<string>}
    */
   // TODO: Refactor {Withdraw}
-  async onWithdrawalNoAddressProvided (withdrawal, address) {
+  async onWithdrawalNoAddressProvided (withdrawal) {
     return "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument"
   }
 

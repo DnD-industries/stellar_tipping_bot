@@ -125,9 +125,9 @@ class Adapter extends EventEmitter {
    * @param withdrawal {Withdraw}
    * @returns {Promise<void>}
    */
-  async onWithdrawalNoAddressProvided (withdrawal, address) {
+  async onWithdrawalNoAddressProvided (withdrawal) {
     // Override this or listen to events!
-      this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
+      this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -310,7 +310,7 @@ class Adapter extends EventEmitter {
     const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
-        return this.onWithdrawalNoAddressProvided(withdrawalRequest, address);
+        return this.onWithdrawalNoAddressProvided(withdrawalRequest);
     }
 
 
