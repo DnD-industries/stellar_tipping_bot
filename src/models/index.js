@@ -27,7 +27,7 @@ module.exports = async () => {
     conn_url = process.env.DATABASE_URL;
   } else {
     const password = process.env.PG_PASSWORD ? `:${process.env.PG_PASSWORD}` : "";
-    const host_with_port = process.env.PG_PORT.length ? `${process.env.PG_HOST}:${process.env.PG_PORT}` : process.env.PG_HOST;
+    const host_with_port = process.env.PG_PORT ? `${process.env.PG_HOST}:${process.env.PG_PORT}` : process.env.PG_HOST;
     conn_url = `postgres://${process.env.PG_USER}${password}@${host_with_port}/${process.env.PG_NAME}`;
   }
   conn_url += `?pool=false`;
