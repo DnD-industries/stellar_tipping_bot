@@ -11,18 +11,21 @@ module.exports = async function (models) {
   const events = new EventEmitter()
 
   console.log("publickey:", publicKey);
+  process.env.STELLAR_PUBLIC_KEY = publicKey; //set the public key associated with our private key, for use elsewhere
+
   if (process.env.MODE === 'production') {
     StellarSdk.Network.usePublicNetwork()
   } else {
     StellarSdk.Network.useTestNetwork()
   }
 
-  // latestTx = await Transaction.latest();
-
-  // if (latestTx) {
-  //   callBuilder.cursor(latestTx.cursor)
-  // }
-
+  //Retrieve the latest transaction involving our public key from the db
+  latestTx = await Transaction.latest();
+  //If we found a transaction in our db, use the latest, otherwise use the paging token defined in .env
+  const startingCursor = latestTx ? latestTx.cursor : process.env.STELLAR_CURSOR_PAGING_TOKEN;
+  console.log("Starting stream from Horizon from paging token:", startingCursor);
+  callBuilder.cursor(startingCursor);
+  
   callBuilder.stream({
     onmessage: (record) => {
       record.transaction()
@@ -90,12 +93,12 @@ module.exports = async function (models) {
      * hash should just be something unique - we use the msg id from reddit,
      * but a uuid4 or sth like that would work as well.
      */
-    createTransaction: function (to, amount, hash) {
+    createTransaction: function (to, amount, hash, memo = "") {
       let data = {to, amount, hash}
       return new Promise(function (resolve, reject) {
         // Do not deposit to self, it wouldn't make sense
         if (to === publicKey) {
-          data = 'WITHDRAWAL_REFERENCE_ERROR'
+          data = 'TRANSACTION_REFERENCE_ERROR'
           return reject(data)
         }
 
@@ -105,7 +108,7 @@ module.exports = async function (models) {
         server.loadAccount(to)
           // If the account is not found, surface a nicer error message for logging.
           .catch(StellarSdk.NotFoundError, function (error) {
-            data = 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST'
+            data = 'DESTINATION_ACCOUNT_DOES_NOT_EXIST'
             return reject(data)
           })
           // If there was no error, load up-to-date information on your account.
@@ -124,7 +127,7 @@ module.exports = async function (models) {
               }))
               // A memo allows you to add your own metadata to a transaction. It's
               // optional and does not affect how Stellar treats the transaction.
-              .addMemo(StellarSdk.Memo.text('XLM Tipping bot'))
+              .addMemo(StellarSdk.Memo.text(memo.length ? memo.substring(0,27) : "XLM Tipping Bot"))
               .build()
             // Sign the transaction to prove you are actually the person sending it.
             transaction.sign(keyPair)
@@ -136,16 +139,18 @@ module.exports = async function (models) {
 
     /**
      * Send a transaction into the horizon network
+     * TODO: Verify that we are calling with the proper argument in reject(). Looks to me like this is a general function, not just for withdrawing.
      */
     send: async function (tx) {
       return new Promise(async (resolve, reject) => {
         try {
-          await server.submitTransaction(tx)
-          resolve()
+          const transactionResult = await server.submitTransaction(tx);
+          console.log("Horizon tx result: ", transactionResult);
+          return resolve(JSON.stringify(transactionResult));
         } catch (exc) {
-          console.log('WITHDRAWAL_SUBMISSION_FAILED')
-          console.log(exc)
-          reject('WITHDRAWAL_SUBMISSION_FAILED')
+          console.log('WITHDRAWAL_SUBMISSION_FAILED');
+          console.log(exc);
+          return reject('WITHDRAWAL_SUBMISSION_FAILED');
         }
       })
     }

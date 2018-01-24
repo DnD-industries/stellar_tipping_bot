@@ -4,27 +4,39 @@ const slackMessage = require('./slack-message');
 
 class SlackCommandUtils {
     //"command":"/tip","text":"<@U8PTZ287N|d> 123"
+  /**
+   * @param msg {SLMessage}
+   * @returns {Command}
+   */
     extractCommandParamsFromMessage(msg) {
         let adapter     = "slack";
         let sourceId    = msg.uniqueUserID;
         let command;
         let params = this.findCommandParams(msg.text); //Get the locations of our command params
         let amount;
+        let address;
+        let targetId;
+        let walletPublicKey;
         //Remove the lead slash, and fall into the appropriate command case
         switch(msg.command.split('/')[1]) {
             case "register":
-                let walletPublicKey = params[0];
+                walletPublicKey = params[0];
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
-                let targetId = this.extractUserIdFromCommand(params[0]);
+                targetId = this.extractUserIdFromCommand(params[0]);
                 amount = parseFloat(params[1]);
                 command = new Command.Tip(adapter, sourceId, targetId, amount);
                 break;
             case "withdraw":
                 amount = parseFloat(params[0]);
-                let address = params.length > 1 ? params[1] : null;
+                address = params.length > 1 ? params[1] : null;
                 command = new Command.Withdraw(adapter, sourceId, amount, address);
+                break;
+            case "balance":
+                amount = parseFloat(params[0]);
+                address = params.length > 1 ? params[1] : null;
+                command = new Command.Balance(adapter, sourceId, address);
                 break;
             default:
                 console.error("Unknown command type:", msg.command);
@@ -34,15 +46,19 @@ class SlackCommandUtils {
         }
         return command;
     }
-    
-    /**
-     * Takes a string, which usually will be an escaped Slack userID string
-     * such as "<@U12345678|dlohnes>". In this case, U12345678 is the slack
-     * user ID unique to this person IN THIS TEAM. In order to generate
-     * a truly unique user ID, we'll need to append the team ID as well.
-     *
-     * See: https://api.slack.com/slash-commands#how_do_commands_work
-     */
+
+  /**
+   *
+   * Takes a string, which usually will be an escaped Slack userID string
+   * such as "<@U12345678|dlohnes>". In this case, U12345678 is the slack
+   * user ID unique to this person IN THIS TEAM. In order to generate
+   * a truly unique user ID, we'll need to append the team ID as well.
+   *
+   * See: https://api.slack.com/slash-commands#how_do_commands_work
+   *
+   * @param cmd {Command}
+   * @returns {string}
+   */
     extractUserIdFromCommand(cmd) {
         // If it doesn't contain @ and |, we're not interested. Just return what's given to us
         if(cmd.indexOf("@") < 0 || cmd.indexOf("|") < 0 ) {
@@ -52,6 +68,11 @@ class SlackCommandUtils {
         return result;
     }
 
+  /**
+   *
+   * @param cmd
+   * @returns {string[]}
+   */
     findCommandParams(cmd){
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
         const params = cmd.split(" ")

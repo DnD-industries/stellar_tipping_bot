@@ -1,12 +1,9 @@
-const express     = require('express');
-const app         = express();
-const bodyParser  = require('body-parser');
 const Adapter     = require('../abstract');
-const slmessage   = require('./slack-message');
-const slackUtils  = require('./slack-command-utils');
 const slackClient = require('./slack-client');
 const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
+const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
+const Command     = require('../commands/command')
 
 // Constants
 const _REG_FAIL_WALLET_VALIDATION = "The provided wallet address is invalid"
@@ -25,6 +22,11 @@ function formatMessage(txt) {
       `[About Stellar](https://www.stellar.org/)`
 }
 
+
+/**
+ * The Slack adapter itself is actually what is responsible for generating
+ * messages during particular events (such as when a user withdraws XLM, or doesn't have a high enough balance).
+ */
 class Slack extends Adapter {
 
   static get REG_FAIL_SAME_WALLET() {
@@ -36,7 +38,8 @@ class Slack extends Adapter {
   }
 
   async onTipWithInsufficientBalance (tip, amount) {
-    await callReddit('reply', formatMessage(`Sorry. I can not tip for you. Your balance is insufficient.`), tip.original)
+    const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
+    return `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(account.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``
   }
 
   async onTipTransferFailed(tip, amount) {
@@ -44,12 +47,25 @@ class Slack extends Adapter {
   }
 
   async onTipReferenceError (tip, amount) {
-    await callReddit('reply', formatMessage(`While self love is encouraged, self tipping is not.`), tip.original)
+    return `What is the sound of one tipper tipping?`
   }
 
+  /**
+   *
+   * @param tip {Tip}
+   * @param amount {float}
+   * @returns {Promise<string>}
+   */
   async onTip (tip, amount) {
-    // console.log(`Tip from ${tip.sourceId} to ${tip.targetId}.`)
-    // await callReddit('reply', formatMessage(`Thank you. You tipped **${payment} XLM** to *${success.targetId}*.`), tip.original)
+    const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
+    if(!account.walletAddress) {
+      this.client.sendPlainTextDMToSlackUser(tip.targetId,
+          `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`)
+    } else {
+      this.client.sendPlainTextDMToSlackUser(tip.targetId,
+          `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
+    }
+    return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
   async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
@@ -78,20 +94,20 @@ class Slack extends Adapter {
     return `You requested to withdraw \`${Utils.formatNumber(amountRequested)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
-  async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
-    return `\`${address}\` is not a valid public key. Please try again with a valid public key.`
+  async onWithdrawalInvalidAddress (withdrawal) {
+    return `\`${withdrawal.address}\` is not a valid public key. Please try again with a valid public key.`
   }
 
-  async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
-    this.emit('withdrawalSubmissionFailed ', uniqueId, address, amount, hash)
+  async onWithdrawalSubmissionFailed (withdrawal) {
+    this.emit('withdrawalSubmissionFailed ', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
   }
 
-  async onWithdrawalInvalidAmountProvided (uniqueId, address, amount, hash) {
-    return `\`${amount}\` is not a valid withdrawal amount. Please try again.`
+  async onWithdrawalInvalidAmountProvided (withdrawal) {
+    return `\`${withdrawal.amount}\` is not a valid withdrawal amount. Please try again.`
   }
 
-  async onWithdrawal (uniqueId, address, amount, hash) {
-    return `You withdrew \`${Utils.formatNumber(amount)} XLM\` to your wallet at \`${address}\``
+  async onWithdrawal (withdrawal, address) {
+    return `You withdrew \`${Utils.formatNumber(withdrawal.amount)} XLM\` to your wallet at \`${address}\``
   }
 
 
@@ -132,28 +148,26 @@ class Slack extends Adapter {
       return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
   }
-
   /**
-   * handleRegistrationRequest(command)
    *
-   * @param command a Withdrawal Command object
+   * @param cmd {Balance}
+   * @returns {Promise<void>}
    */
-  // TODO: This is a really bad code smell. Two things with the same intended behavior. 
-  async handleWithdrawalRequest(command) {
-    return this.receiveWithdrawalRequest(
-        {
-          adapter   : command.adapter,
-          uniqueId  : command.sourceId,
-          address   : command.address,
-          amount    : command.amount,
-          hash      : command.hash
-        })
+  async receiveBalanceRequest (cmd) {
+    const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
+    if(!account.walletAddress) {
+      return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
+    } else {
+      return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
+    }
   }
+
 
   constructor (config) {
     super(config);
 
     this.name = 'slack';
+    this.client = new slackClient(oauth_token);
   }
 
   extractTipAmount (tipText) {

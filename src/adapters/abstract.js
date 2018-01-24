@@ -7,169 +7,270 @@ const Promise = require('../../node_modules/bluebird')
 class Adapter extends EventEmitter {
 
   constructor (config) {
-    super()
+    super();
 
-    this.config = config
+    this.config = config;
 
-    this.Account = config.models.account
+    this.Account = config.models.account;
+    this.Transaction = config.models.transaction;
 
     this.Account.events.on('DEPOSIT', (sourceAccount, amount) => {
       if (this.name === sourceAccount.adapter) {
-        this.onDeposit(sourceAccount, amount.toFixed(7))
+        this.onDeposit(sourceAccount, amount.toFixed(7));
+
+        //TODO: notify user of received deposit
       }
-    })
+    });
+
+    this.Transaction.events.on('REFUND', (transaction) => {
+      this.onRefund(transaction);
+    });
   }
 
   // *** +++ Deposit Hook Functions +
+
+  /**
+   *
+   * @param sourceAccount The uniqueId of the account which made the deposit
+   * @param amount The amount in XLM of the deposit
+   * @returns {Promise<void>}
+   */
   async onDeposit (sourceAccount, amount) {
     // Override this or listen to events!
-    this.emit('deposit', sourceAccount, amount)
+    this.emit('deposit', sourceAccount, amount);
   }
 
+  async onRefund (transaction) {
+    // Override this or listen to events!
+    this.emit('refund', transaction);
+    try {
+      await transaction.refund(this.config.stellar, transaction);
+    } catch (exc) {
+      console.log("refund exception:", exc);
+    }
+  }
+
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipWithInsufficientBalance (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tipWithInsufficientBalance', potentialTip, amount)
+    this.emit('tipWithInsufficientBalance', potentialTip, amount);
   }
 
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipTransferFailed (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tipTransferFailed', potentialTip, amount)
+    this.emit('tipTransferFailed', potentialTip, amount);
   }
 
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTipReferenceError (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tipReferenceError', potentialTip, amount)
+    this.emit('tipReferenceError', potentialTip, amount);
   }
 
+  /**
+   *
+   * @param potentialTip {Tip} The Command.Tip object created from the tip request
+   * @param amount The tip amount fixed to 7 decimal places
+   * @returns {Promise<void>}
+   */
   async onTip (potentialTip, amount) {
     // Override this or listen to events!
-    this.emit('tip', potentialTip, amount)
+    this.emit('tip', potentialTip, amount);
   }
 
   // *** +++ Withdrawael Hook Functions +
-  async onWithdrawalReferenceError (uniqueId, address, amount, hash) {
+  /**
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalReferenceError (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalReferenceError', uniqueId, address, amount, hash)
+    this.emit('withdrawalReferenceError', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
-  async onWithdrawalDestinationAccountDoesNotExist (uniqueId, address, amount, hash) {
+  /**
+   *
+   * Called when the public key address you're trying to withdraw to doesn't exist
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalDestinationAccountDoesNotExist (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalDestinationAccountDoesNotExist', uniqueId, address, amount, hash)
+    this.emit('withdrawalDestinationAccountDoesNotExist', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
-  async onWithdrawalNoAddressProvided (uniqueId, address, amount, hash) {
+  /**
+   *
+   * Called when you try to withdraw with no address
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalNoAddressProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalNoAddressProvided', uniqueId, address, amount, hash)
+    this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
-  async onWithdrawalInvalidAmountProvided (uniqueId, address, amount, hash) {
+  /**
+   *
+   * Called when you try to make a withdraw with an invalid amount, such as "asdf"
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalInvalidAmountProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalInvalidAmountProvided', uniqueId, address, amount, hash)
+    this.emit('withdrawalInvalidAmountProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
-  async onWithdrawalFailedWithInsufficientBalance (uniqueId, address, amount, hash) {
+  /**
+   *
+   * Called when the user does not have a high enough balance to complete their withdrawal.
+   * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
     // Override this or listen to events!
-    this.emit('withdrawalFailedWithInsufficientBalance', uniqueId, address, amount, hash)
+    this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance);
   }
 
-  async onWithdrawalSubmissionFailed (uniqueId, address, amount, hash) {
+  /**
+   * Called when, for any reason, we attempt to withdraw but sending the transaction to the Horizon server fails.
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalSubmissionFailed (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalSubmissionFailed', uniqueId, address, amount, hash)
+    this.emit('withdrawalSubmissionFailed', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
-  async onWithdrawalInvalidAddress (uniqueId, address ,amount, hash) {
+  /**
+   *
+   * Called when you try to withdraw with any invalid address (should only occur when the address is provided as an additional argument / is not retreived directly from the Account db).
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawalInvalidAddress (withdrawal) {
     // Override this or listen to events!
-   this.emit('withdrawalInvalidAddress', uniqueId, address, amount, hash)
+   this.emit('withdrawalInvalidAddress', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
-  async onWithdrawal (uniqueId, address, amount, hash) {
+  /**
+   * Called on a successfull withdrawal
+   * @param withdrawal {Withdraw}
+   * @param address {String} The address to which the withdrawal was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {Promise<void>}
+   */
+  async onWithdrawal (withdrawal, address) {
     // Override this or listen to events!
-    this.emit('withdrawal', uniqueId, address, amount, hash)
-  }
-
-  async sendDepositConfirmation (sourceAccount, amount) {
-      // Override me
-  }
-
-  async sendTransferConfirmation (sourceAccount, amount) {
-      // Override me
+    this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
   }
 
   // *** +++ Registration related functions +
+  /**
+   * Called when the user tries to register with an invalid wallet address.
+   *
+   * @param walletAddressGiven
+   * @returns {Promise<string>}
+   */
   async onRegistrationBadWallet (walletAddressGiven) {
-    return `${walletAddressGiven} is not a valid Public Key / wallet address`
+    return `${walletAddressGiven} is not a valid Public Key / wallet address`;
   }
 
+  /**
+   * Called when the user successfully registers and replaces their old wallet with a new wallet.
+   *
+   * @param oldWallet {String} The old wallet which has now been replaced
+   * @param newWallet {String} The new wallet address of the user
+   * @returns {Promise<string>}
+   */
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``
+    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``;
   }
 
+  /**
+   * Called when the user tries to register with the wallet they are already registered with.
+   *
+   * @param walletAddress {String} The wallet address the user was trying to replace with the same value
+   * @returns {Promise<string>}
+   */
   async onRegistrationSameAsExistingWallet(walletAddress) {
-    return `You are already using the public key \`${walletAddress}\``
+    return `You are already using the public key \`${walletAddress}\``;
   }
 
+  /**
+   * Called when the user tries to register a wallet address which another user has already registered.
+   *
+   * @param walletAddress {String} The wallet address which the user was trying to replace.
+   * @returns {Promise<string>}
+   */
   async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
     // TODO: Factor contact info out into env vars or something
-    return `Another user has already registered the wallet address \`${walletAddress}\` If you think this is a mistake, please contact @dlohnes on Slack`
+    return `Another user has already registered the wallet address \`${walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`;
   }
 
+  /**
+   * Called when the user registers a wallet for the first time i.e. they did not previously have a wallet address.
+   *
+   * @param walletAddress {String} The wallet address the user has registered.
+   * @returns {Promise<string>}
+   */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`ROBOT_ADDRESS\` to make funds available for use with the '/tip' command.`
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`;
   }
 
-
   /**
-     * // Being that each platform (Reddit, Twitter, Slack...) can have different
-     * means of initiating the tipping process, and may even have multiple,
-     * each adapter is responsible for handling the extraction of the tip amount
-     * from users' commands.
-     * @param tipText The original command given by the tipbot user
-     */
-  // extractTipAmount (tipText) {
-  //   // Override me
-  //     console.error("Abstract extractTipAmount() should not get called")
-  //     return undefined
-  // }
-
-  /**
-   *  Should receive a tip object like:
-   *
-   *  {
-   *    adapter: "adapter_name", (e.g. "reddit")
-   *    sourceId: "unique_source_id", (e.g. reddit username)
-   *    targetId: "foo_bar" // the target id
-   *    amount: "123.12",,
-   *    hash: "asfcewef" // some kind of hash, e.g. comment hash, must be unique per sourceId
-   *  }
-   *
-   *  You'll receive the tip object within every hook, so you can add stuff you need in the callbacks
+   * Will transfer the tip provided if possible, otherwise will call the appropriate function on the adapter
+   * in the event that there is an insufficient balance or other issue.
+   * @param tip {Tip}
+   * @returns {Promise<void>}
    */
   async receivePotentialTip (tip) {
       // Let's see if the source has a sufficient balance
-      const source = await this.Account.getOrCreate(tip.adapter, tip.sourceId)
-      const payment = new Big(tip.amount)
-      const hash = tip.hash
+      const source = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
+      const payment = new Big(tip.amount);
+      const hash = tip.hash;
 
       if (!source.canPay(payment)) {
-        return this.onTipWithInsufficientBalance(tip, payment.toFixed(7))
+        return this.onTipWithInsufficientBalance(tip, payment.toFixed(7));
       }
 
       if (tip.sourceId === tip.targetId) {
-        return this.onTipReferenceError(tip, payment.toFixed(7))
+        return this.onTipReferenceError(tip, payment.toFixed(7));
       }
 
-      const target = await this.Account.getOrCreate(tip.adapter, tip.targetId)
+      const target = await this.Account.getOrCreate(tip.adapter, tip.targetId);
 
       // ... and tip.
-      source.transfer(target, payment, hash)
-        .then(() => {
-          this.onTip(tip, payment.toFixed(7))
-        })
-        .catch((exc) => {
-          if (exc !== 'DUPLICATE_TRANSFER') {
-            this.onTipTransferFailed(tip, payment.toFixed(7))
-          }
-        })
+    try {
+        await source.transfer(target, payment, hash);
+        return this.onTip(tip, payment.toFixed(7));
+    } catch (exc) {
+        if (exc !== 'DUPLICATE_TRANSFER') {
+          this.onTipTransferFailed(tip, payment.toFixed(7));
+        }
+    }
   }
 
   /**
@@ -179,99 +280,100 @@ class Adapter extends EventEmitter {
    */
   requestBalance (adapter, uniqueId) {
     return new Promise(async (resolve, reject) => {
-      const target = await this.Account.getOrCreate(adapter, uniqueId)
-      resolve(target.balance)
+      const target = await this.Account.getOrCreate(adapter, uniqueId);
+      resolve(target.balance);
     })
   }
 
   /**
-   * Extract should be the result of utils.extractWithdrawal
+   * Will cause the bot to send the requested amount of XLM to the withdrawer's provided wallet address if possible,
+   * otherwise will call the appropriate function on the adapter in the event that there is an insufficient balance or other issue.
    *
-   * Hash should be a unique id (e.g. the message id)
-   *
-   * Should receive an object like this:
-   *
-   * {
-   *     adapter: 'reddit',
-   *     uniqueId: 'the-dark-coder'
-   *     address?: 'aStellarAddress', // optional
-   *     amount: '12.12'
-   *     hash: 'aUniqueHash'
-   * }
+   * @param withdrawalRequest {Withdraw}
+   * @returns {Promise<void>}
    */
   async receiveWithdrawalRequest (withdrawalRequest) {
-
-
-    const adapter = withdrawalRequest.adapter
-    const uniqueId = withdrawalRequest.uniqueId
-    const hash = withdrawalRequest.hash
-    const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId)
-    const amountRequested = withdrawalRequest.amount
+    const adapter = withdrawalRequest.adapter;
+    const uniqueId = withdrawalRequest.uniqueId;
+    const hash = withdrawalRequest.hash;
+    const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId);
+    const amountRequested = withdrawalRequest.amount;
     let withdrawalAmount;
     try {
-      withdrawalAmount = new Big(amountRequested)
+      withdrawalAmount = new Big(amountRequested);
     } catch (e) {
-      console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`)
-      console.log(`Withdrawal request amount is ${amountRequested}`)
-      return this.onWithdrawalInvalidAmountProvided(uniqueId, address, amountRequested, hash)
+      console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`);
+      console.log(`Withdrawal request amount is ${amountRequested}`);
+      return this.onWithdrawalInvalidAmountProvided(withdrawalRequest);
     }
-    const fixedAmount = withdrawalAmount.toFixed(7)
+    const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
-      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash);
     }
 
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
-      return this.onWithdrawalInvalidAddress(uniqueId, address, fixedAmount, hash)
+      return this.onWithdrawalInvalidAddress(withdrawalRequest);
     }
 
     // Fetch the account
-    const target = await this.Account.getOrCreate(adapter, uniqueId)
+    const target = await this.Account.getOrCreate(adapter, uniqueId);
     if (!target.canPay(withdrawalAmount)) {
-      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance)
+      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance);
     }
 
     // Withdraw
     try {
-      await target.withdraw(this.config.stellar, address, withdrawalAmount, hash)
-      return this.onWithdrawal(uniqueId, address, fixedAmount, hash)
+      await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
+      return this.onWithdrawal(withdrawalRequest, address);
     } catch (exc) {
       if (exc === 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
-        return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash)
+        return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_REFERENCE_ERROR') {
-        return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash)
+        return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {
-        return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash)
+        return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash);
       }
       // throw (exc)
     }
   }
 
   /**
-   * Validates the options provided and gives back an objet wher the key is the request option
+   *
+   * @param cmd {Balance}
+   * @returns {Promise<void>}
+   */
+  async receiveBalanceRequest (cmd) {
+    this.emit('receiveBalanceRequest', cmd);
+  }
+
+  /**
+   * * Validates the options provided and gives back an object wher the key is the request option
    * and the value is the value which will be set on an account.
    *
    * Feel free to do any validation you like. Just be sure to handle errors / rejections to your liking.
    *
    * Technically 'options' can look like anything you want, but right now we only support changing wallet address.
    *
-   * {
+   *  * {
    *     walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB',
    * }
    *
+   * @param options
+   * @returns {{walletAddress: string|string|string|*|null|string}}
    */
     setAccountOptions(options) {
-      let walletAddr = options.walletAddress
+      let walletAddr = options.walletAddress;
       if(!StellarSdk.StrKey.isValidEd25519PublicKey(walletAddr)) {
-        throw new Error("setAccountOptions was given a bad public key")
+        throw new Error("setAccountOptions was given a bad public key");
       }
       // We could just return `options` here, but in the interest
       // of future proofing / illustrating what we're more likely to do later as
       // options are added...
-      return {walletAddress : walletAddr}
+      return {walletAddress : walletAddr};
   }
 }
 

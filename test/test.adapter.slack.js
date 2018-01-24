@@ -2,27 +2,12 @@ const assert = require('assert')
 const Slack = require('../src/adapters/slack/slack-adapter')
 const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
+const Utils = require('../src/utils')
 
-// TODO: Get rid of this
 class TestableSlack extends Slack {
-  async onRegistrationBadWallet (walletAddressGiven) {
-    return "badWallet"
-  }
-
-  async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    return `${oldWallet} replaced by ${newWallet}`
-  }
-
-  async onRegistrationSameAsExistingWallet(walletAddress) {
-    return `Already registered ${walletAddress}`
-  }
-
-  async onRegistrationOtherUserHasRegisteredWallet(walletAddress) {
-    return `Another user has already registered ${walletAddress}`
-  }
-
-  async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return `Successfully registered user's first wallet: ${walletAddress}`
+  constructor (config) {
+    super(config);
+    this.client.sendPlainTextDMToSlackUser = sinon.spy();
   }
 }
 
@@ -58,9 +43,10 @@ describe('slackAdapter', async () => {
   describe('handle registration request', () => {
 
     it ('should return a message to be sent back to the user if their wallet fails validation', async () => {
-      let msg = new Command.Register('testing', 'someUserId', 'badwalletaddress013934888318')
+      const badWalletAddress = 'badwalletaddress013934888318';
+      let msg = new Command.Register('testing', 'someUserId', badWalletAddress)
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, "badWallet");
+      assert.equal(returnedValue, `${badWalletAddress} is not a valid Public Key / wallet address`);
     })
 
     it ('should return a message to send back to the user if this user has already registered with that wallet', async () => {
@@ -68,14 +54,13 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'team.foo', sameAddressAsOtherAccount)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Already registered ${accountWithWallet.walletAddress}`);
+      assert.equal(returnedValue, `You are already using the public key \`${accountWithWallet.walletAddress}\``);
     })
 
     it ('should send a message back to the user if someone else has already registered with that wallet', async () => {
       let msg = new Command.Register('testing', 'newTeam.someNewUserId', accountWithWallet.walletAddress)
-
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Another user has already registered ${accountWithWallet.walletAddress}`);
+      assert.equal(returnedValue, `Another user has already registered the wallet address \`${accountWithWallet.walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`);
     })
 
     // TODO: Make sure this updates the 'updatedAt' value of the Account object
@@ -84,7 +69,7 @@ describe('slackAdapter', async () => {
       const msg = new Command.Register('testing', 'team.foo', newWalletId)
       const returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       const refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
-      assert.equal(returnedValue, `${accountWithWallet.walletAddress} replaced by ${newWalletId}`);
+      assert.equal(returnedValue, `Your old wallet \`${accountWithWallet.walletAddress}\` has been replaced by \`${newWalletId}\``);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
     })
 
@@ -93,41 +78,98 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Successfully registered user's first wallet: ${desiredWalletAddress}`);
+      assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
     })
   })
 
   describe(`handle withdrawal request`, () => {
     it (`should not do the withdrawal and should return an appropriate message if the user is not registered`, async() => {
       let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1)
-      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument");
     })
 
     it (`should not do the withdrawal and should return an appropriate message if the user provides an invalid public key`, async() => {
       const badWalletAddress = "badWallet"
       let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1, badWalletAddress)
-      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `\`${badWalletAddress}\` is not a valid public key. Please try again with a valid public key.`);
     })
 
     it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance`, async() => {
       let command = new Command.Withdraw(accountWithWallet.adapter, accountWithWallet.uniqueId, 500.0142)
-      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, "You requested to withdraw \`500.0142 XLM\` but your wallet only contains \`1 XLM\`");
     })
 
     it (`should complete the withdrawal and should return an appropriate message if the  user has a sufficient balance`, async() => {
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
-      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\``);
     })
 
     it (`should return an appropriate message if the  user supplies a string in place of a number`, async() => {
       let amount = 'asdf'
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, amount)
-      let returnedValue = await slackAdapter.handleWithdrawalRequest(command);
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `\`${amount}\` is not a valid withdrawal amount. Please try again.`);
+    })
+  })
+
+  describe(`receive potential tip`, () => {
+    it (`should return an error message if the user's balance is not high enough`, async() => {
+      let amount = 1000
+      let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert.equal(`Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(accountWithWallet.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``, returnedValue)
+    })
+
+    it (`should return a koan if the tipper tips them self`, async() => {
+      let amount = 1
+      let command = new Command.Tip('testing', 'team.foo', 'team.foo', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert.equal(returnedValue, `What is the sound of one tipper tipping?`)
+    })
+
+    it (`should return a confirmation message to the tipper once the tip has gone through`, async() => {
+      let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
+      let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      const tippedAccount = await Account.getOrCreate('testing', 'team.new')
+      assert.equal(tippedAccount.balance, amount)
+      assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
+    })
+
+    it (`should send a message with detailed sign up instructions to any tip receiver who is not yet registered after the tip goes through`, async() => {
+      let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
+      let recipientId = 'team.bar'
+      let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(recipientId,
+          `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`), "The client should receive a message telling it to DM the recipient once the tip goes through")
+      assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)    })
+
+    it (`should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
+      let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
+      let recipientId = 'team.foo'
+      let command = new Command.Tip('testing', 'team.bar', recipientId, amount)
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(recipientId, `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``), "The client should receive a message telling it to DM the recipient once the tip goes through")
+      assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
+    })
+  })
+
+  describe('receive Balance Request', () => {
+    it('should return the user`s account balance and instructions on how to register if they are not registered', async () => {
+      let balanceCommand = new Command.Balance(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId, accountWithoutWallet.walletAddress)
+      const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
+      assert.equal(returned, `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${accountWithoutWallet.balance}\'`)
+    })
+
+    it(`should return the user's wallet address & account balance if they are registered`, async () => {
+      let balanceCommand = new Command.Balance(accountWithWallet.adapter, accountWithWallet.uniqueId, accountWithWallet.walletAddress)
+      const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
+      assert.equal(returned, `Your wallet address is: \`${accountWithWallet.walletAddress}\`\nYour balance is: \'${accountWithWallet.balance}\'`)
     })
   })
 })

@@ -4,15 +4,20 @@ const bodyParser    = require('body-parser');
 const slackMessage  = require('./slack-message');
 const slackUtils    = require('./slack-command-utils');
 const slackClient   = require('./slack-client');
+const SlackAdapter  = require('../slack/slack-adapter');
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 
+
+/**
+ * SlackServer handles all post calls coming from Slack slash commands.
+ */
 class SlackServer {
 
   /**
    *
-   * @param slackAdapter A Slack:Adapter object
+   * @param slackAdapter {SlackAdapter}
    */
   constructor(slackAdapter) {
     var that = this; // Allows us to keep reference to 'this' even in closures, wherein "this" will actually mean the closure we are inside of in that context
@@ -44,7 +49,10 @@ class SlackServer {
       res.send('Hello world, I am Starry');
     });
 
-    app.post('/slack/tip', function (req, res) {
+    /**
+     * Set up how /tip command should be dealt with
+     */
+    app.post('/slack/tip', async function (req, res) {
       console.log('Tip requested');
       let msg = new slackMessage(req.body);
       console.log(msg);
@@ -52,41 +60,27 @@ class SlackServer {
 
       let recipientID= slackUtils.extractUserIdFromCommand(msg.text);
       console.log("recipient: ", recipientID);
-      //msgAttachment = msg.formatSlackAttachment("Great tip!", "good", "10 XLM sent to user");
-      //Implement business logic and send DMs accordingly
-      that.client.sendPlainTextDMToSlackUser(msg.user_id, "You sent a tip");
 
-      that.client.sendPlainTextDMToSlackUser(recipientID, "Got tip");
-      // If the user is not registered, return an error appropriate. Maybe instruct them how to register
-      // else if the user is registered
-      // Check the amount against the user's current balance
-      // If the user's balance is not high enough, return an error containing the current balance
-      // If the user's balance is high enough, first identify the receiver by retreiving their user_id (UUID) then check if the receiver is already registered
-      // If a user does not exist in the db with their particular info,
-      // Add them to the database without a public wallet address (the real mark of not being registered)
-      // Save the tip info in the database
-      //
-      // Else-If a user DOES exist in the db with their particlar inof
-      // Make the transfer happen
-      // If failure
-      // send an appropriate message to the tipper
-      // If success
-      // remove the tip from the sender's balance
-      // add the tip to the receiver's balance
-      // send a success message to the sender
-      // send a personal message to the receiver alerting them they received a tip
-      res.json(200);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+      res.send(await that.adapter.receivePotentialTip(command));
     });
 
+
+    /**
+     * Set up how /withdraw command should be dealt with
+     */
     app.post('/slack/withdraw', async function (req, res) {
       console.log('someone wants to make a withdrawal!');
       console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleWithdrawalRequest(command));
+      res.send(await that.adapter.receiveWithdrawalRequest(command));
     });
 
+    /**
+     * Set up how /register command should be dealt with
+     */
     app.post('/slack/register', async function (req, res) {
       console.log('someone wants to register!');
       console.log(JSON.stringify(req.body));
@@ -94,6 +88,18 @@ class SlackServer {
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
       res.send(await that.adapter.handleRegistrationRequest(command))
+    });
+
+    /**
+     * Set up how /balance command should be dealt with
+     */
+    app.post('/slack/balance', async function (req, res) {
+      console.log('someone wants to check their balance');
+      console.log(JSON.stringify(req.body));
+      let msg = new slackMessage(req.body);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      res.send(await that.adapter.receiveBalanceRequest(command));
     });
 
     // Spin up the server

@@ -1,19 +1,28 @@
 const assert = require('assert')
 const Adapter = require('../src/adapters/abstract')
 const Big = require('big.js')
+const Command = require('../src/adapters/commands/command');
+const Utils = require('../src/utils')
 
 describe('adapter', async () => {
 
   let adapter;
-
+  let accountWithWallet;
   beforeEach(async () => {
     const config = await require('./setup')()
     adapter = new Adapter(config)
+    let Account = adapter.config.models.account;
+    accountWithWallet = await Account.createAsync({
+      adapter: 'testing',
+      uniqueId: 'goodwallet',
+      balance: '1.0000000',
+      walletAddress: 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+    })
   })
 
   describe('deposit', () => {
     it ('should call onDeposit when the adapter is correct', (done) => {
-      const Account = adapter.config.models.account
+      const Account = adapter.config.models.account;
 
       adapter.on('deposit', () => done())
       adapter.name = 'testing'
@@ -25,7 +34,7 @@ describe('adapter', async () => {
       }).then((account) => Account.events.emit('DEPOSIT', account, new Big('50')))
     })
 
-    it ('should not call onDeposit when the adapter is correct', () => {
+    it ('should not call onDeposit when the adapter is incorrect', () => {
       const Account = adapter.config.models.account
 
       adapter.on('deposit', () => { throw new Error() })
@@ -38,6 +47,27 @@ describe('adapter', async () => {
       }).then((account) => Account.events.emit('DEPOSIT', account, '50'))
     })
   })
+
+  // describe('refund', () => {
+  //   it ('should call onRefund when a transaction refund event is emitted', (done) => {
+  //     const Account = adapter.config.models.account;
+
+  //     adapter.on('REFUND', () => done())
+  //     adapter.name = 'testing'
+
+  //     Transaction.createAsync({
+  //       memoId: "",
+  //       amount: record.amount,
+  //       createdAt: new Date(record.created_at),
+  //       asset: record.asset_type,
+  //       cursor: record.paging_token,
+  //       source: record.from,
+  //       target: record.to,
+  //       hash: record.transaction_hash,
+  //       type: 'deposit'
+  //     }).then((transaction) => Transaction.events.emit('REFUND', transaction))
+  //   })
+  // })
 
   describe('receiveWithdrawalRequest', () => {
 
@@ -261,16 +291,9 @@ describe('adapter', async () => {
   describe('receivePotentialTip', () => {
 
     it ('should call onTipWithInsufficientBalance if source cant pay', (done) => {
-      let tip = {
-        amount: '1.12',
-        adapter: 'testing',
-        sourceId: 'foo',
-        hash: 'hash'
-      }
-
+      let tip = new Command.Tip('testing', 'foo', 'target', '1.12')
       adapter.on('tipWithInsufficientBalance', () => done())
       adapter.receivePotentialTip(tip)
-
     })
 
     it ('should reject with onTipReferenceError if one tips herself', (done) => {
@@ -279,13 +302,7 @@ describe('adapter', async () => {
         uniqueId: 'foo',
         balance: '5.0000000'
       }).then(() => {
-        let tip = {
-          amount: '1',
-          adapter: 'testing',
-          sourceId: 'foo',
-          targetId: 'foo',
-          hash: 'hash'
-        }
+        let tip = new Command.Tip('testing', 'foo', 'foo', '1')
         adapter.on('tipReferenceError', () => done())
         adapter.receivePotentialTip(tip)
       })
@@ -304,13 +321,9 @@ describe('adapter', async () => {
         hash: 'hash'
       })
 
-      let tip = {
-          amount: '1',
-          adapter: 'testing',
-          sourceId: 'foo',
-          targetId: 'bar',
-          hash: 'hash'
-      }
+      let tip = new Command.Tip('testing', 'foo', 'bar', '1')
+      tip.hash = 'hash'
+
       await adapter.receivePotentialTip(tip)
 
       source = await adapter.Account.oneAsync({adapter: 'testing', uniqueId: 'foo'})
@@ -328,19 +341,14 @@ describe('adapter', async () => {
         uniqueId: 'foo',
         balance: '5.0000000'
       }).then(() => {
-        let tip = {
-          amount: '1',
-          adapter: 'testing',
-          sourceId: 'foo',
-          targetId: 'bar',
-          hash: 'hash'
-        }
+        let tip = new Command.Tip('testing', 'foo', 'bar', '1')
+
         adapter.on('tip', async (tip, amount) => {
           assert.equal('1.0000000', amount)
 
           source = await adapter.Account.oneAsync({adapter: 'testing', uniqueId: 'foo'})
           target = await adapter.Account.oneAsync({adapter: 'testing', uniqueId: 'bar'})
-          action = await adapter.config.models.action.oneAsync({sourceaccount_id: source.id, hash: 'hash', type: 'transfer'})
+          action = await adapter.config.models.action.oneAsync({sourceaccount_id: source.id, hash: tip.hash, type: 'transfer'})
 
           assert.equal(source.balance, '4.0000000')
           assert.equal(target.balance, '1.0000000')
@@ -349,7 +357,7 @@ describe('adapter', async () => {
           assert.equal(action.sourceaccount_id, source.id)
           assert.equal(action.amount, '1.0000000')
           assert.equal(action.type, 'transfer')
-          assert.equal(action.hash, 'hash')
+          assert.equal(action.hash, tip.hash)
 
           done()
         })
@@ -377,4 +385,6 @@ describe('adapter', async () => {
       }
     })
   })
+
+
 })

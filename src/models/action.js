@@ -7,7 +7,7 @@ module.exports = (db) => {
    * A generic action
    */
   const Action = db.define('action', {
-      type: ['withdrawal', 'deposit', 'transfer'],
+      type: ['withdrawal', 'deposit', 'transfer', 'refund'],
       amount: String,
       address: String,
       hash: String,
@@ -29,7 +29,7 @@ module.exports = (db) => {
     }
   })
 
-  Action.hasOne('sourceAccount', db.models.account, { required: true, reverse: 'sourceActions' })
+  Action.hasOne('sourceAccount', db.models.account, { reverse: 'sourceActions' })
   Action.hasOne('targetAccount', db.models.account, { reverse: 'targetActions' })
 
   return Action
