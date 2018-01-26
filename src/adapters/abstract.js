@@ -330,7 +330,7 @@ class Adapter extends EventEmitter {
       await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
       return this.onWithdrawal(withdrawalRequest, address);
     } catch (exc) {
-      if (exc === 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
+      if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_REFERENCE_ERROR') {

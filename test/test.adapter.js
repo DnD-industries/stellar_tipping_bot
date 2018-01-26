@@ -144,7 +144,7 @@ describe('adapter', async () => {
       }).then(() => {
         adapter.config.stellar = {
           createTransaction: () => new Promise((res, rej) => {
-            return rej('WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST')
+            return rej('DESTINATION_ACCOUNT_DOES_NOT_EXIST')
           })
         }
         let  cmd = new Command.Withdraw('testing', 'foo', '5', target)
