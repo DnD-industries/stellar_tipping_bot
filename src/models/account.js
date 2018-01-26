@@ -3,6 +3,8 @@ const Big = require('big.js')
 const StellarSdk = require('stellar-sdk')
 const Promise = require('../../node_modules/bluebird')
 
+var singleton;
+
 module.exports = (db) => {
 
   /**
@@ -157,9 +159,11 @@ module.exports = (db) => {
             throw 'DUPLICATE_WITHDRAWAL'
           }
 
+          let txSendResponse;
+
           try {
             const tx = await stellar.createTransaction(to, withdrawalAmount.toFixed(7), hash)
-            await stellar.send(tx)
+            txSendResponse = await stellar.send(tx)
           } catch (exc) {
             this.balance = refundBalance.plus(amount).toFixed(7)
             throw exc
@@ -167,13 +171,21 @@ module.exports = (db) => {
 
           await this.saveAsync()
           await Transaction.createAsync(doc)
-          await Action.createAsync({
-            hash: hash,
-            type: 'withdrawal',
-            sourceaccount_id: this.id,
-            amount: amount.toFixed(7),
-            address: to
-          })
+          try {
+            await Action.createAsync({
+              hash: hash,
+              type: 'withdrawal',
+              sourceaccount_id: this.id,
+              amount: amount.toFixed(7),
+              address: to
+            })
+
+            await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
+            console.log(`Transaction hash is:\n${JSON.stringify(txSendResponse)}`)
+
+          } catch (e) {
+            console.log(e)
+          }
         })
       },
 
@@ -263,5 +275,10 @@ module.exports = (db) => {
     })
   }
 
-  return Account
+  singleton = Account;
+  return singleton;
+}
+
+module.exports.Singleton = () => {
+  return singleton;
 }

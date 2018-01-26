@@ -114,6 +114,31 @@ describe('slackAdapter', async () => {
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `\`${amount}\` is not a valid withdrawal amount. Please try again.`);
     })
+
+    it (`should return an appropriate message if the user supplies a public address that doesn't exist on the chain`, async() => {
+      let nonexistantButValidAddress = "GBZKOHL2DJHVNPWWRFCDBDGMC2T5OWNVA33LN7DOY55ETALXU3PBXTN3";
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1, nonexistantButValidAddress)
+      slackAdapter.config.stellar = {
+        createTransaction: () => new Promise((res, rej) => {
+          return rej('DESTINATION_ACCOUNT_DOES_NOT_EXIST')
+        })
+      }
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
+      assert.equal(returnedValue, `I could not complete your request. The address you tried to withdraw from does not exist.`);
+    })
+
+    it (`should return an appropriate message if the user tries to tip out to the tipping bot's wallet address`, async() => {
+      // This isn't actually the bot's address, but the var name should tell you "what is going on here" for purposes of testability
+      let robotsOwnTippingAddress = "GBZKOHL2DJHVNPWWRFCDBDGMC2T5OWNVA33LN7DOY55ETALXU3PBXTN3";
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1, robotsOwnTippingAddress)
+      slackAdapter.config.stellar = {
+        createTransaction: () => new Promise((res, rej) => {
+          return rej('TRANSACTION_REFERENCE_ERROR')
+        })
+      }
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
+      assert.equal(returnedValue, `You're not allowed to send money through this interface to the tipping bot. If you'd like to tip the creators, check our repository on GitHub.`);
+    })
   })
 
   describe(`receive potential tip`, () => {

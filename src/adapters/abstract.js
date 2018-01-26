@@ -97,6 +97,7 @@ class Adapter extends EventEmitter {
 
   // *** +++ Withdrawael Hook Functions +
   /**
+   * Gets called when there is a problem submitting the transaction to the Horizon server with the Stellar SDK.
    *
    * @param withdrawal {Withdraw}
    * @returns {Promise<void>}
@@ -127,7 +128,7 @@ class Adapter extends EventEmitter {
    */
   async onWithdrawalNoAddressProvided (withdrawal) {
     // Override this or listen to events!
-    this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
+      this.emit('withdrawalNoAddressProvided', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
   /**
@@ -310,7 +311,7 @@ class Adapter extends EventEmitter {
     const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
-      return this.onWithdrawalNoAddressProvided(uniqueId, address, fixedAmount, hash);
+        return this.onWithdrawalNoAddressProvided(withdrawalRequest);
     }
 
 
@@ -319,7 +320,8 @@ class Adapter extends EventEmitter {
     }
 
     // Fetch the account
-    const target = await this.Account.getOrCreate(adapter, uniqueId);
+    const target = await withdrawalRequest.getSourceAccount();
+    // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(withdrawalAmount)) {
       return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance);
     }
@@ -329,10 +331,10 @@ class Adapter extends EventEmitter {
       await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
       return this.onWithdrawal(withdrawalRequest, address);
     } catch (exc) {
-      if (exc === 'WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
+      if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
-      if (exc === 'WITHDRAWAL_REFERENCE_ERROR') {
+      if (exc === 'TRANSACTION_REFERENCE_ERROR') {
         return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {

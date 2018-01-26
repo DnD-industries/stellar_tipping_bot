@@ -5,6 +5,7 @@ const slackMessage = require('./slack-message');
 class SlackCommandUtils {
     //"command":"/tip","text":"<@U8PTZ287N|d> 123"
   /**
+   * Turns an {SLMessage} into a a {Command} object, with params depending on which slash command is provided by the user.
    * @param msg {SLMessage}
    * @returns {Command}
    */
@@ -69,9 +70,10 @@ class SlackCommandUtils {
     }
 
   /**
+   * Splits out the given string "cmd" into separate strings at each white space character
    *
-   * @param cmd
-   * @returns {string[]}
+   * @param cmd {String} The string to be parsed
+   * @returns {String[]} The same string but split out at white space characters
    */
     findCommandParams(cmd){
         cmd = this.removeExtraSpacesFromCommand(cmd); //Sanitize extra spaces from command
@@ -79,21 +81,19 @@ class SlackCommandUtils {
         return params;
     }
 
-    //Returns an array of indices representing the location of a space delimiter that was found in a command
-    //Example: findCommandDelimitersIndicesCommand("<user_id> 1234 myAddress")
-    //Output: [9, 14]
-    findCommandDelimiterIndices(cmd){
-        let indices = [];
-        for(let i=0; i<cmd.length;i++) {
-            if (cmd[i] === " ") indices.push(i);
-        }
-        return indices; 
-    }
 
-    //Removes extra spaces from a command
-    //Example: removeExtraSpacesFromCommand("<user_id>   1234      myAddress")
-    //Output: "<user_id> 1234 myAddress"
+  /**
+   * Removes extra spaces from a command
+   * Example: removeExtraSpacesFromCommand("<user_id>   1234      myAddress")
+   * Output: "<user_id> 1234 myAddress"
+   *
+   * @param cmd {String}
+   * @returns {String}
+   */
     removeExtraSpacesFromCommand(cmd) {
+        if(!cmd) {
+          return ""
+        }
         return cmd.replace(/\s\s+/g, ' '); //Regex to remove multiple spaces, tabs, etc and replace with a single space for ease of parsing
     }
 }

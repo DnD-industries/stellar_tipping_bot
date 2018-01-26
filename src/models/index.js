@@ -6,6 +6,9 @@ function configure(model, db) {
 
   /**
    * Wrap db calls in a transaction - postgres only
+   *
+   * If you're getting weird errors where models don't seem to be updating when you think they should be updating,
+   * it's probably because of this.
    */
   model.withinTransaction = async (func) => {
     await db.driver.db.query('BEGIN')

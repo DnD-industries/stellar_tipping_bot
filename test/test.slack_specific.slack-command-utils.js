@@ -36,14 +36,6 @@ describe('slack-command-utils', () => {
       assert.equal(expectedOutput[2], params[2]);
     });
 
-    it("should find command delimiter indices", () => {
-      let paramInput = "<user_id> 1234 myAddress";
-      let paramIndices = slackUtils.findCommandDelimiterIndices(paramInput);
-      let expectedOutput = [9, 14];
-      assert.equal(expectedOutput[0], paramIndices[0]);
-      assert.equal(expectedOutput[1], paramIndices[1]);
-    });
-
     it("should extract tip command params from message", () => {
       let slackMsgBody = {
         token: 'PKT0CQibMhddhKa4IwXv0xSa',

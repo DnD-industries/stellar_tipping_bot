@@ -3,6 +3,13 @@ const { WebClient }   = require('@slack/client');
 
 class SlackClient extends WebClient {
 
+  /**
+   * Given a Slack user ID, will eventually return the ID necessary for DM'ing that user.
+   * Note that a User Id for slack is not your human readable @username.
+   * For more info on how sending messages works on Slack see https://api.slack.com/methods/chat.postMessage
+   * @param userID
+   * @returns {Promise<*|PromiseLike<T>|Promise<T>>}
+   */
   async getDMIdForUser(userID) {
     return this.im.list()
       .then((res) => {
@@ -25,9 +32,16 @@ class SlackClient extends WebClient {
       })
   }
 
-  // attachmentColor = An optional value that can either be one of good, warning, danger, or any hex color code (eg. #439FE0).
-  // This value is used to color the border along the left side of the message attachment.
-  // TODO: Add URLs for icons and images as appropriate
+  /**
+   * Takes in certain arguments and from them will distill an attachment object for use with {this.sendDMToSlackUserWithAttachments()}
+   *
+   * @param title {String} The title of the attachment
+   * @param attachmentColor {String} An optional value that can either be one of 'good', 'warning', 'danger', or any hex color code (eg. #439FE0). This value is used to color the border along the left side of the message attachment.
+   * @param plainTextBody {String} The body of the attachment. Can contain additional characters that allow for formatting
+   * @param fieldsArray Hashes contained within this array will be displalyed in a table inside the attachment. Search for 'fields' here for more info: https://api.slack.com/docs/message-attachments
+   * // TODO: Add URLs for icons and images as appropriate
+   * @returns {string}
+   */
   formatSlackAttachment(title, attachmentColor, plainTextBody, fieldsArray = []) {
 
     let attachment = [
@@ -52,6 +66,12 @@ class SlackClient extends WebClient {
     return JSON.stringify(attachment);
   }
 
+  /**
+   * Given a unique user ID
+   * @param userID {String} Unique user id in the form of "[slackteamid].[slackuserid]". The DM Id for the user will be retreived from this.
+   * @param plainTextBody {String} The text to be sent to the user
+   * @returns {Promise<*|Promise|Promise<T>>}
+   */
   async sendPlainTextDMToSlackUser(userID, plainTextBody){
     //Retrieve the dm id (between Starry and the user) for the user who sent us a message
     return this.im.list()
@@ -77,6 +97,12 @@ class SlackClient extends WebClient {
       });
   }
 
+  /**
+   *
+   * @param userID {String} Unique user id in the form of "[slackteamid].[slackuserid]". The DM Id for the user will be retreived from this.
+   * @param attachments {Array} An array of attachments to be included in the message in place of a standard text message
+   * @returns {Promise<*|Promise|Promise<T>>}
+   */
   async sendDMToSlackUserWithAttachments(userID, attachments){
     //Retrieve the dm id (between Starry and the user) for the user who sent us a message
     return this.im.list()
