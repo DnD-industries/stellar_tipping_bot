@@ -178,11 +178,8 @@ module.exports = (db) => {
               address: to
             })
 
-            let a;
-            await Action.withinTransaction(async() => {
-              a =await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
-            })
-            console.log(a)
+            await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
+
           } catch (e) {
             console.log(e)
           }
