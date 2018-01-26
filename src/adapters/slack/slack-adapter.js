@@ -91,7 +91,7 @@ class Slack extends Adapter {
    * @returns {Promise<void>}
    */
   async onWithdrawalDestinationAccountDoesNotExist (withdrawal) {
-
+    return `I could not complete your request. The address you tried to withdraw from does not exist.`;
   }
 
   /**

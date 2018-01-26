@@ -114,6 +114,18 @@ describe('slackAdapter', async () => {
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `\`${amount}\` is not a valid withdrawal amount. Please try again.`);
     })
+
+    it (`should return an appropriate message if the user supplies a public address that doesn't exist on the chain`, async() => {
+      let nonexistantButValidAddress = "GBZKOHL2DJHVNPWWRFCDBDGMC2T5OWNVA33LN7DOY55ETALXU3PBXTN3";
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1, nonexistantButValidAddress)
+      slackAdapter.config.stellar = {
+        createTransaction: () => new Promise((res, rej) => {
+          return rej('DESTINATION_ACCOUNT_DOES_NOT_EXIST')
+        })
+      }
+      let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
+      assert.equal(returnedValue, `I could not complete your request. The address you tried to withdraw from does not exist.`);
+    })
   })
 
   describe(`receive potential tip`, () => {
