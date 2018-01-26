@@ -1,22 +1,23 @@
-const StellarSdk = require('stellar-sdk')
-const EventEmitter = require('events')
+const StellarSdk = require('stellar-sdk');
+const EventEmitter = require('events');
 
 module.exports = async function (models) {
-  const server = new StellarSdk.Server(process.env.STELLAR_HORIZON)
-  const keyPair = StellarSdk.Keypair.fromSecret(process.env.STELLAR_SECRET_KEY)
-  const publicKey = keyPair.publicKey()
-  const callBuilder = server.payments().forAccount(publicKey)
-  const Transaction = models.transaction
-  const Account = models.account
-  const events = new EventEmitter()
+  const server = new StellarSdk.Server(process.env.STELLAR_HORIZON);
+  const keyPair = StellarSdk.Keypair.fromSecret(process.env.STELLAR_SECRET_KEY);
+  const publicKey = keyPair.publicKey();
+  const callBuilder = server.payments().forAccount(publicKey);
+  const Transaction = models.transaction;
+  const Account = models.account;
+  const events = new EventEmitter();
+  let accountSequenceNumber = 0;
 
   console.log("publickey:", publicKey);
   process.env.STELLAR_PUBLIC_KEY = publicKey; //set the public key associated with our private key, for use elsewhere
 
   if (process.env.MODE === 'production') {
-    StellarSdk.Network.usePublicNetwork()
+    StellarSdk.Network.usePublicNetwork();
   } else {
-    StellarSdk.Network.useTestNetwork()
+    StellarSdk.Network.useTestNetwork();
   }
 
   //Retrieve the latest transaction involving our public key from the db
@@ -42,8 +43,8 @@ module.exports = async function (models) {
              // 3. If the tx comes from a known address, add it to the balance for that account 
 
              // We haven't implemented that yet! fairx.io to come!
-             console.log('Trying to send non-XLM credit.')
-             events.emit('NOT_NATIVE_ASSET_RECEIVED', record)
+             console.log('Trying to send non-XLM credit.');
+             events.emit('NOT_NATIVE_ASSET_RECEIVED', record);
              return;
           }
           try {
@@ -57,23 +58,23 @@ module.exports = async function (models) {
               target: record.to,
               hash: record.transaction_hash,
               type: 'deposit'
-            })
+            });
 
             //console.log(`Incoming txOriginal: `,JSON.stringify(txn))
-            console.log(`INCOMING_TRANSACTION: `, JSON.stringify(record, null, 2))
+            console.log(`INCOMING_TRANSACTION: `, JSON.stringify(record, null, 2));
             //console.log(`Incoming txInstance:`, JSON.stringify(txInstance))
-            events.emit('INCOMING_TRANSACTION', txInstance)
+            events.emit('INCOMING_TRANSACTION', txInstance);
           } catch (exc) {
-            console.log('Unable to commit transaction.')
-            console.log(exc)
-            events.emit('UNABLE_TO_COMMIT_TRANSACTION', exc)
+            console.log('Unable to commit transaction.');
+            console.log(exc);
+            events.emit('UNABLE_TO_COMMIT_TRANSACTION', exc);
           }
         })
         .catch(function(exc) {
-          console.log('Unable to process a record.')
-          console.log(exc)
-          events.emit('UNABLE_TO_PROCESS_RECORD', exc)
-        })
+          console.log('Unable to process a record.');
+          console.log(exc);
+          events.emit('UNABLE_TO_PROCESS_RECORD', exc);
+        });
     }
   })
 
@@ -94,12 +95,12 @@ module.exports = async function (models) {
      * but a uuid4 or sth like that would work as well.
      */
     createTransaction: function (to, amount, hash, memo = "") {
-      let data = {to, amount, hash}
+      let data = {to, amount, hash};
       return new Promise(function (resolve, reject) {
         // Do not deposit to self, it wouldn't make sense
         if (to === publicKey) {
-          data = 'TRANSACTION_REFERENCE_ERROR'
-          return reject(data)
+          data = 'TRANSACTION_REFERENCE_ERROR';
+          return reject(data);
         }
 
         // First, check to make sure that the destination account exists.
@@ -108,8 +109,8 @@ module.exports = async function (models) {
         server.loadAccount(to)
           // If the account is not found, surface a nicer error message for logging.
           .catch(StellarSdk.NotFoundError, function (error) {
-            data = 'DESTINATION_ACCOUNT_DOES_NOT_EXIST'
-            return reject(data)
+            data = 'DESTINATION_ACCOUNT_DOES_NOT_EXIST';
+            return reject(data);
           })
           // If there was no error, load up-to-date information on your account.
           .then(function() {
@@ -117,6 +118,13 @@ module.exports = async function (models) {
           })
           .then(async function(sourceAccount) {
             // Start building the transaction.
+            console.log("Source account sequence:", sourceAccount.sequenceNumber());
+            while (sourceAccount.sequenceNumber() <= accountSequenceNumber) {
+              console.log("Sequence number already used, incrementing...");
+              sourceAccount.incrementSequenceNumber();
+              console.log("New source account sequence:", sourceAccount.sequenceNumber());
+            }
+            accountSequenceNumber = sourceAccount.sequenceNumber();
             var transaction = new StellarSdk.TransactionBuilder(sourceAccount)
               .addOperation(StellarSdk.Operation.payment({
                 destination: to,
@@ -127,9 +135,9 @@ module.exports = async function (models) {
               }))
               // A memo allows you to add your own metadata to a transaction. It's
               // optional and does not affect how Stellar treats the transaction.
+              // We substring here to limit memo strings to the allowed 28-byte maximum.
               .addMemo(StellarSdk.Memo.text(memo.length ? memo.substring(0,27) : "XLM Tipping Bot"))
-              .build()
-            console.log("Source Account Sequence:",sourceAccount.sequenceNumber());
+              .build();
             // Sign the transaction to prove you are actually the person sending it.
             transaction.sign(keyPair);
 
