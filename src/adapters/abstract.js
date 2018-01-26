@@ -333,7 +333,7 @@ class Adapter extends EventEmitter {
       if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
-      if (exc === 'WITHDRAWAL_REFERENCE_ERROR') {
+      if (exc === 'TRANSACTION_REFERENCE_ERROR') {
         return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {

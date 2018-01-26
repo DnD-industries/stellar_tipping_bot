@@ -116,7 +116,7 @@ describe('adapter', async () => {
       }).then(() => {
         adapter.config.stellar = {
           createTransaction: () => new Promise((res, rej) => {
-            return rej('WITHDRAWAL_REFERENCE_ERROR')
+            return rej('TRANSACTION_REFERENCE_ERROR')
           })
         }
         let cmd = new Command.Withdraw('testing', 'foo', '5', target)

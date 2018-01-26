@@ -78,15 +78,13 @@ class Slack extends Adapter {
    * @param withdrawal {Withdraw}
    * @returns {Promise<void>}
    */
-  // TODO: Implement this. We may want to refund to users in the event this happens?
   async onWithdrawalReferenceError (withdrawal) {
-
+    return `You're not allowed to send money through this interface to the tipping bot. If you'd like to tip the creators, check our repository on GitHub.`;
   }
 
   /**
    * Called when the Stellar SDK determines that the destination for a withdrawal doesn't yet actually exist.
    * Note that this is distinct from onWithdrawalInvalidAddress. You can have a valid address that doesn't exist.
-   * TODO: We should definitely implement this. Otherwise, we're paying for transactions that are bound to fail.
    * @param withdrawal {Withdraw}
    * @returns {Promise<void>}
    */
