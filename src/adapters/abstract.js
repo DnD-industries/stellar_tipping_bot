@@ -44,9 +44,10 @@ class Adapter extends EventEmitter {
     // Override this or listen to events!
     this.emit('refund', transaction);
     try {
-      await transaction.refund(this.config.stellar, transaction);
+      const refundTx = await transaction.refund(this.config.stellar, transaction);
+      console.log("Refund Succeeded");
     } catch (exc) {
-      console.log("refund exception:", exc);
+      console.log("Refund Failed");
     }
   }
 

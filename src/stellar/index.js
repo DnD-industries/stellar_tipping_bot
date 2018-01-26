@@ -60,7 +60,7 @@ module.exports = async function (models) {
             })
 
             //console.log(`Incoming txOriginal: `,JSON.stringify(txn))
-            console.log(`INCOMING_TRANSACTION: `, JSON.stringify(record))
+            console.log(`INCOMING_TRANSACTION: `, JSON.stringify(record, null, 2))
             //console.log(`Incoming txInstance:`, JSON.stringify(txInstance))
             events.emit('INCOMING_TRANSACTION', txInstance)
           } catch (exc) {
@@ -129,28 +129,27 @@ module.exports = async function (models) {
               // optional and does not affect how Stellar treats the transaction.
               .addMemo(StellarSdk.Memo.text(memo.length ? memo.substring(0,27) : "XLM Tipping Bot"))
               .build()
+            console.log("Source Account Sequence:",sourceAccount.sequenceNumber());
             // Sign the transaction to prove you are actually the person sending it.
-            transaction.sign(keyPair)
+            transaction.sign(keyPair);
 
-            resolve(transaction)
+            resolve(transaction);
           })
       })
     },
 
     /**
      * Send a transaction into the horizon network
-     * TODO: Verify that we are calling with the proper argument in reject(). Looks to me like this is a general function, not just for withdrawing.
      */
     send: async function (tx) {
       return new Promise(async (resolve, reject) => {
         try {
           const transactionResult = await server.submitTransaction(tx);
-          console.log("Horizon tx result: ", transactionResult);
-          return resolve(JSON.stringify(transactionResult));
+          console.log("Transaction Success:", JSON.stringify(transactionResult, null, 2));
+          return resolve("Success");
         } catch (exc) {
-          console.log('WITHDRAWAL_SUBMISSION_FAILED');
-          console.log(exc);
-          return reject('WITHDRAWAL_SUBMISSION_FAILED');
+          console.log("Transaction Failure:", JSON.stringify(exc, null, 2));
+          return reject("Failure");
         }
       })
     }

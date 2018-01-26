@@ -108,7 +108,7 @@ module.exports = (db) => {
       },
       afterSave: async function (success) {
         if (success && !this.credited && !this.refunded && this.type === 'deposit') {
-          console.log("afterSave: ", JSON.stringify(this));
+          //console.log("afterSave: ", JSON.stringify(this));
           const Account = db.models.account;
 
           //***If the CLOSE_DEPOSIT env variable is activated, refund ALL new deposits***
