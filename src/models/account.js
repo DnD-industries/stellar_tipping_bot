@@ -179,6 +179,7 @@ module.exports = (db) => {
             })
 
             await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
+            console.log(`Transaction hash is:\n${JSON.stringify(tx)}`)
 
           } catch (e) {
             console.log(e)
