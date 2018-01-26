@@ -159,10 +159,11 @@ module.exports = (db) => {
             throw 'DUPLICATE_WITHDRAWAL'
           }
 
-          let tx;
+          let txSendResponse;
+
           try {
-            tx = await stellar.createTransaction(to, withdrawalAmount.toFixed(7), hash)
-            await stellar.send(tx)
+            const tx = await stellar.createTransaction(to, withdrawalAmount.toFixed(7), hash)
+            txSendResponse = await stellar.send(tx)
           } catch (exc) {
             this.balance = refundBalance.plus(amount).toFixed(7)
             throw exc
@@ -180,8 +181,7 @@ module.exports = (db) => {
             })
 
             await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
-            // Fix this not being defined here
-            console.log(`Transaction hash is:\n${JSON.stringify(tx)}`)
+            console.log(`Transaction hash is:\n${JSON.stringify(txSendResponse)}`)
 
           } catch (e) {
             console.log(e)
