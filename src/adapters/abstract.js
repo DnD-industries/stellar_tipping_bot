@@ -319,7 +319,8 @@ class Adapter extends EventEmitter {
     }
 
     // Fetch the account
-    const target = await this.Account.getOrCreate(adapter, uniqueId);
+    const target = await withdrawalRequest.getSourceAccount();
+    // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(withdrawalAmount)) {
       return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance);
     }

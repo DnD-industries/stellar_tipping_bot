@@ -1,8 +1,10 @@
 const assert = require('assert')
 const Adapter = require('../src/adapters/abstract')
 const Big = require('big.js')
-const Command = require('../src/adapters/commands/command');
 const Utils = require('../src/utils')
+const Command = require('../src/adapters/commands/command');
+
+let Account;
 
 describe('adapter', async () => {
 
@@ -11,7 +13,8 @@ describe('adapter', async () => {
   beforeEach(async () => {
     const config = await require('./setup')()
     adapter = new Adapter(config)
-    let Account = adapter.config.models.account;
+    Account = adapter.config.models.account;
+    // Require again so that we re-get the new Account stuff
     accountWithWallet = await Account.createAsync({
       adapter: 'testing',
       uniqueId: 'goodwallet',
@@ -73,12 +76,7 @@ describe('adapter', async () => {
 
     it (`should call withdrawalNoAddressProvided if no address is given and the account doesn't have an address on file in the db`, (done) => {
       adapter.on('withdrawalNoAddressProvided', () => done())
-      adapter.receiveWithdrawalRequest({
-          adapter: 'testing',
-          amount: '666',
-          uniqueId: 'foo',
-          hash: 'bar'
-        })
+      adapter.receiveWithdrawalRequest(new Command.Withdraw('testing', 'foo', '666'))
     })
 
     it ('should call withdrawalInvalidAddress if invalid address is given', (done) => {
@@ -95,14 +93,7 @@ describe('adapter', async () => {
 
     it ('should call withdrawalFailedWithInsufficientBalance if withdrawal exceed balance', (done) => {
       adapter.on('withdrawalFailedWithInsufficientBalance', () => done())
-      adapter.receiveWithdrawalRequest({
-        adapter: 'testing',
-        amount: '666',
-        uniqueId: 'foo',
-        hash: 'bar',
-        // someone gave her secret away :-(
-        address: 'GA2B3GCDNVMANF4TT44KJNYU7TBVTKWY5XWF3Q3BJAPXRPBHXAEIFGBD'
-      })
+      adapter.receiveWithdrawalRequest(new Command.Withdraw('testing', 'foo', '666', 'GA2B3GCDNVMANF4TT44KJNYU7TBVTKWY5XWF3Q3BJAPXRPBHXAEIFGBD'))
     })
 
     it ('should call withdrawalReferenceError if transaction goes to bot account', (done) => {
@@ -128,13 +119,8 @@ describe('adapter', async () => {
             return rej('WITHDRAWAL_REFERENCE_ERROR')
           })
         }
-        adapter.receiveWithdrawalRequest({
-          adapter: 'testing',
-          amount: '5',
-          uniqueId: 'foo',
-          hash: 'hash',
-          address: target
-        })
+        let cmd = new Command.Withdraw('testing', 'foo', '5', target)
+        adapter.receiveWithdrawalRequest(cmd)
       })
     })
 
@@ -161,13 +147,8 @@ describe('adapter', async () => {
             return rej('WITHDRAWAL_DESTINATION_ACCOUNT_DOES_NOT_EXIST')
           })
         }
-        adapter.receiveWithdrawalRequest({
-          adapter: 'testing',
-          amount: '5',
-          uniqueId: 'foo',
-          hash: 'hash',
-          address: target
-        })
+        let  cmd = new Command.Withdraw('testing', 'foo', '5', target)
+        adapter.receiveWithdrawalRequest(cmd)
       })
     })
 
@@ -196,13 +177,8 @@ describe('adapter', async () => {
             address: source,
             createTransaction: () => {}
           }
-          await adapter.receiveWithdrawalRequest({
-            adapter: 'testing',
-            amount: '5',
-            uniqueId: 'foo',
-            hash: 'hash',
-            address: target
-          })
+          let cmd = new Command.Withdraw('testing', 'foo', '5', target)
+          await adapter.receiveWithdrawalRequest(cmd)
 
           // account should be refunded
           const account = await Account.getOrCreate('testing', 'foo')
@@ -237,13 +213,8 @@ describe('adapter', async () => {
             throw 'WITHDRAWAL_SUBMISSION_FAILED'
           }
         }
-        adapter.receiveWithdrawalRequest({
-          adapter: 'testing',
-          amount: '5',
-          uniqueId: 'foo',
-          hash: 'hash',
-          address: target
-        })
+        let cmd = new Command.Withdraw('testing', 'foo', '5', target)
+        adapter.receiveWithdrawalRequest(cmd)
       })
     })
 
@@ -255,7 +226,7 @@ describe('adapter', async () => {
       adapter.on('withdrawal', async () => {
         // account should be refunded
         const account = await Account.getOrCreate('testing', 'foo')
-        const action = await Action.oneAsync({hash: 'hash', type: 'withdrawal', sourceaccount_id: account.id})
+        const action = await Action.oneAsync({type: 'withdrawal', sourceaccount_id: account.id})
         assert.equal('0.0000000', account.balance)
 
         assert.equal('5.0000000', action.amount)
@@ -271,19 +242,20 @@ describe('adapter', async () => {
         adapter: 'testing',
         uniqueId: 'foo',
         balance: '5.0000000'
-      }).then(() => {
+      }).then(async () => {
         adapter.config.stellar = {
           address: source,
           createTransaction: () => {},
           send: () => {}
         }
-        adapter.receiveWithdrawalRequest({
-          adapter: 'testing',
-          amount: '5',
-          uniqueId: 'foo',
-          hash: 'hash',
-          address: target
-        })
+        let cmd = new Command.Withdraw('testing', 'foo', '5', target)
+        // Verify an Action with our given paremeters doesn't yet exist
+        const Action = adapter.config.models.action
+        let acc = await cmd.getSourceAccount();
+        const action = await Action.oneAsync({type: 'withdrawal', sourceaccount_id: acc.id})
+        assert.notEqual(acc, null) // Our account should exist by this point
+        assert.equal(action, null) // But our withdrawal Action from that account should not
+        adapter.receiveWithdrawalRequest(cmd)
       })
     })
   })
@@ -385,6 +357,5 @@ describe('adapter', async () => {
       }
     })
   })
-
 
 })
