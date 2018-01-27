@@ -23,7 +23,16 @@ module.exports = {
       return number.toString()
     else
       return parseInt(number).toString()
-  }, 
+  },
+
+
+  /**
+   *
+   * @param uniqueId {String} A unique ID for a user in the format of [teamid].[userid]
+   */
+  slackUserIdFromUniqueId: (uniqueId) => {
+    return uniqueId.split(`.`)[1]
+  },
 
 
   /**
