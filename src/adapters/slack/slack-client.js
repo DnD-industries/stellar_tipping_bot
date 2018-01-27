@@ -13,6 +13,7 @@ class SlackClient extends WebClient {
   async getDMIdForUser(userID) {
     return this.im.list()
       .then((res) => {
+        console.log(`Response: ${JSON.stringify(res)}`)
         var dmID;
         for (let im of res.ims) {
           if (im.user === userID) {
