@@ -143,8 +143,8 @@ class Slack extends Adapter {
    * @param address {String}
    * @returns {Promise<string>}
    */
-  async onWithdrawal (withdrawal, address) {
-    return `You withdrew \`${Utils.formatNumber(withdrawal.amount)} XLM\` to your wallet at \`${address}\``
+  async onWithdrawal (withdrawal, address, txHash) {
+    return `You withdrew \`${Utils.formatNumber(withdrawal.amount)} XLM\` to your wallet at \`${address}\`\n\nYour transaction hash is \`${txHash}\``
   }
 
 

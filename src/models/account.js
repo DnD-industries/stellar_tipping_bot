@@ -122,6 +122,18 @@ module.exports = (db) => {
        * withdrawalAmount can be a string or a Big
        * hash should just be something unique - we use the msg id from reddit,
        * but a uuid4 or sth like that would work as well.
+       *
+       * Should return response body from transaction send
+       * See: https://www.stellar.org/developers/horizon/reference/endpoints/transactions-create.html
+       */
+
+      /**
+       *
+       * @param stellar The adapter's config.stellar object, in most cases (except during testing)
+       * @param to {String} The oybkuc address to which the XLM is being withdrawn
+       * @param withdrawalAmount {String|Big}
+       * @param hash {String} A unique identifier for the withdrawal
+       * @returns {Promise<*>}
        */
       withdraw: async function (stellar, to, withdrawalAmount, hash) {
         const Transaction = db.models.transaction
@@ -181,7 +193,7 @@ module.exports = (db) => {
             })
 
             await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
-            console.log(`Transaction hash is:\n${JSON.stringify(txSendResponse)}`)
+            return txSendResponse
 
           } catch (e) {
             console.log(e)

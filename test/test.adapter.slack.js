@@ -102,10 +102,20 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, "You requested to withdraw \`500.0142 XLM\` but your wallet only contains \`1 XLM\`");
     })
 
-    it (`should complete the withdrawal and should return an appropriate message if the  user has a sufficient balance`, async() => {
+    it (`should complete the withdrawal and should return a message with the amount withdrawn and a transaction receipt if the  user has a sufficient balance`, async() => {
+      const transactionHash = "txHash"
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
+      // A little messy, but the general idea here is that we are getting the command to just
+      // return what it would have already been returning, but with its 'withdraw' function's return value pre-determined for testing purposes
+      let sourceAccount = await command.getSourceAccount()
+      sourceAccount.withdraw = () => {
+        return transactionHash
+      }
+      command.getSourceAccount = () => {
+        return sourceAccount;
+      }
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
-      assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\``);
+      assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\`\n\nYour transaction hash is \`${transactionHash}\``);
     })
 
     it (`should return an appropriate message if the  user supplies a string in place of a number`, async() => {

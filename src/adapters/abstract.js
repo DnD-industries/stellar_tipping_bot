@@ -184,7 +184,7 @@ class Adapter extends EventEmitter {
    * @param address {String} The address to which the withdrawal was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
    * @returns {Promise<void>}
    */
-  async onWithdrawal (withdrawal, address) {
+  async onWithdrawal (withdrawal, address, txHash) {
     // Override this or listen to events!
     this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
   }
@@ -328,8 +328,9 @@ class Adapter extends EventEmitter {
 
     // Withdraw
     try {
-      await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
-      return this.onWithdrawal(withdrawalRequest, address);
+      // txHash is the hash from the stellar blockchain, not our internal hash
+      const txHash = await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
+      return this.onWithdrawal(withdrawalRequest, address, txHash);
     } catch (exc) {
       if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
