@@ -194,7 +194,7 @@ class Slack extends Adapter {
    */
   async onDeposit (sourceAccount, amount) {
     // Override this or listen to events!
-    console.log(`Deposit source account:\n${sourceAccount}\nAmount: ${amount}`)
+    console.log(`Deposit source account:\n${JSON.stringify(sourceAccount)}\nAmount: ${amount}`)
     this.client.sendPlainTextDMToSlackUser(sourceAccount.uniqueUserID,
         `You made a deposit of ${amount}`);
   }
