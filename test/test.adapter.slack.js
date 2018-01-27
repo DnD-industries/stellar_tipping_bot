@@ -213,7 +213,7 @@ describe('slackAdapter', async () => {
     it('should send a message to the receiver of a deposit when their deposit goes through', async () => {
       let amount = 5.0
       await slackAdapter.onDeposit(accountWithWallet, amount)
-      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(accountWithWallet.uniqueUserID, `You made a deposit of ${Utils.formatNumber(amount)}`));
+      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(accountWithWallet.uniqueId, `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
     })
   })
 })
