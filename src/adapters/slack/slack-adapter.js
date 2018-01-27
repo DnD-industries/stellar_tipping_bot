@@ -185,6 +185,19 @@ class Slack extends Adapter {
       return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
   }
+
+  /**
+   *
+   * @param sourceAccount The uniqueId of the account which made the deposit
+   * @param amount The amount in XLM of the deposit
+   * @returns {Promise<void>}
+   */
+  async onDeposit (sourceAccount, amount) {
+    // Override this or listen to events!
+    this.client.sendPlainTextDMToSlackUser(sourceAccount.uniqueUserID,
+        `You made a deposit of ${amount}`);
+  }
+
   /**
    *
    * @param cmd {Balance}

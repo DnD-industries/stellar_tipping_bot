@@ -102,7 +102,8 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, "You requested to withdraw \`500.0142 XLM\` but your wallet only contains \`1 XLM\`");
     })
 
-    it (`should complete the withdrawal and should return a message with the amount withdrawn and a transaction receipt if the  user has a sufficient balance`, async() => {
+    it (`should complete the withdrawal and should return a message with the amount withdrawn and a transaction receipt if the  user has a sufficient balance`, async() =>
+    {
       const transactionHash = "txHash"
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
       // A little messy, but the general idea here is that we are getting the command to just
@@ -166,7 +167,7 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `What is the sound of one tipper tipping?`)
     })
 
-    it (`should return a confirmation message to the tipper once the tip has gone through`, async() => {
+    it (`should return a confirmation message with transaction hash to the tipper once the tip has gone through`, async() => {
       let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
@@ -205,6 +206,14 @@ describe('slackAdapter', async () => {
       let balanceCommand = new Command.Balance(accountWithWallet.adapter, accountWithWallet.uniqueId, accountWithWallet.walletAddress)
       const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
       assert.equal(returned, `Your wallet address is: \`${accountWithWallet.walletAddress}\`\nYour balance is: \'${accountWithWallet.balance}\'`)
+    })
+  })
+
+  describe('on deposit', () => {
+    it('should send a message to the receiver of a deposit when their deposit goes through', async () => {
+      let amount = 5.0
+      await slackAdapter.onDeposit(accountWithWallet, amount)
+      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(accountWithWallet.uniqueUserID, `You made a deposit of ${Utils.formatNumber(amount)}`));
     })
   })
 })
