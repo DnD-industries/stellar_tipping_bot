@@ -8,7 +8,8 @@ const SlackAdapter  = require('../slack/slack-adapter');
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
-
+const redis = require('redis');
+const CommandQueue = require('./slack-command-queue')
 
 /**
  * SlackServer handles all post calls coming from Slack slash commands.
@@ -23,6 +24,7 @@ class SlackServer {
     var that = this; // Allows us to keep reference to 'this' even in closures, wherein "this" will actually mean the closure we are inside of in that context
     this.adapter = slackAdapter;
     this.client = new slackClient(oauth_token);
+    this.CommandQueue = new CommandQueue(redis.createClient(process.env.REDIS_URL));
     // Set up express app
     app.set('port', (process.env.PORT || 5000));
 
@@ -86,6 +88,8 @@ class SlackServer {
       console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      CommandQueue.enqueue(command);
 
       res.send(await that.adapter.handleRegistrationRequest(command))
     });

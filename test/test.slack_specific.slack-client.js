@@ -34,7 +34,6 @@ describe('slack-message', async () => {
       let userID = "U8PTZ287N";
       return client.sendPlainTextDMToSlackUser(userID, "Testing sendPlainTextDMToSlackUser")
       .then((result) => {
-        //console.log("RESULT:" + JSON.stringify(result));
         expect(result.ok).to.equal(true);
       }); 
     }).timeout(testTimeout);
