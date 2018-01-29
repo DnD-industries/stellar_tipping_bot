@@ -18,3 +18,4 @@ docker push "${DOCKER_REPO}":$BUILD_TAG
 	#ssh deploy@ipaddr 
   	#/bin/bash ./deploy.sh
 #fi
+ 
