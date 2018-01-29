@@ -35,7 +35,7 @@ npm install
 Fire up a postgres container and create two databases:
 
 ```
-docker run -itd --name db -p 5455:5432 postgres:latest
+docker run -itd --name db -p 5455:5432 postgres:10.1
 docker exec -ti db sh -c 'su postgres -c "createdb stellar"'
 docker exec -ti db sh -c 'su postgres -c "createdb stellar_testing"'
 ```
@@ -75,7 +75,7 @@ MODE=testing
 PG_USER=postgres
 PG_HOST=localhost
 PG_PORT=5455
-PG_NAME=stellar_testing
+PG_DB=stellar_testing
 PG_PASSWORD=
 
 SLACK_VERIFICATION_TOKEN=YOUR_SLACK_VERIFICATION_TOKEN

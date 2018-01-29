@@ -1,0 +1,38 @@
+version: '2'
+services:
+  app:
+    image: davidbulnes/stellar-bot
+    build:
+      . # build using the Dockerfile from the root directory of the repo
+    volumes:
+      - ${PWD}/.env:/usr/src/app/.env # make our .env file available inside the container. We need an absolute path (using pwd) because it is a single file volume.
+    working_dir: /usr/src/app
+    stdin_open: true # necessary for a shell session inside the container
+    tty: true # shell session
+    ports:
+      - 5000:5000
+    links:
+      - db
+      - redis
+    depends_on:
+      - db
+      - redis
+    command: bash -c "npm run app" # encapsulate the command with bash -c so we can add additional steps easily
+    environment:
+      - PG_URL=postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}
+  db:
+    image: postgres:10.1
+    #volumes:
+    #  - 
+    ports:
+      - 5455:5432
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      - POSTGRES_DATABASE=${PG_DB}
+  redis:
+    image: redis:3.2.11
+    #volumes:
+      #- define any persistent on-disk storage or swap space
+    ports:
+      - 6379:6379 # may want to define a different externally mapped port so we can differentiate connections via localhost vs docker0

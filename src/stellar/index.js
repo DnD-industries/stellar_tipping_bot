@@ -9,7 +9,7 @@ module.exports = async function (models) {
   const Transaction = models.transaction;
   const Account = models.account;
   const events = new EventEmitter();
-  let accountSequenceNumber = 0;
+  let lastSequenceNumber = 0;
 
   console.log("publickey:", publicKey);
   process.env.STELLAR_PUBLIC_KEY = publicKey; //set the public key associated with our private key, for use elsewhere
@@ -119,12 +119,12 @@ module.exports = async function (models) {
           .then(async function(sourceAccount) {
             // Start building the transaction.
             console.log("Source account sequence:", sourceAccount.sequenceNumber());
-            while (sourceAccount.sequenceNumber() <= accountSequenceNumber) {
+            while (sourceAccount.sequenceNumber() <= lastSequenceNumber) {
               console.log("Sequence number already used, incrementing...");
               sourceAccount.incrementSequenceNumber();
               console.log("New source account sequence:", sourceAccount.sequenceNumber());
             }
-            accountSequenceNumber = sourceAccount.sequenceNumber();
+            lastSequenceNumber = sourceAccount.sequenceNumber();
             var transaction = new StellarSdk.TransactionBuilder(sourceAccount)
               .addOperation(StellarSdk.Operation.payment({
                 destination: to,
