@@ -1,6 +1,6 @@
 #!/bin/bash
 #Handle line endings for unix systems
-git config core.autocrlf true
+git config core.autocrlf false
 #stash any local changes due to the build
 git stash --all
 #build our new app
