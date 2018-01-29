@@ -8,6 +8,7 @@ cache:
 services: 
   - postgresql
   - redis-server
+  - docker
 before_script:
   - psql -c 'CREATE DATABASE stellar_testing;' -U postgres
 after_success:

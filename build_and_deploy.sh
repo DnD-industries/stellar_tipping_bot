@@ -1,4 +1,5 @@
 #!/bin/bash
+git stash --all #stash any local changes due to the build
 docker-compose build
 docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 docker push "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_"${TRAVIS_COMMIT}"
