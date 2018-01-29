@@ -34,7 +34,7 @@ module.exports = async () => {
     conn_url = `postgres://${process.env.PG_USER}${password}@${host_with_port}/${process.env.PG_DB}`;
   }
   conn_url += `?pool=false`;
-  console.log("Connection URL is: " + conn_url);
+  console.log("Postgres connection URL is: " + conn_url);
   const db = await orm.connectAsync(conn_url);
 
   // +++ Model definitions

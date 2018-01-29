@@ -24,7 +24,12 @@ class SlackServer {
     var that = this; // Allows us to keep reference to 'this' even in closures, wherein "this" will actually mean the closure we are inside of in that context
     this.adapter = slackAdapter;
     this.client = new slackClient(oauth_token);
-    this.CommandQueue = new CommandQueue(redis.createClient(process.env.REDIS_URL));
+    try{
+      console.log("Connecting to redis url:", process.env.REDIS_URL);
+      this.CommandQueue = new CommandQueue(redis.createClient(process.env.REDIS_URL));
+    } catch (exc) {
+      throw new Error(exc);
+    }
     // Set up express app
     app.set('port', (process.env.PORT || 5000));
 
