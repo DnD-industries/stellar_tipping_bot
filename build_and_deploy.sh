@@ -1,6 +1,10 @@
 #!/bin/bash
-git stash --all #stash any local changes due to the build
+#stash any local changes due to the build
+git stash --all
+#build our new app
 docker-compose build
+#tag with the branch and commit sha 
+docker tag "${DOCKER_REPO}" "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_"${TRAVIS_COMMIT}" 
 docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 docker push "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_"${TRAVIS_COMMIT}"
 
