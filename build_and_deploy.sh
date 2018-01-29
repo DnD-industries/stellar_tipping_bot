@@ -3,10 +3,13 @@
 git stash --all
 #build our new app
 docker-compose build
-#tag with the branch and commit sha 
-docker tag "${DOCKER_REPO}" "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_"${TRAVIS_COMMIT}" 
+#tag the build with the branch and shortened commit sha 
+BUILD_TAG="{TRAVIS_BRANCH}"_$(git rev-parse --short HEAD)
+echo "Build tag: "$BUILD_TAG
+
+docker tag "${DOCKER_REPO}" "${DOCKER_REPO}":$BUILD_TAG 
 docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
-docker push "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_"${TRAVIS_COMMIT}"
+docker push "${DOCKER_REPO}":$BUILD_TAG
 
 #If we are in the master branch, ssh into the production server to trigger a docker pull
 #if [ "${TRAVIS_BRANCH}" == "master" ]; then
