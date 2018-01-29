@@ -42,13 +42,23 @@ describe('slack-command-queue', async () => {
     CommandQueue._push = sinon.spy();
   });
 
-  describe('enqueue', () => {
+  describe('pushCommand', () => {
     it('should serialize the command and push it to the redis queue', async () => {
       let cmd = new Command.Register('testing', 'someUserId', 'walletAddr');
       // mock it
       cmd.serialize = () => { return 'serialized'; }
-      CommandQueue.enqueue(cmd);
+      CommandQueue.pushCommand(cmd);
       assert(CommandQueue._push.calledWith(cmd.serialize()))
     })
   })
+
+  // describe('enqueue', () => {
+  //   it('should serialize the command and push it to the redis queue', async () => {
+  //     let cmd = new Command.Register('testing', 'someUserId', 'walletAddr');
+  //     // mock it
+  //     cmd.serialize = () => { return 'serialized'; }
+  //     CommandQueue.enqueue(cmd);
+  //     assert(CommandQueue._push.calledWith(cmd.serialize()))
+  //   })
+  // })
 })

@@ -21,7 +21,7 @@ class CommandQueue {
    * Serializes a given Command and then pushes it on the stack of commands to be dealt with
    * @param command {Command} The unserialized command object to be enqueued
    */
-  enqueue (command) {
+  pushCommand (command) {
     const serialized = command.serialize();
     this._push(serialized);
   }
