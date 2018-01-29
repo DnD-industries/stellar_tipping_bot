@@ -10,3 +10,5 @@ services:
   - redis-server
 before_script:
   - psql -c 'CREATE DATABASE stellar_testing;' -U postgres
+after_success:
+  - ./build_and_deploy.sh
