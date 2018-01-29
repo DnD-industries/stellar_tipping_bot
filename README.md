@@ -29,15 +29,11 @@ While scanning our own internet from afar for a suitable community to join, Star
 Check out the repo and install dependencies:
 
 ```
-npm install
-```
+sudo apt-get install docker-compose 
+OR
+brew install docker-compose
 
-Fire up a postgres container and create two databases:
-
-```
-docker run -itd --name db -p 5455:5432 postgres:10.1
-docker exec -ti db sh -c 'su postgres -c "createdb stellar"'
-docker exec -ti db sh -c 'su postgres -c "createdb stellar_testing"'
+docker-compose build
 ```
 
 Create an `.env` file:
@@ -45,11 +41,11 @@ Create an `.env` file:
 ```
 MODE=development
 
+PG_DB=stellar
 PG_USER=postgres
-PG_HOST=localhost
-PG_PORT=5455
-PG_NAME=stellar
-PG_PASSWORD=
+PG_PASSWORD=starry
+PG_HOST=db
+PG_PORT=5432
 
 STELLAR_HORIZON=https://horizon-testnet.stellar.org
 STELLAR_SECRET_KEY=YOUR_SECRET_KEY_HERE
@@ -72,17 +68,27 @@ Create an `.env.test`:
 ```
 MODE=testing
 
+PORT=5001
+
+PG_DB=stellar
 PG_USER=postgres
-PG_HOST=localhost
+PG_PASSWORD=starry
+PG_HOST=db
 PG_PORT=5455
-PG_DB=stellar_testing
-PG_PASSWORD=
 
 SLACK_VERIFICATION_TOKEN=YOUR_SLACK_VERIFICATION_TOKEN
 SLACK_BOT_OAUTH_TOKEN=YOUR_SLACK_OAUTH_TOKEN
 SLACK_BOT_NAME=Starry
 
 CLOSE_DEPOSITS=false
+```
+
+Fire up the application stack and create two databases:
+
+```
+docker-compose up -d
+docker-compose exec db sh -c 'su postgres -c "createdb stellar"'
+docker-compose exec db sh -c 'su postgres -c "createdb stellar_testing"'
 ```
 
 ## Get it going
@@ -96,8 +102,11 @@ npm run test
 Run the app:
 
 ```
-npm run app
+docker-compose up -d
+docker-compose logs -f app
 ```
+
+The bot is now running on localhost:5000
 
 ## Contribute
 
@@ -107,7 +116,7 @@ We are always looking for contributors. A nice way to contribute is [creating mo
 
 If you want to support the development of the bot, please send XLM to:
 
-`GC2BDQ6BCDCIYLPHFGZKO4DJ3L3LQ4KTG3IZYF4M4UDBC3V2CZBZH3TU`
+`GDQPEI6PRU33VDWUBKVXDIRWY337MAB4755LCU5RF7HFGWOEWXKWGMEZ`
 
 Thank you very much!
 
