@@ -6,7 +6,7 @@ git stash --all
 #build our new app
 docker-compose build
 #tag the build with the branch and shortened commit sha 
-BUILD_TAG="{TRAVIS_BRANCH}"_$(git rev-parse --short HEAD)
+BUILD_TAG="${TRAVIS_BRANCH}"_$(git rev-parse --short HEAD)
 echo "Build tag: "$BUILD_TAG
 
 docker tag "${DOCKER_REPO}" "${DOCKER_REPO}":$BUILD_TAG 
