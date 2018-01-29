@@ -70,7 +70,7 @@ MODE=testing
 
 PORT=5001
 
-PG_DB=stellar
+PG_DB=stellar-testing
 PG_USER=postgres
 PG_PASSWORD=starry
 PG_HOST=db

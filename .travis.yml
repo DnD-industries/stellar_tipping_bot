@@ -7,5 +7,6 @@ cache:
     - "node_modules"
 services: 
   - postgresql
+  - redis-server
 before_script:
   - psql -c 'CREATE DATABASE stellar_testing;' -U postgres
