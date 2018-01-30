@@ -15,7 +15,7 @@ docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 #push both the branch_latest tag and the build_tag with commit sha
 docker push "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_latest
 docker push "${DOCKER_REPO}":$BUILD_TAG
-
+ 
 #If we are in the master branch, ssh into the production server to trigger a docker pull
 #Also validate this build wasn't triggered by a pull request to master
 #if [ "${TRAVIS_BRANCH}" == "master" && "${TRAVIS_PULL_REQUEST}" == "false"]; then
