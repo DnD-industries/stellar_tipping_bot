@@ -11,6 +11,8 @@ COPY ./package-lock.json /usr/src/app/package-lock.json
 
 RUN npm install
 
-COPY . /usr/src/app
+COPY . /usr/src/app/
+
+COPY app.js /usr/src/app/
 
 EXPOSE 5000

@@ -6,7 +6,7 @@ git config core.autocrlf false
 #stash any local changes due to the build
 #git stash --all
 #build our new app
-docker-compose build
+docker-compose build --no-cache
 #tag the build with the branch and shortened commit sha 
 BUILD_TAG="${TRAVIS_BRANCH}"_$(git rev-parse --short HEAD)
 echo "Build tag: "$BUILD_TAG
