@@ -55,13 +55,13 @@ class CommandQueue {
    *
    * @param slackClient {Slack}
    */
-  flush(slackAdapter) {
-    let command = this.popCommand();
+  async flush(slackAdapter) {
+    let command = await this.popCommand();
     if(!command) {
       console.log("nothing to flush");
     }
     while(command) {
-      slackAdapter.handleCommand(command);
+      await slackAdapter.handleCommand(command);
       command = this.popCommand();
     }
   }
