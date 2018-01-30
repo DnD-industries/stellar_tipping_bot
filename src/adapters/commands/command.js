@@ -7,11 +7,11 @@ const AccountInstance = require('../../models/account')
  *
  */
 class Command {
-  constructor(adapter, sourceId) {
+  constructor(adapter, sourceId, hash) {
     this.adapter  = adapter;
     this.sourceId = sourceId;
     this.uniqueId = this.sourceId; // alias, allows for interoperability with multiple legacy functions expecting different names for same data
-    this.hash     = utils.uuidv4();
+    this.hash     = hash || utils.uuidv4();
   }
 
   get Account() {
@@ -20,6 +20,36 @@ class Command {
 
   async getSourceAccount() {
     return await this.Account.getOrCreate(this.adapter, this.sourceId);
+  }
+
+  serialize() {
+    return {
+      adapter : this.adapter,
+      sourceId: this.sourceId,
+      uniqueId: this.uniqueId,
+      hash    : this.hash
+    }
+  }
+
+  static deserialize(serialized) {
+    switch(serialized.type) {
+      case "register":
+        return new Register(serialized.adapter, serialized.sourceId, serialized.walletPublicKey);
+        break;
+      case "tip":
+        return new Tip(serialized.adapter, serialized.sourceId, serialized.targetId, serialized.amount);
+        break;
+      case "withdraw":
+        return new Withdraw(serialized.adapter, serialized.sourceId, serialized.amount, serialized.address);
+        break;
+      case "balance":
+        return new Balance(serialized.adapter, serialized.sourceId, serialized.address);
+        break;
+      default:
+        //We don't know what type the command is, so return the generic super class
+        return new Command(serialized.adapter, serialized.sourceId, serialized.hash);
+        break;
+    }
   }
 }
 
@@ -80,5 +110,6 @@ module.exports = {
   Register,
   Tip,
   Withdraw,
-  Balance
+  Balance,
+  Deserialize: Command.deserialize
 }
