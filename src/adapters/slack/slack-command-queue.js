@@ -61,9 +61,12 @@ class CommandQueue {
       console.log("nothing to flush");
     }
     while(command) {
+      consoel.log("In whiel of flush");
       await slackAdapter.handleCommand(command);
       command = this.popCommand();
     }
+
+    console.log("Finished flush");
 
   }
 }
