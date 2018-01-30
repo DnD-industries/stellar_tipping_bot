@@ -154,6 +154,7 @@ class Slack extends Adapter {
    * @returns {Promise<void>}
    */
   async handleCommand(command) {
+    console.log(`Hadling command: ${JSON.stringify(command)}`)
     if(!command) {
       return;
     }
@@ -224,6 +225,7 @@ class Slack extends Adapter {
    * @returns {Promise<void>}
    */
   async receiveBalanceRequest (cmd) {
+    console.log("in Receive balance request");
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
     if(!account.walletAddress) {
       return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
