@@ -58,7 +58,7 @@ class Command {
         break;
       default:
         //We don't know what type the command is, so return null;
-        return new Command(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
+        return null;
         break;
     }
   }
