@@ -1,15 +1,18 @@
 language: node_js
 node_js:
-  - "node"
-  - "9.4.0"
+- node
+- 9.4.0
 cache:
   directories:
-    - "node_modules"
-services: 
-  - postgresql
-  - redis-server
-  - docker
+  - node_modules
+services:
+- postgresql
+- redis-server
+- docker
 before_script:
-  - psql -c 'CREATE DATABASE stellar_testing;' -U postgres
+- psql -c 'CREATE DATABASE stellar_testing;' -U postgres
+before_install:
+- openssl aes-256-cbc -K $encrypted_12c7568632e6_key -iv $encrypted_12c7568632e6_iv
+  -in travis_key.enc -out travis_key -d
 after_success:
-  - ./build_and_deploy.sh
+- "./build_and_deploy.sh"

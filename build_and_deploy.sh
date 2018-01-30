@@ -15,8 +15,8 @@ docker login -u "${DOCKER_USERNAME}" -p "${DOCKER_PASSWORD}"
 docker push "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_latest "${DOCKER_REPO}":$BUILD_TAG
 
 #If we are in the master branch, ssh into the production server to trigger a docker pull
-#if [ "${TRAVIS_BRANCH}" == "master" ]; then
-	#ssh deploy@ipaddr 
-  	#/bin/bash ./deploy.sh
-#fi
+#Also validate this build wasn't triggered by a pull request to master
+if [ "${TRAVIS_BRANCH}" == "master" && "${TRAVIS_PULL_REQUEST}" == "false"]; then
+	ssh "${HOST_USER}"@"${HOST_MACHINE}" './pull_and_run_image.sh ${DOCKER_REPO}:$BUILD_TAG'
+fi
  
