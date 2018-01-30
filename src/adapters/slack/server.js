@@ -11,6 +11,8 @@ const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const redis = require('redis');
 const CommandQueue = require('./slack-command-queue')
 
+const MESSAGE_FLUSH_INTERVAL = 100; // milliseconds
+
 /**
  * SlackServer handles all post calls coming from Slack slash commands.
  */
@@ -69,6 +71,9 @@ class SlackServer {
       console.log("recipient: ", recipientID);
 
       let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      await this.CommandQueue.pushCommand(command);
+
       res.send(await that.adapter.receivePotentialTip(command));
     });
 
@@ -112,6 +117,8 @@ class SlackServer {
     // Spin up the server
     this.server = app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'));
+
+      setInterval(that.CommandQueue.flush, MESSAGE_FLUSH_INTERVAL, that.client);
     });
   }
 

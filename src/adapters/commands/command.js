@@ -33,7 +33,15 @@ class Command {
     }
   }
 
+  /**
+   *
+   * @param serialized
+   * @returns {Command}
+   */
   static deserialize(serialized) {
+    if(!serialized) {
+      return null;
+    }
     switch(serialized.type) {
       case "register":
         return new Register(serialized.adapter, serialized.sourceId, serialized.walletPublicKey, serialized.hash);

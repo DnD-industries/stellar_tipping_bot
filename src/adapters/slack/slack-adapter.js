@@ -147,13 +147,33 @@ class Slack extends Adapter {
     return `You withdrew \`${Utils.formatNumber(withdrawal.amount)} XLM\` to your wallet at \`${address}\`\n\nYour transaction hash is \`${txHash}\``
   }
 
+  /**
+   * Routes a command depending on its class to the appropriate function
+   *
+   * @param command {Command}
+   * @returns {Promise<void>}
+   */
+  async handleCommand(command) {
+    if(!command) {
+      return;
+    }
+    if(command instanceof Command.Register) {
+      this.handleRegistrationRequest(command);
+    } else if (command instanceof Command.Balance) {
+      this.receiveBalanceRequest(command);
+    } else if (command instanceof Command.Tip) {
+      this.receivePotentialTip(command);
+    } else if (command instanceof Command.Withdraw) {
+      this.receiveWithdrawalRequest(command);
+    }
+  }
 
   /**
    * handleRegistrationRequest(command)
    *
    * @param command a Registration command object
    */
-  async handleRegistrationRequest(command) {``
+  async handleRegistrationRequest(command) {
 
     if (!(command.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(command.walletPublicKey))) {
       return this.onRegistrationBadWallet(command.walletPublicKey)
