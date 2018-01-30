@@ -120,7 +120,7 @@ module.exports = async function (models) {
             // Start building the transaction.
             console.log("Source account sequence:", sourceAccount.sequenceNumber());
             while (sourceAccount.sequenceNumber() <= lastSequenceNumber) {
-              console.log("Sequence number already used, incrementing...");
+              console.log("Sequence number " + sourceAccount.account + " l.t.e. to last sequence of " + lastSequenceNumber);
               sourceAccount.incrementSequenceNumber();
               console.log("New source account sequence:", sourceAccount.sequenceNumber());
             }

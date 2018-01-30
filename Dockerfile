@@ -9,7 +9,6 @@ RUN cd /tmp && npm install
 
 RUN mkdir -p /usr/src/app
 RUN cp -a /tmp/node_modules /usr/src/app
-RUN rm -R /tmp/node_modules
 
 WORKDIR /usr/src/app
 COPY . /usr/src/app
