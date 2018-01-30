@@ -36,16 +36,16 @@ class Command {
   static deserialize(serialized) {
     switch(serialized.type) {
       case "register":
-        return new Register(serialized.adapter, serialized.sourceId, serialized.walletPublicKey);
+        return new Register(serialized.adapter, serialized.sourceId, serialized.walletPublicKey, serialized.hash);
         break;
       case "tip":
-        return new Tip(serialized.adapter, serialized.sourceId, serialized.targetId, serialized.amount);
+        return new Tip(serialized.adapter, serialized.sourceId, serialized.targetId, serialized.amount, serialized.hash);
         break;
       case "withdraw":
-        return new Withdraw(serialized.adapter, serialized.sourceId, serialized.amount, serialized.address);
+        return new Withdraw(serialized.adapter, serialized.sourceId, serialized.amount, serialized.address, serialized.hash);
         break;
       case "balance":
-        return new Balance(serialized.adapter, serialized.sourceId, serialized.address);
+        return new Balance(serialized.adapter, serialized.sourceId, serialized.address, serialized.hash);
         break;
       default:
         //We don't know what type the command is, so return the generic super class
@@ -59,8 +59,8 @@ class Command {
  * Register is used to allow users to register a wallet against their unique ID for a particular platform
  */
 class Register extends Command {
-  constructor(adapter, sourceId, walletPublicKey){
-    super(adapter, sourceId);
+  constructor(adapter, sourceId, walletPublicKey, hash){
+    super(adapter, sourceId, hash);
     this.walletPublicKey = walletPublicKey;
     this.type = "register";
   }
@@ -76,8 +76,8 @@ class Register extends Command {
  * Tip allows users to tip another user
  */
 class Tip extends Command {
-  constructor(adapter, sourceId, targetId, amount){
-    super(adapter, sourceId);
+  constructor(adapter, sourceId, targetId, amount, hash){
+    super(adapter, sourceId, hash);
     this.targetId = targetId;
     this.amount   = amount;
     this.type = "tip";
@@ -98,8 +98,8 @@ class Tip extends Command {
  *
  */
 class Withdraw extends Command {
-  constructor(adapter, sourceId, amount, address = null){
-    super(adapter, sourceId);
+  constructor(adapter, sourceId, amount, address = null, hash = null){
+    super(adapter, sourceId, hash);
     this.amount   = amount;
     this.address  = address;
     this.type = "withdraw";
@@ -119,8 +119,8 @@ class Withdraw extends Command {
  * Allows the user to check their balance, current wallet address
  */
 class Balance extends Command {
-  constructor(adapter, sourceId, address = null){
-    super(adapter, sourceId);
+  constructor(adapter, sourceId, address = null, hash = null){
+    super(adapter, sourceId, hash);
     this.address = address;
     this.type = "balance";
   }

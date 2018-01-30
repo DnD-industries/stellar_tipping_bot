@@ -178,6 +178,5 @@ describe('Command', () => {
       assert.equal(serialized.type, cmd.type);
       assert.equal(serialized.address, cmd.address);
     })
-
   })
 })
