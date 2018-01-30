@@ -13,6 +13,4 @@ RUN npm install
 
 COPY . /usr/src/app/
 
-COPY app.js /usr/src/app/
-
 EXPOSE 5000
