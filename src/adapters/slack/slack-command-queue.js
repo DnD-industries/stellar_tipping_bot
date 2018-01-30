@@ -65,7 +65,7 @@ class CommandQueue {
     while(command) {
       console.log(`Command is: ${JSON.stringify(command)}`);
       await slackAdapter.handleCommand(command);
-      command = this.popCommand();
+      command = await this.popCommand();
     }
 
     console.log("Finished flush");
