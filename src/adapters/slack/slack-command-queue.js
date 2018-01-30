@@ -53,7 +53,7 @@ class CommandQueue {
 
   /**
    *
-   * @param slackClient {Slack}
+   * @param slackAdapter {Slack}
    */
   async flush(slackAdapter) {
     let command = await this.popCommand();
@@ -64,6 +64,7 @@ class CommandQueue {
       await slackAdapter.handleCommand(command);
       command = this.popCommand();
     }
+
   }
 }
 

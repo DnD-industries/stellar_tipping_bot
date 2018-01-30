@@ -72,9 +72,9 @@ class SlackServer {
 
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      await this.CommandQueue.pushCommand(command);
+      that.CommandQueue.pushCommand(command);
 
-      res.send(await that.adapter.receivePotentialTip(command));
+      res.send(200);
     });
 
 
@@ -87,7 +87,9 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.receiveWithdrawalRequest(command));
+      that.CommandQueue.pushCommand(command);
+
+      res.send(200);
     });
 
     /**
@@ -99,7 +101,9 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleRegistrationRequest(command))
+      that.CommandQueue.pushCommand(command);
+
+      res.send(200);
     });
 
     /**
@@ -111,15 +115,21 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.receiveBalanceRequest(command));
+      that.CommandQueue.pushCommand(command);
+
+      res.send(200);
     });
 
     // Spin up the server
     this.server = app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'));
 
-      setInterval(that.CommandQueue.flush, MESSAGE_FLUSH_INTERVAL, that.client);
+      setInterval(that.flushCommandQueue, MESSAGE_FLUSH_INTERVAL, that);
     });
+  }
+
+  flushCommandQueue(slackServer) {
+    slackServer.CommandQueue.flush(slackServer.adapter);
   }
 
   close(done){
