@@ -55,7 +55,7 @@ describe('slack-command-queue', async () => {
       }
 
       CommandQueue._pop = () => {
-        return serializedCommand;
+        return JSON.stringify(serializedCommand);
       }
 
       let command = await CommandQueue.popCommand();

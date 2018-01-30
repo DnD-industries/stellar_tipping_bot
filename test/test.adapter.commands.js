@@ -86,7 +86,7 @@ describe('Command', () => {
 
     it('should create a new Command object with correct base characteristics, regardless of the type', () => {
       serializedCommand.type = 'unknown';
-      let command = Command.Deserialize(serializedCommand);
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
       assert(command instanceof Command.Command, "Command should be an instance of the type Command");
       assert.equal(command.adapter, serializedCommand.adapter);
       assert.equal(command.sourceId, serializedCommand.sourceId);
@@ -95,7 +95,7 @@ describe('Command', () => {
 
     it('should create Register objects if the serialized type is `register`', () => {
       serializedCommand.type = 'register';
-      let command = Command.Deserialize(serializedCommand);
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
       assert(command instanceof Command.Register, "Command should be an instance of the type Register");
       assert.equal(command.walletPublicKey, serializedCommand.walletPublicKey);
       assert.equal(command.type, serializedCommand.type);
@@ -103,7 +103,7 @@ describe('Command', () => {
 
     it('should create Withdraw objects if the serialized type is `withdraw`', () => {
       serializedCommand.type = 'withdraw';
-      let command = Command.Deserialize(serializedCommand);
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
       assert(command instanceof Command.Withdraw, "Command should be an instance of the type Register");
       assert.equal(command.amount, serializedCommand.amount);
       assert.equal(command.address, serializedCommand.address);
@@ -112,7 +112,7 @@ describe('Command', () => {
 
     it('should create Tip objects if the serialized type is `tip`', () => {
       serializedCommand.type = 'tip';
-      let command = Command.Deserialize(serializedCommand);
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
       assert(command instanceof Command.Tip, "Command should be an instance of the type Register");
       assert.equal(command.targetId, serializedCommand.targetId);
       assert.equal(command.amount, serializedCommand.amount);
@@ -121,7 +121,7 @@ describe('Command', () => {
 
     it('should create Balance objects if the serialized type is `balance`', () => {
       serializedCommand.type = 'balance';
-      let command = Command.Deserialize(serializedCommand);
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
       assert(command instanceof Command.Balance, "Command should be an instance of the type Register");
       assert.equal(command.address, serializedCommand.address);
       assert.equal(command.type, serializedCommand.type);
@@ -132,7 +132,7 @@ describe('Command', () => {
 
     it('should correctly derive a serialized Register from an instance of a Register Command', () => {
       let cmd = new Command.Register('testing', 'someUserId', 'walletAddr');
-      let serialized = cmd.serialize();
+      let serialized = JSON.parse(cmd.serialize());
 
       assert.equal(serialized.uniqueId, cmd.uniqueId);
       assert.equal(serialized.sourceId, cmd.sourceId);
@@ -144,7 +144,7 @@ describe('Command', () => {
 
     it('should correctly derive a serialized Tip from an instance of a Tip Command', () => {
       let cmd = new Command.Tip('testing', 'someUserId', targetId, walletPublicKey);
-      let serialized = cmd.serialize();
+      let serialized = JSON.parse(cmd.serialize());
 
       assert.equal(serialized.uniqueId, cmd.uniqueId);
       assert.equal(serialized.sourceId, cmd.sourceId);
@@ -156,7 +156,7 @@ describe('Command', () => {
 
     it('should correctly derive a serialized Withdraw from an instance of a Withdraw Command', () => {
       let cmd = new Command.Withdraw('testing', 'someUserId', 'amount', 'address');
-      let serialized = cmd.serialize();
+      let serialized = JSON.parse(cmd.serialize());
 
       assert.equal(serialized.uniqueId, cmd.uniqueId);
       assert.equal(serialized.sourceId, cmd.sourceId);
@@ -169,7 +169,7 @@ describe('Command', () => {
 
     it('should correctly derive a serialized Balance from an instance of a Balance Command', () => {
       let cmd = new Command.Balance('testing', 'someUserId', 'address');
-      let serialized = cmd.serialize();
+      let serialized = JSON.parse(cmd.serialize());
 
       assert.equal(serialized.uniqueId, cmd.uniqueId);
       assert.equal(serialized.sourceId, cmd.sourceId);

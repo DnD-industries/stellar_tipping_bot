@@ -44,11 +44,11 @@ class CommandQueue {
    * @private
    */
   async _push (serializedCommand) {
-    await this.redisClient.push(serializedCommand)
+    await this.redisClient.push("commands", serializedCommand);
   }
 
   async _pop() {
-    return await this.redisClient.pop
+    return await this.redisClient.pop("commands");
   }
 
   /**
@@ -56,7 +56,9 @@ class CommandQueue {
    * @param slackAdapter {Slack}
    */
   async flush(slackAdapter) {
+    console.log("in flush");
     let command = await this.popCommand();
+    console.log("Got command");
     if(!command) {
       console.log("nothing to flush");
     }

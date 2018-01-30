@@ -24,40 +24,41 @@ class Command {
   }
 
   serialize() {
-    return {
+    return JSON.stringify({
       adapter : this.adapter,
       sourceId: this.sourceId,
       uniqueId: this.uniqueId,
       hash    : this.hash,
       type    : this.type
-    }
+    });
   }
 
   /**
    *
-   * @param serialized
+   * @param serializedStr
    * @returns {Command}
    */
-  static deserialize(serialized) {
-    if(!serialized) {
+  static deserialize(serializedStr) {
+    let serializedObj = JSON.parse(serializedStr);
+    if(!serializedObj) {
       return null;
     }
-    switch(serialized.type) {
+    switch(serializedObj.type) {
       case "register":
-        return new Register(serialized.adapter, serialized.sourceId, serialized.walletPublicKey, serialized.hash);
+        return new Register(serializedObj.adapter, serializedObj.sourceId, serializedObj.walletPublicKey, serializedObj.hash);
         break;
       case "tip":
-        return new Tip(serialized.adapter, serialized.sourceId, serialized.targetId, serialized.amount, serialized.hash);
+        return new Tip(serializedObj.adapter, serializedObj.sourceId, serializedObj.targetId, serializedObj.amount, serializedObj.hash);
         break;
       case "withdraw":
-        return new Withdraw(serialized.adapter, serialized.sourceId, serialized.amount, serialized.address, serialized.hash);
+        return new Withdraw(serializedObj.adapter, serializedObj.sourceId, serializedObj.amount, serializedObj.address, serializedObj.hash);
         break;
       case "balance":
-        return new Balance(serialized.adapter, serialized.sourceId, serialized.address, serialized.hash);
+        return new Balance(serializedObj.adapter, serializedObj.sourceId, serializedObj.address, serializedObj.hash);
         break;
       default:
         //We don't know what type the command is, so return null;
-        return null;
+        return new Command(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
         break;
     }
   }
@@ -74,9 +75,9 @@ class Register extends Command {
   }
 
   serialize() {
-    let serialized = super.serialize();
+    let serialized = JSON.parse(super.serialize());
     serialized.walletPublicKey = this.walletPublicKey;
-    return serialized;
+    return JSON.stringify(serialized);
   }
 }
 
@@ -92,10 +93,10 @@ class Tip extends Command {
   }
 
   serialize() {
-    let serialized = super.serialize();
+    let serialized = JSON.parse(super.serialize());
     serialized.targetId = this.targetId;
     serialized.amount= this.amount;
-    return serialized;
+    return JSON.stringify(serialized);
   }
 
 }
@@ -114,10 +115,10 @@ class Withdraw extends Command {
   }
 
   serialize() {
-    let serialized = super.serialize();
+    let serialized = JSON.parse(super.serialize());
     serialized.amount  = this.amount;
     serialized.address = this.address;
-    return serialized;
+    return JSON.stringify(serialized);
   }
 
 }
@@ -134,9 +135,9 @@ class Balance extends Command {
   }
 
   serialize() {
-    let serialized = super.serialize();
+    let serialized = JSON.parse(super.serialize());
     serialized.address = this.address;
-    return serialized;
+    return JSON.stringify(serialized);
   }
 }
 
