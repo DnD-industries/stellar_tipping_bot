@@ -1,5 +1,7 @@
 .env
 .env.test
+pgdb
+redisdb
 node_modules
 backups
 .idea
