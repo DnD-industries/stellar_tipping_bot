@@ -1,5 +1,6 @@
 const {promisify} = require('util');
 const Command = require('../commands/command')
+const Utils = require('../../utils')
 
 /**
  * Enqueues commands as they are made by Slack users.
@@ -27,6 +28,10 @@ class CommandQueue {
     await this._push(serialized);
   }
 
+  /**
+   *
+   * @returns {Promise<Command|null>}
+   */
   async popCommand() {
     let serialized = await this._pop();
     let deserialized = Command.Deserialize(serialized);
@@ -44,6 +49,21 @@ class CommandQueue {
 
   async _pop() {
     return await this.redisClient.pop
+  }
+
+  /**
+   *
+   * @param slackClient {Slack}
+   */
+  flush(slackAdapter) {
+    let command = this.popCommand();
+    if(!command) {
+      console.log("nothing to flush");
+    }
+    while(command) {
+      slackAdapter.handleCommand(command);
+      command = this.popCommand();
+    }
   }
 }
 
