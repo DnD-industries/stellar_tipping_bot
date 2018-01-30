@@ -1,0 +1,8 @@
+version: '3'
+services:
+  app:
+    image: ${STELLARBOT_MASTER_TAG}
+    volumes:
+      - ${PWD}/.env:/usr/src/app/.env # make our .env file available inside the container. We need an absolute path (using pwd) because it is a single file volume.    working_dir: /usr/src/app
+    
+  
