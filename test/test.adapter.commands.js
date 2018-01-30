@@ -127,4 +127,57 @@ describe('Command', () => {
       assert.equal(command.type, serializedCommand.type);
     })
   })
+
+  describe('serialization', () => {
+
+    it('should correctly derive a serialized Register from an instance of a Register Command', () => {
+      let cmd = new Command.Register('testing', 'someUserId', 'walletAddr');
+      let serialized = cmd.serialize();
+
+      assert.equal(serialized.uniqueId, cmd.uniqueId);
+      assert.equal(serialized.sourceId, cmd.sourceId);
+      assert.equal(serialized.adapter, cmd.adapter);
+      assert.equal(serialized.hash, cmd.hash);
+      assert.equal(serialized.type, cmd.type);
+      assert.equal(serialized.walletPublicKey, cmd.walletPublicKey);
+    })
+
+    it('should correctly derive a serialized Tip from an instance of a Tip Command', () => {
+      let cmd = new Command.Tip('testing', 'someUserId', targetId, walletPublicKey);
+      let serialized = cmd.serialize();
+
+      assert.equal(serialized.uniqueId, cmd.uniqueId);
+      assert.equal(serialized.sourceId, cmd.sourceId);
+      assert.equal(serialized.adapter, cmd.adapter);
+      assert.equal(serialized.hash, cmd.hash);
+      assert.equal(serialized.type, cmd.type);
+      assert.equal(serialized.walletPublicKey, cmd.walletPublicKey);
+    })
+
+    it('should correctly derive a serialized Withdraw from an instance of a Withdraw Command', () => {
+      let cmd = new Command.Withdraw('testing', 'someUserId', 'amount', 'address');
+      let serialized = cmd.serialize();
+
+      assert.equal(serialized.uniqueId, cmd.uniqueId);
+      assert.equal(serialized.sourceId, cmd.sourceId);
+      assert.equal(serialized.adapter, cmd.adapter);
+      assert.equal(serialized.hash, cmd.hash);
+      assert.equal(serialized.type, cmd.type);
+      assert.equal(serialized.amount, cmd.amount);
+      assert.equal(serialized.address, cmd.address);
+    })
+
+    it('should correctly derive a serialized Balance from an instance of a Balance Command', () => {
+      let cmd = new Command.Balance('testing', 'someUserId', 'address');
+      let serialized = cmd.serialize();
+
+      assert.equal(serialized.uniqueId, cmd.uniqueId);
+      assert.equal(serialized.sourceId, cmd.sourceId);
+      assert.equal(serialized.adapter, cmd.adapter);
+      assert.equal(serialized.hash, cmd.hash);
+      assert.equal(serialized.type, cmd.type);
+      assert.equal(serialized.address, cmd.address);
+    })
+
+  })
 })
