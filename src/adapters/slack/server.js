@@ -46,11 +46,11 @@ class SlackServer {
         console.log(req.headers);
         console.log(JSON.stringify(req.body));
       }
-      
+
       //If this is a GET request, use the query token, otherwise look for it in the body
       let token = req.method === "GET" ? req.query.token : req.body.token;
       //With the proper validation token from Slack, route the request accordingly.
-      //Otherwise reply with a 401 status code 
+      //Otherwise reply with a 401 status code
       token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
     });
 
@@ -131,7 +131,7 @@ class SlackServer {
 
   flushCommandQueue(slackServer) {
     console.log("FLUSHING COMMAND QUEUE");
-    slackServer.CommandQueue.flush(slackServer.adapter);
+    slackServer.CommandQueue.flush(slackServer.adapter, slackServer.client);
   }
 
   close(done){
