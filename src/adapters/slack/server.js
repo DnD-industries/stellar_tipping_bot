@@ -94,8 +94,6 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      CommandQueue.enqueue(command);
-
       res.send(await that.adapter.handleRegistrationRequest(command))
     });
 

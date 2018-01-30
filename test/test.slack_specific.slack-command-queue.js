@@ -9,8 +9,6 @@ describe('slack-command-queue', async () => {
 
   let CommandQueue;
   let slackAdapter;
-  let accountWithWallet;
-  let accountWithoutWallet;
 
   beforeEach(async () => {
     const config = await require('./setup')()
@@ -21,18 +19,6 @@ describe('slack-command-queue', async () => {
     slackAdapter = new Slack(config);
     Account = config.models.account;
 
-    accountWithWallet = await Account.createAsync({
-      adapter: 'testing',
-      uniqueId: 'team.foo',
-      balance: '1.0000000',
-      walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB'
-    });
-
-    accountWithoutWallet = await Account.createAsync({
-      adapter: 'testing',
-      uniqueId: 'team.bar',
-      balance: '1.0000000'
-    })
 
     mockRedis = {
       rpush : () => {},
@@ -42,13 +28,43 @@ describe('slack-command-queue', async () => {
     CommandQueue._push = sinon.spy();
   });
 
-  describe('enqueue', () => {
+  describe('pushCommand', () => {
     it('should serialize the command and push it to the redis queue', async () => {
       let cmd = new Command.Register('testing', 'someUserId', 'walletAddr');
       // mock it
       cmd.serialize = () => { return 'serialized'; }
-      CommandQueue.enqueue(cmd);
+      CommandQueue.pushCommand(cmd);
       assert(CommandQueue._push.calledWith(cmd.serialize()))
+    })
+  })
+
+  describe('popCommand', () => {
+    it('should pop a serialized version of a Command and return a deserialized version of the same data', async () => {
+      const adapter = 'testAdapter111'
+      const sourceId = 'theSourceId'
+      const hash = 'hash'
+      const address = 'address'
+      const type = 'balance'
+
+      let serializedCommand = {
+        adapter,
+        sourceId,
+        hash,
+        address,
+        type
+      }
+
+      CommandQueue._pop = () => {
+        return serializedCommand;
+      }
+
+      let command = await CommandQueue.popCommand();
+      assert.equal(command.adapter, adapter);
+      assert.equal(command.sourceId, sourceId);
+      assert.equal(command.uniqueId, sourceId);
+      assert.equal(command.hash, hash);
+      assert.equal(command.address, address);
+      assert.equal(command.type, type);
     })
   })
 })
