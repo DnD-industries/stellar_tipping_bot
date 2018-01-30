@@ -74,7 +74,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.send(200);
+      res.sendStatus(200);
     });
 
 
@@ -89,7 +89,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.send(200);
+      res.sendStatus(200);
     });
 
     /**
@@ -103,7 +103,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.send(200);
+      res.sendStatus(200);
     });
 
     /**
@@ -117,7 +117,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.send(200);
+      res.sendStatus(200);
     });
 
     // Spin up the server
