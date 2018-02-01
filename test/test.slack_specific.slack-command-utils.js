@@ -1,6 +1,7 @@
 const assert = require('assert');
 const slackUtils = require('../src/adapters/slack/slack-command-utils');
 const slackMessage = require('../src/adapters/slack/slack-message');
+const Command = require('../src/adapters/commands/command')
 
 describe('slack-command-utils', () => {
   describe('Extract User Id', () => {
@@ -57,6 +58,7 @@ describe('slack-command-utils', () => {
       assert.equal(expectedSourceId, command.sourceId);
       assert.equal(expectedTargetId, command.targetId);
       assert.equal(expectedAmount, command.amount);
+      assert(command instanceof Command.Tip);
     });
 
     it("should extract withdraw command params from message without optional address specified", () => {
@@ -79,6 +81,7 @@ describe('slack-command-utils', () => {
       assert.equal(expectedSourceId, command.sourceId);
       assert.equal(expectedAmount, command.amount);
       assert.equal(null, command.address);
+      assert(command instanceof Command.Withdraw);
     });
 
     it("should extract withdraw command params from message with optional address specified", () => {
@@ -102,6 +105,7 @@ describe('slack-command-utils', () => {
       assert.equal(expectedSourceId, command.sourceId);
       assert.equal(expectedAmount, command.amount);
       assert.equal(expectedAddress, command.address);
+      assert(command instanceof Command.Withdraw);
     });
 
     it("should extract register command params from message", () => {
@@ -123,6 +127,27 @@ describe('slack-command-utils', () => {
       assert.equal(expectedAdapter, command.adapter);
       assert.equal(expectedSourceId, command.sourceId);
       assert.equal(expectedPublicKey, command.walletPublicKey);
+      assert(command instanceof Command.Register);
+    });
+
+    it("should extract info command params from message", () => {
+      let slackMsgBody = {
+        token: 'PKT0CQibMhddhKa4IwXv0xSa',
+        team_id: 'T8MPK3KV1',
+        team_domain: 'starrytest',
+        user_id: 'U8PTZ287N',
+        user_name: 'd',
+        command: '/info',
+        text: 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN',
+        response_url: 'https://hooks.slack.com/commands/T8MPK3KV1/300987453926/1Y2q8KAJSLCrFcqAeyDIeNq9'
+      };
+
+      let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
+      let expectedAdapter   = "slack";
+      let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
+      assert.equal(expectedAdapter, command.adapter);
+      assert.equal(expectedSourceId, command.sourceId);
+      assert(command instanceof Command.Info);
     });
   });
 })
