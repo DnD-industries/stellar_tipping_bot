@@ -121,6 +121,19 @@ class SlackServer {
       res.sendStatus(200);
     });
 
+    /**
+     * Set up how /balance command should be dealt with
+     */
+    app.post('/slack/info', async function (req, res) {
+      let msg = new slackMessage(req.body);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      that.CommandQueue.pushCommand(command);
+
+      res.sendStatus(200);
+    });
+
+
     // Spin up the server
     this.server = app.listen(app.get('port'), function() {
       console.log('slackbot running on port', app.get('port'));
