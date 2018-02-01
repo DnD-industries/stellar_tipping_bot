@@ -65,6 +65,8 @@ SLACK_BOT_NAME=Starry
 TOKEN=YOUR_DOCKER_HUB_WEBHOOK_TOKEN
 
 CLOSE_DEPOSITS=false
+
+GITHUB_URL=https://github.com/DnD-industries/stellar_tipping_bot
 ```
 
 Create an `.env.test`:
