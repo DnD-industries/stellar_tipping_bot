@@ -57,21 +57,17 @@ class CommandQueue {
    * @param slackClient {SlackClient}
    */
   async flush(slackAdapter, slackClient) {
-    console.log("in flush");
     let command = await this.popCommand();
-    console.log("Got command");
-    if(!command) {
-      console.log("nothing to flush");
-    }
+    //Needed?
+    //if(!command) {
+    //  console.log("nothing to flush");
+    //}
     while(command) {
       console.log(`Command is: ${JSON.stringify(command)}`);
       let textBody = await slackAdapter.handleCommand(command);
       slackClient.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(command.uniqueId), textBody);
       command = await this.popCommand();
     }
-
-    console.log("Finished flush");
-
   }
 }
 

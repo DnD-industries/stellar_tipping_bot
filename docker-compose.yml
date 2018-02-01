@@ -1,7 +1,7 @@
 version: '3'
 services:
   app:
-    image: davidbulnes/stellar-bot:latest
+    image: davidbulnes/stellar-bot:dev_latest
     build:
       . # build using the Dockerfile from the root directory of the repo
     volumes:

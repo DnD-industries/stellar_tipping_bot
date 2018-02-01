@@ -57,8 +57,8 @@ class Command {
         return new Balance(serializedObj.adapter, serializedObj.sourceId, serializedObj.address, serializedObj.hash);
         break;
       default:
-        //We don't know what type the command is, so return null;
-        return null;
+        //We don't know what type the command is, so return a generic Command
+        return new Command(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
         break;
     }
   }

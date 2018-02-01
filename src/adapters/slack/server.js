@@ -11,7 +11,7 @@ const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const redis = require('redis');
 const CommandQueue = require('./slack-command-queue')
 
-const MESSAGE_FLUSH_INTERVAL = 100; // milliseconds
+const MESSAGE_FLUSH_INTERVAL = 1; // milliseconds
 
 /**
  * SlackServer handles all post calls coming from Slack slash commands.
@@ -130,7 +130,7 @@ class SlackServer {
   }
 
   flushCommandQueue(slackServer) {
-    console.log("FLUSHING COMMAND QUEUE");
+    //console.log("FLUSHING COMMAND QUEUE");
     slackServer.CommandQueue.flush(slackServer.adapter, slackServer.client);
   }
 
