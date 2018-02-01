@@ -2,3 +2,5 @@ version: '3'
 services:
   app:
     image: davidbulnes/stellar-bot:${STELLARBOT_MASTER_TAG}
+  port:
+    6000:6000
