@@ -300,6 +300,7 @@ class Adapter extends EventEmitter {
     const hash = withdrawalRequest.hash;
     const address = withdrawalRequest.address || await this.Account.walletAddressForUser(adapter, uniqueId);
     const amountRequested = withdrawalRequest.amount;
+    console.log(`Original withdrawal request amount is ${amountRequested}`)
     let withdrawalAmount;
     try {
       withdrawalAmount = new Big(amountRequested);
