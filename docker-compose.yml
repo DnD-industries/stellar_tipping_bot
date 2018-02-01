@@ -23,7 +23,8 @@ services:
       - nginx
     # Encapsulate the command with bash -c so we can add additional steps easily.
     # Wait for the db connection before starting the app
-    command: bash -c "./wait_for_postgres.sh npm run app" 
+    command: bash -c "./wait_for_postgres.sh npm run app"
+    restart: always
     #environment:
     #  - PG_URL=postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}
   db:
@@ -36,16 +37,19 @@ services:
       - POSTGRES_USER=${PG_USER}
       - POSTGRES_PASSWORD=${PG_PASSWORD}
       #- POSTGRES_DATABASE=${PG_DB}
+    restart: always
   redis:
     image: redis:3.2.11
     volumes:
       - ./redisdb:/data
     ports:
       - 6379:6379 # may want to define a different externally mapped port so we can differentiate connections via localhost vs docker0
+    restart: always
   nginx:
     image: nginx:1.13.8
     ports:
       - 80:80
+    restart: always
   dockerhub-hook:
     image: maccyber/micro-dockerhub-hook
     ports:
@@ -54,3 +58,4 @@ services:
     volumes:
       - ./deploy_scripts:/src/scripts
       - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
