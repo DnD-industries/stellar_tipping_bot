@@ -19,9 +19,9 @@ services:
     depends_on:
       - db
       - redis
-    # encapsulate the command with bash -c so we can add additional steps easily
-    # wait for the db connection before starting the app
-    #command: bash -c "./wait_for_postgres.sh npm run app" 
+    # Encapsulate the command with bash -c so we can add additional steps easily.
+    # Wait for the db connection before starting the app
+    command: bash -c "./wait_for_postgres.sh npm run app" 
     #environment:
     #  - PG_URL=postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}
   db:
