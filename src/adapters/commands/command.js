@@ -128,6 +128,7 @@ class Withdraw extends Command {
  * Allows the user to check their balance, current wallet address
  */
 class Balance extends Command {
+  // TODO: Address here may be entirely unnecessary
   constructor(adapter, sourceId, address = null, hash = null){
     super(adapter, sourceId, hash);
     this.address = address;
