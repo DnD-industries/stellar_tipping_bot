@@ -130,7 +130,6 @@ class SlackServer {
   }
 
   flushCommandQueue(slackServer) {
-    //console.log("FLUSHING COMMAND QUEUE");
     slackServer.CommandQueue.flush(slackServer.adapter, slackServer.client);
   }
 

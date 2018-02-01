@@ -58,10 +58,6 @@ class CommandQueue {
    */
   async flush(slackAdapter, slackClient) {
     let command = await this.popCommand();
-    //Needed?
-    //if(!command) {
-    //  console.log("nothing to flush");
-    //}
     while(command) {
       console.log(`Command is: ${JSON.stringify(command)}`);
       let textBody = await slackAdapter.handleCommand(command);
