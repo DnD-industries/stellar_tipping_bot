@@ -39,11 +39,11 @@ class SlackCommandUtils {
                 command = new Command.Withdraw(adapter, sourceId, amount, address);
                 break;
             case "balance":
-                // I think we can just take these out?
-                // amount = parseFloat(params[0]) || params[0];
-                // address = params.length > 1 ? params[1] : null;
                 command = new Command.Balance(adapter, sourceId);
                 break;
+            case "info":
+              command = new Command.Info(adapter, sourceId);
+              break;
             default:
                 console.error("Unknown command type:", msg.command);
                 //We don't know what type the command is, so return the generic super class
