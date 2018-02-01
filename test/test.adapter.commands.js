@@ -126,6 +126,13 @@ describe('Command', () => {
       assert.equal(command.address, serializedCommand.address);
       assert.equal(command.type, serializedCommand.type);
     })
+
+    it('should create Balance objects if the serialized type is `balance`', () => {
+      serializedCommand.type = 'info';
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
+      assert(command instanceof Command.Info, "Command should be an instance of the type Info");
+      assert.equal(command.type, serializedCommand.type);
+    })
   })
 
   describe('serialization', () => {
@@ -177,6 +184,16 @@ describe('Command', () => {
       assert.equal(serialized.hash, cmd.hash);
       assert.equal(serialized.type, cmd.type);
       assert.equal(serialized.address, cmd.address);
+    })
+
+    it('should correctly derive a serialized Balance from an instance of a Balance Command', () => {
+      let cmd = new Command.Info('testing', 'someUserId');
+      let serialized = JSON.parse(cmd.serialize());
+      assert.equal(serialized.uniqueId, cmd.uniqueId);
+      assert.equal(serialized.sourceId, cmd.sourceId);
+      assert.equal(serialized.adapter, cmd.adapter);
+      assert.equal(serialized.hash, cmd.hash);
+      assert.equal(serialized.type, cmd.type);
     })
   })
 })

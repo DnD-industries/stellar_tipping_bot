@@ -56,6 +56,9 @@ class Command {
       case "balance":
         return new Balance(serializedObj.adapter, serializedObj.sourceId, serializedObj.address, serializedObj.hash);
         break;
+      case "info":
+        return new Info(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
+        break;
       default:
         //We don't know what type the command is, so return a generic Command
         return new Command(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
@@ -142,11 +145,27 @@ class Balance extends Command {
   }
 }
 
+/**
+ * Allows the user to get info on the tipping bot, including developer info and the bot's wallet address
+ */
+class Info extends Command {
+  constructor(adapter, sourceId, hash = null){
+    super(adapter, sourceId, hash);
+    this.type = "info";
+  }
+
+  serialize() {
+    let serialized = JSON.parse(super.serialize());
+    return JSON.stringify(serialized);
+  }
+}
+
 module.exports = { 
   Command,
   Register,
   Tip,
   Withdraw,
   Balance,
+  Info,
   Deserialize: Command.deserialize
 }
