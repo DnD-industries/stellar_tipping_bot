@@ -16,9 +16,11 @@ services:
     links:
       - db
       - redis
+      - nginx
     depends_on:
       - db
       - redis
+      - nginx
     # Encapsulate the command with bash -c so we can add additional steps easily.
     # Wait for the db connection before starting the app
     command: bash -c "./wait_for_postgres.sh npm run app" 
@@ -40,3 +42,7 @@ services:
       - ./redisdb:/data
     ports:
       - 6379:6379 # may want to define a different externally mapped port so we can differentiate connections via localhost vs docker0
+  nginx:
+    image: nginx:1.13.8
+    ports:
+      - 80:80
