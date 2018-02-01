@@ -219,9 +219,10 @@ describe('slackAdapter', async () => {
 
     it(`should return the bot's wallet address and the GitHub url info if they are registered`, async () => {
       process.env.GITHUB_URL = 'testurl'
+      process.env.STELLAR_PUBLIC_KEY = 'testpubkey'
       let infoCommand = new Command.Info(accountWithWallet.adapter, accountWithWallet.uniqueId)
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
-      assert.equal(returned, `Deposit address: ${process.env.TIPPING_BOT_WALLET_ADDRESS}\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      assert.equal(returned, `Deposit address: ${process.env.STELLAR_PUBLIC_KEY}\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
   })
 

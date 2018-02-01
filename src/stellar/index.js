@@ -12,8 +12,9 @@ module.exports = async function (models) {
   let lastSequenceNumber = 0;
 
   console.log("publickey:", publicKey);
+  console.log(`Process Env1:\n${JSON.stringify(process.env)}`);
   process.env.STELLAR_PUBLIC_KEY = publicKey; //set the public key associated with our private key, for use elsewhere
-
+  console.log(`Process Env2:\n${JSON.stringify(process.env)}`);
   if (process.env.MODE === 'production') {
     StellarSdk.Network.usePublicNetwork();
   } else {
