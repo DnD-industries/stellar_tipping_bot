@@ -5,9 +5,9 @@
 
 if echo "$TAG" | grep -q "master"; then
 	#Set our env variable for the master tag to $TAG, passed from micro-dockerhub-hook/lib/run-script.js
-	$STELLARBOT_MASTER_TAG = $TAG
+	STELLARBOT_MASTER_TAG = $TAG
 	#Remove the "master_" prefix from the tag to get the commit sha
-	$COMMIT_SHA=$STELLARBOT_MASTER_TAG%"master_"
+	COMMIT_SHA=$STELLARBOT_MASTER_TAG%"master_"
 	echo "$COMMIT_SHA"
 	#Change our path to the relative path where our stellar bot docker-compose.yml resides
 	cd ..
