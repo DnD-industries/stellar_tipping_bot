@@ -81,7 +81,6 @@ module.exports = (db) => {
             throw exc;
           }
 
-
           this.credited = false;
           this.refunded = true;
           await this.saveAsync();
