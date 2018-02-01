@@ -153,7 +153,7 @@ class Slack extends Adapter {
    * @param command {Command}
    */
   handleCommand(command) {
-    console.log(`Hadling command: ${JSON.stringify(command)}`)
+    console.log(`Handling command: ${JSON.stringify(command)}`)
     if(!command) {
       return;
     }
@@ -164,6 +164,7 @@ class Slack extends Adapter {
     } else if (command instanceof Command.Tip) {
       return this.receivePotentialTip(command);
     } else if (command instanceof Command.Withdraw) {
+      console.log(`Handling withdrawal request\nCommand JSON is ${JSON.stringify(command)}`);
       return this.receiveWithdrawalRequest(command);
     }
   }
