@@ -1,5 +1,6 @@
 .env
 .env.test
+.env.dockerhub-hook
 pgdb
 redisdb
 node_modules

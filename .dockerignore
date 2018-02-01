@@ -1,3 +1,4 @@
 .env
 .env.test
+.env.dockerhub-hook
 node_modules

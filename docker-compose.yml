@@ -46,3 +46,13 @@ services:
     image: nginx:1.13.8
     ports:
       - 80:80
+  dockerhub:
+    image: maccyber/micro-dockerhub-hook
+    ports:
+      - "3000:3000"
+    env_file: .env.dockerhub-hook
+    volumes:
+      - ./deploy_scripts:/src/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Path to docker-compose files who are triggered by scripts:
+      # - /srv:/srv
