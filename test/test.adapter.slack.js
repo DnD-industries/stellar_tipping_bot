@@ -209,6 +209,22 @@ describe('slackAdapter', async () => {
     })
   })
 
+  describe('receive Info Request', () => {
+    it('should return the GitHub page info and a standin for the stellar bot`s address if they are not registered', async () => {
+      process.env.GITHUB_URL = 'testurl'
+      let infoCommand = new Command.Info(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId)
+      const returned = await slackAdapter.receiveInfoRequest(infoCommand)
+      assert.equal(returned, `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`)
+    })
+
+    it(`should return the bot's wallet address and the GitHub url info if they are registered`, async () => {
+      process.env.GITHUB_URL = 'testurl'
+      let infoCommand = new Command.Info(accountWithWallet.adapter, accountWithWallet.uniqueId)
+      const returned = await slackAdapter.receiveInfoRequest(infoCommand)
+      assert.equal(returned, `Deposit address: ${process.env.TIPPING_BOT_WALLET_ADDRESS}\nGitHub homepage: ${process.env.GITHUB_URL}`)
+    })
+  })
+
   describe('on deposit', () => {
     it('should send a message to the receiver of a deposit when their deposit goes through', async () => {
       let amount = 5.0

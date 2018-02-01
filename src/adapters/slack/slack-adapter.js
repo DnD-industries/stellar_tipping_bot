@@ -164,8 +164,9 @@ class Slack extends Adapter {
     } else if (command instanceof Command.Tip) {
       return this.receivePotentialTip(command);
     } else if (command instanceof Command.Withdraw) {
-      console.log(`Handling withdrawal request\nCommand JSON is ${JSON.stringify(command)}`);
       return this.receiveWithdrawalRequest(command);
+    } else if (command instanceof Command.Info) {
+      return this.receiveInfoRequest(command);
     }
   }
 
@@ -211,7 +212,7 @@ class Slack extends Adapter {
    *
    * @param sourceAccount The uniqueId of the account which made the deposit
    * @param amount The amount in XLM of the deposit
-   * @returns {Promise<void>}
+   * @returns String
    */
   async onDeposit (sourceAccount, amount) {
     // Override this or listen to events!
@@ -222,7 +223,7 @@ class Slack extends Adapter {
   /**
    *
    * @param cmd {Balance}
-   * @returns {Promise<void>}
+   * @returns String
    */
   async receiveBalanceRequest (cmd) {
     console.log("in Receive balance request");
@@ -231,6 +232,20 @@ class Slack extends Adapter {
       return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
     } else {
       return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
+    }
+  }
+
+  /**
+   *
+   * @param cmd {Info}
+   * @returns String
+   */
+  async receiveInfoRequest (cmd) {
+    const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
+    if(!account.walletAddress) {
+      return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
+    } else {
+      return `Deposit address: ${process.env.TIPPING_BOT_WALLET_ADDRESS}\nGitHub homepage: ${process.env.GITHUB_URL}`
     }
   }
 
