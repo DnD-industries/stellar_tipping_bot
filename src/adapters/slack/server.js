@@ -74,8 +74,8 @@ class SlackServer {
       console.log("recipient: ", recipientID);
 
       let command = slackUtils.extractCommandParamsFromMessage(msg);
-      
-      res.send(that.adapter.handleCommand(command));
+
+      res.send(await that.adapter.handleCommand(command));
     });
 
 
@@ -102,7 +102,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(that.adapter.handleCommand(command));
+      res.send(await that.adapter.handleCommand(command));
     });
 
     /**
@@ -114,7 +114,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(that.adapter.handleCommand(command));
+      res.send(await that.adapter.handleCommand(command));
     });
 
     /**
@@ -124,7 +124,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(that.adapter.handleCommand(command));
+      res.send(await that.adapter.handleCommand(command));
     });
 
 
