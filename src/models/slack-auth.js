@@ -1,5 +1,7 @@
 const orm = require('orm')
 
+var singleton;
+
 module.exports = (db) => {
 
   /**
@@ -25,8 +27,26 @@ module.exports = (db) => {
     }
   })
 
-  // Action.hasOne('sourceAccount', db.models.account, { reverse: 'sourceActions' })
-  // Action.hasOne('targetAccount', db.models.account, { reverse: 'targetActions' })
+  /**
+   *
+   * @param team {String} The Slack TeamID of a given team. This is likely derived from the uniqueID of a user making a POST request to our server where the unique ID is "[teamID].[userID]"
+   * @returns {String|null} A viable auth token for the given team
+   */
+  SlackAuth.authTokenForTeamId = async function (team) {
+    return await SlackAuth.withinTransaction(async () => {
+      let auth = await SlackAuth.oneAsync({team});
+      if (auth) {
+        return auth.token;
+      } else {
+        return null;
+      }
+    })
+  }
 
-  return SlackAuth
+  singleton = SlackAuth;
+  return singleton;
+}
+
+module.exports.Singleton = () => {
+  return singleton;
 }

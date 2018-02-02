@@ -34,6 +34,14 @@ module.exports = {
     return uniqueId.split(`.`)[1]
   },
 
+  /**
+   *
+   * @param uniqueId {String} A unique ID for a user in the format of [teamid].[userid]
+   */
+  slackTeamIdFromUniqueId: (uniqueId) => {
+    return uniqueId.split(`.`)[0]
+  },
+
 
   /**
    * Creates a random unique ID.
