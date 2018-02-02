@@ -144,7 +144,7 @@ class Slack extends Adapter {
    * @returns {Promise<string>}
    */
   async onWithdrawal (withdrawal, address, txHash) {
-    return `You withdrew \`1 XLM\` to your wallet at \`${address}\`\n\nYour transaction hash is \`${txHash}\`\nYou can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${txHash}`;
+    return `You withdrew \`${withdrawal.amount} XLM\` to your wallet at \`${address}\`\n\nYour transaction hash is \`${txHash}\`\nYou can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${txHash}`;
   }
 
   /**
