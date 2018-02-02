@@ -16,6 +16,7 @@ describe('slackAdapter', async () => {
   let slackAdapter;
   let accountWithWallet;
   let accountWithoutWallet;
+  let stellarpubkey;
 
   beforeEach(async () => {
     const config = await require('./setup')()
@@ -38,7 +39,13 @@ describe('slackAdapter', async () => {
       uniqueId: 'team.bar',
       balance: '1.0000000'
     })
+
+    stellarpubkey = process.env.STELLAR_PUBLIC_KEY;
   });
+
+  afterEach('slackAdapter', async() => {
+    process.env.STELLAR_PUBLIC_KEY = stellarpubkey;
+  })
 
   describe('handle registration request', () => {
 
