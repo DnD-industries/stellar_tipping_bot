@@ -219,7 +219,6 @@ class Slack extends Adapter {
    * @returns String
    */
   async onDeposit (sourceAccount, amount) {
-    // Override this or listen to events!
     this.client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
         `You made a deposit of ${Utils.formatNumber(amount)} XLM`);
   }

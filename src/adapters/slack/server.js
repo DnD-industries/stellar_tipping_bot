@@ -137,6 +137,7 @@ class SlackServer {
   }
 
   flushCommandQueue(slackServer) {
+    // TODO: Going to need to refactor this when we get OAuth working so that we don't include the client at this time
     slackServer.CommandQueue.flush(slackServer.adapter, slackServer.client);
   }
 
