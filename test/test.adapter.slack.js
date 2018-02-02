@@ -16,6 +16,7 @@ describe('slackAdapter', async () => {
   let slackAdapter;
   let accountWithWallet;
   let accountWithoutWallet;
+  let stellarpubkey;
 
   beforeEach(async () => {
     const config = await require('./setup')()
@@ -38,7 +39,13 @@ describe('slackAdapter', async () => {
       uniqueId: 'team.bar',
       balance: '1.0000000'
     })
+
+    stellarpubkey = process.env.STELLAR_PUBLIC_KEY;
   });
+
+  afterEach('slackAdapter', async() => {
+    process.env.STELLAR_PUBLIC_KEY = stellarpubkey;
+  })
 
   describe('handle registration request', () => {
 
@@ -71,6 +78,13 @@ describe('slackAdapter', async () => {
       const refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
       assert.equal(returnedValue, `Your old wallet \`${accountWithWallet.walletAddress}\` has been replaced by \`${newWalletId}\``);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
+    })
+
+    it ('should send a message back to the user if they are trying to register with the robot`s own wallet address', async () => {
+      process.env.STELLAR_PUBLIC_KEY = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+      let msg = new Command.Register('testing', 'newTeam.someNewUserId', process.env.STELLAR_PUBLIC_KEY)
+      let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
+      assert.equal(returnedValue, `That is my address. You must register with your own address.`);
     })
 
     it ('should otherwise save the wallet info to the database for the user and return an appropriate message', async () => {
@@ -222,7 +236,7 @@ describe('slackAdapter', async () => {
       process.env.STELLAR_PUBLIC_KEY = 'testpubkey'
       let infoCommand = new Command.Info(accountWithWallet.adapter, accountWithWallet.uniqueId)
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
-      assert.equal(returned, `Deposit address: ${process.env.STELLAR_PUBLIC_KEY}\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      assert.equal(returned, `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
   })
 

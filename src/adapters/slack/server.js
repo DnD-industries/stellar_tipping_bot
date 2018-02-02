@@ -13,6 +13,8 @@ const CommandQueue = require('./slack-command-queue')
 
 const MESSAGE_FLUSH_INTERVAL = 1; // milliseconds
 
+const REQUEST_BEING_PROCESSED = "Your request is being processed.";
+
 /**
  * SlackServer handles all post calls coming from Slack slash commands.
  */
@@ -75,7 +77,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.sendStatus(200);
+      res.send(REQUEST_BEING_PROCESSED);
     });
 
 
@@ -90,7 +92,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.sendStatus(200);
+      res.send(REQUEST_BEING_PROCESSED);
     });
 
     /**
@@ -104,7 +106,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.sendStatus(200);
+      res.send(REQUEST_BEING_PROCESSED);
     });
 
     /**
@@ -118,7 +120,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.sendStatus(200);
+      res.send(REQUEST_BEING_PROCESSED);
     });
 
     /**
@@ -130,7 +132,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
-      res.sendStatus(200);
+      res.send(REQUEST_BEING_PROCESSED);
     });
 
 
