@@ -242,7 +242,6 @@ class Slack extends Adapter {
    */
   async receiveInfoRequest (cmd) {
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
-    console.log(`Process Env1:\n${JSON.stringify(process.env)}`);
     if(!account.walletAddress) {
       return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
     } else {
