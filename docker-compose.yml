@@ -54,7 +54,6 @@ services:
     image: maccyber/micro-dockerhub-hook
     ports:
       - 3000:3000
-    env_file: ./.env
     volumes:
       - ./deploy_scripts:/src/scripts
       - /var/run/docker.sock:/var/run/docker.sock
