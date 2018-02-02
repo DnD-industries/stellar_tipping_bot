@@ -1,4 +1,5 @@
 "use strict"
+const SlackAuth = require('../../models/slack-auth').Singleton()
 const { WebClient }   = require('@slack/client');
 
 class SlackClient extends WebClient {
@@ -128,6 +129,23 @@ class SlackClient extends WebClient {
         console.error(err);
         return Promise.reject(err);
       });
+  }
+
+
+  static clientForCommand(command) {
+    if(SlackAuth.authTokenForTeamId(command.teamId)){
+      return new SlackClient(SlackAuth.authTokenForTeamId(command.teamId))
+    } else {
+      return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
+    }
+  }
+
+  static botClientForCommand(command) {
+    if(SlackAuth.botTokenForTeamId(command.teamId)){
+      return new SlackClient(SlackAuth.botTokenForTeamId(command.teamId))
+    } else {
+      return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
+    }
   }
 }
 

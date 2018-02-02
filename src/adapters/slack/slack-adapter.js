@@ -51,6 +51,7 @@ class Slack extends Adapter {
    */
   async onTip (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
+    // const client = slackClient.clientForCommand(tip);
     if(!account.walletAddress) {
       this.client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`)
