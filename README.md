@@ -67,6 +67,7 @@ TOKEN=YOUR_DOCKER_HUB_WEBHOOK_TOKEN
 CLOSE_DEPOSITS=false
 
 GITHUB_URL=https://github.com/DnD-industries/stellar_tipping_bot
+STELLAR_TX_VIEWER_URL_BASE=https://stellar.expert/explorer/tx
 ```
 
 Create an `.env.test`:
@@ -87,6 +88,9 @@ SLACK_BOT_OAUTH_TOKEN=YOUR_SLACK_OAUTH_TOKEN
 SLACK_BOT_NAME=Starry
 
 CLOSE_DEPOSITS=false
+
+GITHUB_URL=https://github.com/DnD-industries/stellar_tipping_bot
+STELLAR_TX_VIEWER_URL_BASE=https://stellar.expert/explorer/tx
 ```
 
 Fire up the application stack and create two databases:
