@@ -151,7 +151,7 @@ module.exports = async function (models) {
         try {
           const transactionResult = await server.submitTransaction(tx);
           console.log("Transaction Success:", JSON.stringify(transactionResult, null, 2));
-          return resolve("Success");
+          return resolve(transactionResult.hash);
         } catch (exc) {
           console.log("Transaction Failure:", JSON.stringify(exc, null, 2));
           return reject("Failure");
