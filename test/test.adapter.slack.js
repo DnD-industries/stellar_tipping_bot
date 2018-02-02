@@ -236,7 +236,7 @@ describe('slackAdapter', async () => {
       process.env.STELLAR_PUBLIC_KEY = 'testpubkey'
       let infoCommand = new Command.Info(accountWithWallet.adapter, accountWithWallet.uniqueId)
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
-      assert.equal(returned, `Deposit address: ${process.env.STELLAR_PUBLIC_KEY}\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      assert.equal(returned, `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
   })
 

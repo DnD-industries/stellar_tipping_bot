@@ -249,7 +249,7 @@ class Slack extends Adapter {
     if(!account.walletAddress) {
       return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
     } else {
-      return `Deposit address: ${process.env.STELLAR_PUBLIC_KEY}\nGitHub homepage: ${process.env.GITHUB_URL}`
+      return `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`
     }
   }
 
