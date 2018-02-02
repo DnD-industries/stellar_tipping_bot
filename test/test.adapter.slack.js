@@ -130,7 +130,7 @@ describe('slackAdapter', async () => {
         return sourceAccount;
       }
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
-      assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\`\n\nYour transaction hash is \`${transactionHash}\``);
+      assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\`\n\nYour transaction hash is \`${transactionHash}\`You can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${transactionHash}`);
     })
 
     it (`should return an appropriate message if the  user supplies a string in place of a number`, async() => {
