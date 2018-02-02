@@ -43,21 +43,39 @@ class SlackServer {
     //Middleware to perform token validation for slash requests coming from Slack
     app.use(function (req, res, next) {
       if(process.env.MODE === "development"){
-        console.log('Request received at', Date.now());
-        console.log(req.headers);
-        console.log(JSON.stringify(req.body));
+        console.log("Request received at:", Date.now());
+        console.log("Request url:",req.url);
+        console.log("Headers:", JSON.stringify(req.headers));
+        console.log("Body/Query:", req.method === "GET" ? JSON.stringify(req.query) : JSON.stringify(req.body));
       }
 
-      //If this is a GET request, use the query token, otherwise look for it in the body
-      let token = req.method === "GET" ? req.query.token : req.body.token;
-      //With the proper validation token from Slack, route the request accordingly.
-      //Otherwise reply with a 401 status code
-      token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
+      //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
+      if (req.method === "GET" && req.path === "/slack/oauth") {
+        //Check for the presence of an authorization code
+        if (req.query.code) {
+          next();
+        } else {
+          res.status(401).send("Missing Slack authorization code");
+        }
+      } else {
+        //If this is a GET request, use the query token, otherwise look for it in the body
+        let token = req.method === "GET" ? req.query.token : req.body.token;
+        //With the proper validation token from Slack, route the request accordingly.
+        //Otherwise reply with a 401 status code
+        token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
+      }
     });
 
     // Index route
     app.all('/', function (req, res) {
       res.send('Hello world, I am Starry');
+    });
+
+    //https://175c64d8.ngrok.io:5000/slack/oauth?code=309294713090.310353154935.c44bf12345a25f6bdfe004dd2b0f6006c451c69a0d4745cc2888677024c4ab7d&state=
+    app.get('/slack/oauth', async function (req, res) {
+      console.log("oauth req");
+      console.log("code:",req.query.code);
+      res.status(200).send("Stellar Slack Tipping Bot Hello")
     });
 
     /**

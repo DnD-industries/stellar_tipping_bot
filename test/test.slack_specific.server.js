@@ -50,4 +50,17 @@ describe('Slack Server/Router Middleware', async () => {
       .set('Content-Type', 'application/x-www-form-urlencoded')
       .expect(401, done);
   });
+
+  it('responds to GET requests to /slack/oauth with an authorization code', function testSlackOAuthWithCode(done) {
+    request(slackServer.server)
+      .get('/slack/oauth')
+      .query({code: "abc123"})
+      .expect(200, done);
+  });
+
+  it('responds to GET requests to /slack/oauth without an authorization code', function testSlackOAuthWithoutCode(done) {
+    request(slackServer.server)
+      .get('/slack/oauth')
+      .expect(401, done);
+  });
 });
