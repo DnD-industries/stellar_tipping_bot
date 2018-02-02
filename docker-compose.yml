@@ -50,11 +50,3 @@ services:
     ports:
       - 80:80
     restart: always
-  dockerhub-hook:
-    image: maccyber/micro-dockerhub-hook
-    ports:
-      - 3000:3000
-    volumes:
-      - ./deploy_scripts:/src/scripts
-      - /var/run/docker.sock:/var/run/docker.sock
-    restart: always
