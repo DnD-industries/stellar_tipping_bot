@@ -120,6 +120,7 @@ class SlackServer {
 
       that.CommandQueue.pushCommand(command);
 
+      // res.send(that.adapter.handleCommand(command));
       res.send(REQUEST_BEING_PROCESSED);
     });
 
