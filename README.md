@@ -90,7 +90,7 @@ SLACK_BOT_NAME=Starry
 CLOSE_DEPOSITS=false
 
 GITHUB_URL=https://github.com/DnD-industries/stellar_tipping_bot
-STELLAR_TX_VIEWER_URL_BASE=https://stellar.expert/explorer/tx
+STELLAR_TX_VIEWER_URL_BASE=https://horizon-testnet.stellar.org/transactions
 ```
 
 Fire up the application stack and create two databases:
