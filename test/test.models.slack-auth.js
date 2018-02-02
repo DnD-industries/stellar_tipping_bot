@@ -10,6 +10,7 @@ describe('models / slack-auth', async () => {
 
   const pupAndSudsName = "pupnsuds"
   const pupAndSudsAuth = "zomgauth123456789";
+  const pupAndSudsBotAuth = "asdflkjasdf12341234";
 
   beforeEach(async () => {
     const config = await require('./setup')()
@@ -19,6 +20,7 @@ describe('models / slack-auth', async () => {
     auth = await SlackAuth.createAsync({
       team: pupAndSudsName,
       token: pupAndSudsAuth,
+      botToken: pupAndSudsBotAuth
     })
 
     account = await Account.createAsync({
@@ -37,6 +39,21 @@ describe('models / slack-auth', async () => {
 
     it ('should return null if no auth tokens have been registered for that team', async () => {
       const returnedAuth = await SlackAuth.authTokenForTeamId("badname")
+      assert.equal(returnedAuth, null)
+    })
+  })
+
+  /**
+   *  See https://api.slack.com/docs/oauth section "Bot user access tokens"
+   */
+  describe('botTokenForTeamId', () => {
+    it ('should return a bot specific oauth token if someone has registered an oauth token for a given team id', async () => {
+      const returnedAuth = await SlackAuth.botTokenForTeamId(pupAndSudsName)
+      assert.equal(returnedAuth, auth.botToken)
+    })
+
+    it ('should return null if no bot auth tokens have been registered for that team', async () => {
+      const returnedAuth = await SlackAuth.botTokenForTeamId("badname")
       assert.equal(returnedAuth, null)
     })
   })
