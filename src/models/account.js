@@ -193,6 +193,8 @@ module.exports = (db) => {
             })
 
             await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
+            console.log(`Send response: ${txSendResponse}`);
+            console.log(`Hash: ${hash}`);
             return txSendResponse
 
           } catch (e) {

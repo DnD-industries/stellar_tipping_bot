@@ -30,7 +30,7 @@ describe('slackAdapter', async () => {
     accountWithWallet = await Account.createAsync({
       adapter: 'testing',
       uniqueId: 'team.foo',
-      balance: '1.0000000',
+      balance: '100.0000000',
       walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB'
     });
 
@@ -111,15 +111,17 @@ describe('slackAdapter', async () => {
     })
 
     it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance`, async() => {
+      const withdrawAmount = 500.0142
       let command = new Command.Withdraw(accountWithWallet.adapter, accountWithWallet.uniqueId, 500.0142)
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
-      assert.equal(returnedValue, "You requested to withdraw \`500.0142 XLM\` but your wallet only contains \`1 XLM\`");
+      assert.equal(returnedValue, `You requested to withdraw \`${withdrawAmount} XLM\` but your wallet only contains \`${Utils.formatNumber(accountWithWallet.balance)} XLM\``);
     })
 
     it (`should complete the withdrawal and should return a message with the amount withdrawn and a transaction receipt if the  user has a sufficient balance`, async() =>
     {
       const transactionHash = "txHash"
-      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1)
+      const amount = 11
+      let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, amount)
       // A little messy, but the general idea here is that we are getting the command to just
       // return what it would have already been returning, but with its 'withdraw' function's return value pre-determined for testing purposes
       let sourceAccount = await command.getSourceAccount()
@@ -130,7 +132,7 @@ describe('slackAdapter', async () => {
         return sourceAccount;
       }
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
-      assert.equal(returnedValue, `You withdrew \`1 XLM\` to your wallet at \`${accountWithWallet.walletAddress}\`\n\nYour transaction hash is \`${transactionHash}\``);
+      assert.equal(returnedValue, `You withdrew \`${amount} XLM\` to your wallet at \`${accountWithWallet.walletAddress}\`\n\nYour transaction hash is \`${transactionHash}\`\nYou can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${transactionHash}`);
     })
 
     it (`should return an appropriate message if the  user supplies a string in place of a number`, async() => {

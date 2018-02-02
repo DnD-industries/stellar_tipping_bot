@@ -74,9 +74,7 @@ class SlackServer {
 
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      that.CommandQueue.pushCommand(command);
-
-      res.send(REQUEST_BEING_PROCESSED);
+      res.send(await that.adapter.handleCommand(command));
     });
 
 
@@ -103,9 +101,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      that.CommandQueue.pushCommand(command);
-
-      res.send(REQUEST_BEING_PROCESSED);
+      res.send(await that.adapter.handleCommand(command));
     });
 
     /**
@@ -117,9 +113,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      that.CommandQueue.pushCommand(command);
-
-      res.send(REQUEST_BEING_PROCESSED);
+      res.send(await that.adapter.handleCommand(command));
     });
 
     /**
@@ -129,9 +123,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      that.CommandQueue.pushCommand(command);
-
-      res.send(REQUEST_BEING_PROCESSED);
+      res.send(await that.adapter.handleCommand(command));
     });
 
 
