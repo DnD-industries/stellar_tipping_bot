@@ -59,9 +59,7 @@ module.exports = async function (models) {
               type: 'deposit'
             });
 
-            //console.log(`Incoming txOriginal: `,JSON.stringify(txn))
             console.log(`INCOMING_TRANSACTION: `, JSON.stringify(record, null, 2));
-            //console.log(`Incoming txInstance:`, JSON.stringify(txInstance))
             events.emit('INCOMING_TRANSACTION', txInstance);
           } catch (exc) {
             console.log('Unable to commit transaction.');
