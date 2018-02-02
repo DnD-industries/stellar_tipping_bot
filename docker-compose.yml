@@ -6,7 +6,7 @@ services:
       . # build using the Dockerfile from the root directory of the repo
     volumes:
       # make our .env file available inside the container. We need an absolute path (using pwd) because it is a single file volume.
-      - ${PWD}/.env:/usr/src/app/.env 
+      - ${PWD}/.env:/usr/src/app/.env
       #- ./:/usr/src/app/
     working_dir: /usr/src/app
     stdin_open: true # necessary for a shell session inside the container
@@ -54,7 +54,7 @@ services:
     image: maccyber/micro-dockerhub-hook
     ports:
       - 3000:3000
-    env_file: /.env
+    env_file: ./.env
     volumes:
       - ./deploy_scripts:/src/scripts
       - /var/run/docker.sock:/var/run/docker.sock
