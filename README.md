@@ -116,6 +116,8 @@ docker-compose up -d
 docker-compose logs -f app
 ```
 
+To set the path if using a dockerhub web hook:
+
 The bot is now running on localhost:5000
 
 ## Contribute
