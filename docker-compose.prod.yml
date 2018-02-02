@@ -2,5 +2,61 @@ version: '3'
 services:
   app:
     image: davidbulnes/stellar-bot:${STELLARBOT_MASTER_TAG}
+    build:
+      . # build using the Dockerfile from the root directory of the repo
+    volumes:
+      # make our .env file available inside the container. We need an absolute path (using pwd) because it is a single file volume.
+      - ${PWD}/.env:/usr/src/app/.env 
+      #- ./:/usr/src/app/
+    working_dir: /usr/src/app
+    stdin_open: true # necessary for a shell session inside the container
+    tty: true # shell session
     ports:
       - 6000:6000
+    links:
+      - db
+      - redis
+      - nginx
+    depends_on:
+      - db
+      - redis
+      - nginx
+    # Encapsulate the command with bash -c so we can add additional steps easily.
+    # Wait for the db connection before starting the app
+    command: bash -c "./wait_for_postgres.sh npm run app"
+    restart: always
+    #environment:
+    #  - PG_URL=postgres://${PG_USER}:${PG_PASSWORD}@${PG_HOST}:${PG_PORT}/${PG_DB}
+  db:
+    image: postgres:10.1
+    volumes:
+      - ./pgdb:/var/lib/postgresql/data
+    ports:
+      - 5455:5432
+    environment:
+      - POSTGRES_USER=${PG_USER}
+      - POSTGRES_PASSWORD=${PG_PASSWORD}
+      #- POSTGRES_DATABASE=${PG_DB}
+    restart: always
+  redis:
+    image: redis:3.2.11
+    volumes:
+      - ./redisdb:/data
+    ports:
+      - 6379:6379 # may want to define a different externally mapped port so we can differentiate connections via localhost vs docker0
+    restart: always
+  nginx:
+    image: nginx:1.13.8
+    ports:
+      - 80:80
+    restart: always
+  dockerhub-hook:
+    image: maccyber/micro-dockerhub-hook
+    ports:
+      - 3000:3000
+    env_file: ./.env
+    volumes:
+      - ./deploy_scripts:/src/scripts
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+

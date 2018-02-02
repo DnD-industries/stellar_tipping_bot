@@ -13,7 +13,7 @@ if [ echo "$TAG" | grep -q "master" ]; then
 	cd ..
 	#Fetch and reset our code to the latest commit on master
 	git fetch upstream master && git reset --hard $COMMIT_SHA & git clean -df
-	docker-compose pull app && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d app
+	docker-compose pull app && docker-compose -f docker-compose.prod.yml up -d
 	#Change our path back
 	cd -
 else
