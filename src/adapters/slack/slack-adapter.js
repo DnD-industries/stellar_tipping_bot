@@ -181,6 +181,10 @@ class Slack extends Adapter {
       return this.onRegistrationBadWallet(command.walletPublicKey)
     }
 
+    if(command.walletPublicKey == process.env.STELLAR_PUBLIC_KEY) {
+      return `That is my address. You must register with your own address.`;
+    }
+
     // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
     const usersExistingWallet = await this.Account.walletAddressForUser(command.adapter, command.sourceId)
 
