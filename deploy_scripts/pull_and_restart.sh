@@ -1,4 +1,9 @@
 #!/bin/bash
+
+# These brackets ensure this entire script is loaded in memory at run time.
+# If this script itself is overwriten by the git reset command below, it will prevent unpredictable execution
+{ 
+
 #Pulls a new docker image for davidbulnes/stellar-bot:master_<new_commit_sha>, and brings up the new container
 #Called from the dockerhub webhook server running on the host system. We can't easily run it through a docker container due to process isolation. 
 
@@ -27,3 +32,6 @@ if echo "$TAG" | grep -q "master"; then
 else
     echo "NOT PULLING: master not found in tag"
 fi
+
+exit
+}
