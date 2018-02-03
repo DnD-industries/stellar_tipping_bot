@@ -11,14 +11,19 @@ if echo "$TAG" | grep -q "master"; then
     #Remove the "master_" prefix from the tag to get the commit sha
     COMMIT_SHA=$STELLARBOT_MASTER_TAG%"master_"
     echo "$COMMIT_SHA"
-    #Change our path to the relative path where our stellar bot docker-compose.yml resides
-    #Needs to be set in /etc/environment to be available outside of just terminal sessions
-    cd $STELLARBOT_PATH
-    #Fetch and reset our code to the latest commit on master
-    git fetch upstream master && git reset --hard $COMMIT_SHA & git clean -df
-    docker-compose pull app && docker-compose -f docker-compose.prod.yml up -d
-    #Change our path back
-    cd -
+    #Check the tag is not "latest"
+    if ![[ echo $STELLARBOT_MASTER_TAG | grep -q "latest" ]] ; then
+        #Change our path to the relative path where our stellar bot docker-compose.yml resides
+        #Needs to be set in /etc/environment to be available outside of just terminal sessions
+        cd $STELLARBOT_PATH
+        #Fetch and reset our code to the latest commit on master
+        git fetch upstream master && git reset --hard $COMMIT_SHA & git clean -df
+        docker-compose pull app && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up app -d
+        #Change our path back
+        cd -
+    else
+        echo "NOT PULLING: tag ${COMMIT_SHA} is not a git sha suffix"
+    fi 
 else
     echo "NOT PULLING: master not found in tag"
 fi

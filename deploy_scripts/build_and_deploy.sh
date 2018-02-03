@@ -9,8 +9,6 @@ docker-compose build --no-cache
 BUILD_TAG="${TRAVIS_BRANCH}"_$(git rev-parse --short HEAD)
 echo "Build tag: "$BUILD_TAG
 
-echo "Travis pull request:" 
-echo $TRAVIS_PULL_REQUEST
 if [ "$TRAVIS_PULL_REQUEST" == "false" ]; then
 	docker tag "${DOCKER_REPO}":latest "${DOCKER_REPO}":$BUILD_TAG 
 	docker tag "${DOCKER_REPO}":latest "${DOCKER_REPO}":"${TRAVIS_BRANCH}"_latest
