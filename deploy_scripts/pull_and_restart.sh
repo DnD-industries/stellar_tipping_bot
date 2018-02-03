@@ -26,8 +26,6 @@ if echo "$TAG" | grep -q "master"; then
         git fetch origin master && git reset --hard $COMMIT_SHA & git clean -df
         docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull app && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d app
 
-        #recreate our symbolic link
-        ln -s $STELLARBOT_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
         #Change our path back
         #cd -
     else
@@ -36,6 +34,10 @@ if echo "$TAG" | grep -q "master"; then
 else
     echo "NOT PULLING: master not found in tag"
 fi
+
+sleep 1
+#copy our script
+cp $STELLARBOT_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
 
 exit
 }
