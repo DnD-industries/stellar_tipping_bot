@@ -17,7 +17,7 @@ if echo "$TAG" | grep -q "master"; then
     COMMIT_SHA=$STELLARBOT_MASTER_TAG%"master_"
     echo "$COMMIT_SHA"
     #Check the tag is not "latest"
-    if ![[ echo $STELLARBOT_MASTER_TAG | grep -q "latest" ]] ; then
+    if !( echo $STELLARBOT_MASTER_TAG | grep -q "latest" ) ; then
         #Change our path to the relative path where our stellar bot docker-compose.yml resides
         #Needs to be set in /etc/environment to be available outside of just terminal sessions
         cd $STELLARBOT_PATH
