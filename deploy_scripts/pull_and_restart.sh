@@ -14,15 +14,16 @@ if echo "$TAG" | grep -q "master"; then
     #Set our env variable for the master tag to $TAG, passed from micro-dockerhub-hook/lib/run-script.js
     export STELLARBOT_MASTER_TAG=$TAG
     #Remove the "master_" prefix from the tag to get the commit sha
-    COMMIT_SHA=$STELLARBOT_MASTER_TAG%"master_"
-    echo "$COMMIT_SHA"
+    COMMIT_SHA=${STELLARBOT_MASTER_TAG//"master_"/}
+    echo "Commit SHA: ${COMMIT_SHA}"
     #Check the tag is not "latest"
     if !( echo $STELLARBOT_MASTER_TAG | grep -q "latest" ) ; then
         #Change our path to the relative path where our stellar bot docker-compose.yml resides
         #Needs to be set in /etc/environment to be available outside of just terminal sessions
+        echo "STELLARBOT_PATH: "$STELLARBOT_PATH
         cd $STELLARBOT_PATH
         #Fetch and reset our code to the latest commit on master
-        git fetch upstream master && git reset --hard $COMMIT_SHA & git clean -df
+        git fetch origin master && git reset --hard $COMMIT_SHA & git clean -df
         docker-compose pull app && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up app -d
         #Change our path back
         cd -
