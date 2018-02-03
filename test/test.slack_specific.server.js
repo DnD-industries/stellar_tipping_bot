@@ -28,7 +28,6 @@ describe('Slack Server/Router Middleware', async () => {
   });
 
   it('responds to GET requests with 401 in absence of proper Slack authentication token', function testInvalidGETToken(done) {
-    console.log('test 401');
     request(slackServer.server)
       .get('/')
       .set('Content-Type', 'application/x-www-form-urlencoded')

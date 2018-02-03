@@ -5,15 +5,16 @@ const slackMessage  = require('./slack-message');
 const slackUtils    = require('./slack-command-utils');
 const slackClient   = require('./slack-client');
 const SlackAdapter  = require('../slack/slack-adapter');
+const CommandQueue  = require('./slack-command-queue');
+const request       = require('request-promise');
+const redis         = require('redis');
+//Redis consts
+const MESSAGE_FLUSH_INTERVAL = 1; // milliseconds
+const REQUEST_BEING_PROCESSED = "Your request is being processed.";
+
 // An access token (from your Slack app or custom integration - xoxp, xoxb, or xoxa)
 // In our case we use an xoxb bot token
-const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
-const redis = require('redis');
-const CommandQueue = require('./slack-command-queue')
-
-const MESSAGE_FLUSH_INTERVAL = 1; // milliseconds
-
-const REQUEST_BEING_PROCESSED = "Your request is being processed.";
+const oauth_token   = process.env.SLACK_BOT_OAUTH_TOKEN;
 
 /**
  * SlackServer handles all post calls coming from Slack slash commands.
@@ -44,9 +45,9 @@ class SlackServer {
     app.use(function (req, res, next) {
       if(process.env.MODE === "development"){
         console.log("Request received at:", Date.now());
-        console.log("Request url:",req.url);
+        console.log("Request path:",req.path);
         console.log("Headers:", JSON.stringify(req.headers));
-        console.log("Body/Query:", req.method === "GET" ? JSON.stringify(req.query) : JSON.stringify(req.body));
+        console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
       }
 
       //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
@@ -71,11 +72,35 @@ class SlackServer {
       res.send('Hello world, I am Starry');
     });
 
-    //https://175c64d8.ngrok.io:5000/slack/oauth?code=309294713090.310353154935.c44bf12345a25f6bdfe004dd2b0f6006c451c69a0d4745cc2888677024c4ab7d&state=
+    // Example: /slack/oauth?code=309294713090.310353154935.c44bf12345a25f6bdfe004dd2b0f6006c451c69a0d4745cc2888677024c4ab7d&state=
     app.get('/slack/oauth', async function (req, res) {
-      console.log("oauth req");
-      console.log("code:",req.query.code);
-      res.status(200).send("Stellar Slack Tipping Bot Hello")
+      // console.log("auth code:",req.query.code);
+      // console.log("original redirect url:", req.hostname + req.url);
+      let reqOptions = {
+        method: 'POST',
+        uri: 'https://slack.com/api/oauth.access',
+        headers: {
+          'content-type': 'application/x-www-form-urlencoded'
+        },
+        form: {
+          client_id     : process.env.SLACK_APP_CLIENT_ID,
+          client_secret : process.env.SLACK_APP_CLIENT_SECRET,
+          code          : req.query.code/*,
+          redirect_uri  : "https://" + req.hostname + req.url*/
+        }
+      };
+      console.log("request options:", JSON.stringify(reqOptions));
+
+      try {
+        let oauthResponse = await request(reqOptions);
+        console.log("oauthResponse:", JSON.stringify(oauthResponse));
+        //Handle failure response
+        //Save token
+        res.status(200).send("Authorized Stellar Slack Tipping Bot for your team. Welcome.");         
+      } catch (exc) {
+        //Handle exception from slack
+        res.status(200).send("Adding bot to your Slack team failed, please try again.");
+      }
     });
 
     /**
