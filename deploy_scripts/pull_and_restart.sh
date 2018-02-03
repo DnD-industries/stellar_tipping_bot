@@ -24,9 +24,12 @@ if echo "$TAG" | grep -q "master"; then
         cd $STELLARBOT_PATH
         #Fetch and reset our code to the latest commit on master
         git fetch origin master && git reset --hard $COMMIT_SHA & git clean -df
-        docker-compose pull app && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up app -d
+        docker-compose -f docker-compose.yml -f docker-compose.prod.yml pull app && docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d app
+
+        #recreate our symbolic link
+        ln -s $STELLARBOT_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
         #Change our path back
-        cd -
+        #cd -
     else
         echo "NOT PULLING: tag ${COMMIT_SHA} is not a git sha suffix"
     fi 
