@@ -41,6 +41,15 @@ class Slack extends Adapter {
   }
 
   /**
+   * Called when a user tries to tip someone but there isn't actually a user with that username.
+   * @param tip
+   * @returns {Promise<string>}
+   */
+  async onTipNoTargetFound (tip) {
+    return `Your tip was cancelled. We could not find a user with that username. Make sure it is formatted correctly, such as '@username'.`
+  }
+
+  /**
    * Called when the tip goes through successfully.
    * For the Slack Adapter, a DM will get sent to the tip recipient whose content depends on whether or not they are already registered.
    * Text is also returned so that the Slack Server can respond with an appropriate message.
@@ -50,6 +59,7 @@ class Slack extends Adapter {
    * @returns {Promise<string>}
    */
   async onTip (tip, amount) {
+    // TODO: Validate that a user exists with this username
     const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
     // const client = slackClient.clientForCommand(tip);
     if(!account.walletAddress) {
@@ -170,6 +180,24 @@ class Slack extends Adapter {
       return this.receiveInfoRequest(command);
     }
   }
+
+  /**
+   * Will transfer the tip provided if possible, otherwise will call the appropriate function on the adapter
+   * in the event that there is an insufficient balance or other issue.
+   * @param tip {Tip}
+   * @returns {Promise<void>}
+   */
+  async receivePotentialTip (tip) {
+    // Let's validate we can actually find a slack user given the tip command as provided, otherwise we abort
+    try {
+      await this.client.getDMIdForUser(tip.targetId)
+    } catch (e) {
+      console.log(`${e}\nCould not find user ID in receivePotentialTip. Aborting tip`)
+      return this.onTipNoTargetFound(tip)
+    }
+    return super.receivePotentialTip(tip)
+  }
+
 
   /**
    * handleRegistrationRequest(command)
