@@ -59,8 +59,8 @@ class CommandQueue {
    */
   async flush(slackAdapter) {
     let command = await this.popCommand();
-    let client = SlackClient.botClientForCommand(command);
     while(command) {
+      let client = SlackClient.botClientForCommand(command);
       console.log(`Command is: ${JSON.stringify(command)}`);
       let textBody = await slackAdapter.handleCommand(command);
       client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(command.uniqueId), textBody);
