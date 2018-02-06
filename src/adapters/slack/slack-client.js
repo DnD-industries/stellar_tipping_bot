@@ -166,6 +166,7 @@ class SlackClient extends WebClient {
    */
   static botClientForUniqueId(uniqueId) {
     let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
+    console.log(`SlackAuth is: ${JSON.stringify(SlackAuth)}`)
     if(SlackAuth.botTokenForTeamId(teamId)){
       return new SlackClient(SlackAuth.botTokenForTeamId(teamId))
     } else {
