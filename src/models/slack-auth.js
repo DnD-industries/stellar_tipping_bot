@@ -81,7 +81,9 @@ module.exports = (db) => {
     })
   }
 
+  console.log("Created SlackAuth")
   singleton = SlackAuth;
+  console.log(`${JSON.stringify(singleton)}`)
   return singleton;
 }
 
