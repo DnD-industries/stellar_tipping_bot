@@ -177,7 +177,6 @@ class Slack extends Adapter {
    * @param command a Registration command object
    */
   async handleRegistrationRequest(command) {
-
     if (!(command.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(command.walletPublicKey))) {
       return this.onRegistrationBadWallet(command.walletPublicKey)
     }
@@ -253,10 +252,24 @@ class Slack extends Adapter {
     }
   }
 
+  async receiveNewAuthTokensForTeam (team, authToken, botToken = "") {
+    if (!authToken.length) {
+      throw new Error(`Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.`);
+    }
+
+    const newAuth = await this.slackAuth.getOrCreate(team, authToken, botToken);
+    if (newAuth.team && newAuth.token) {
+      return `Adding Starry to Slack succeeded. Open Slack to start tipping!`;
+    } else {
+      throw new Error(`Adding Starry to Slack failed. Please try again.`);
+    }
+  }
+
   constructor (config) {
     super(config);
     this.name = 'slack';
     this.client = new slackClient(oauth_token);
+    this.slackAuth = config.models.slackAuth;
   }
 
 }

@@ -11,8 +11,8 @@ class Adapter extends EventEmitter {
 
     this.config = config;
 
-    this.Account = config.models.account;
-    this.Transaction = config.models.transaction;
+    this.Account      = config.models.account;
+    this.Transaction  = config.models.transaction;
 
     this.Account.events.on('DEPOSIT', (sourceAccount, amount) => {
       if (this.name === sourceAccount.adapter) {

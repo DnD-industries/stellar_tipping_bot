@@ -57,7 +57,7 @@ describe('Slack Server/Router Middleware', async () => {
       .expect(200, done);
   });
 
-  it('responds to GET requests to /slack/oauth without an authorization code', function testSlackOAuthWithoutCode(done) {
+  it('responds with 401 to GET requests to /slack/oauth without an authorization code', function testSlackOAuthWithoutCode(done) {
     request(slackServer.server)
       .get('/slack/oauth')
       .expect(401, done);

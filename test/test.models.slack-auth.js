@@ -57,4 +57,17 @@ describe('models / slack-auth', async () => {
       assert.equal(returnedAuth, null)
     })
   })
+
+  describe('getOrCreate', () => {
+    it ('should only create a new slackAuth if this combination of team and tokens does not exist', async () => {
+      const sameAuth = await SlackAuth.getOrCreate(pupAndSudsName, pupAndSudsAuth, pupAndSudsBotAuth);
+      assert.equal(auth._id, sameAuth._id);
+
+      const otherAuth = await SlackAuth.getOrCreate(pupAndSudsName, 'testAuthToken123', 'testBotToken456')
+      assert.equal(otherAuth.team, pupAndSudsName);
+      assert.equal(otherAuth.token, 'testAuthToken123');
+      assert.equal(otherAuth.botToken, 'testBotToken456');
+    })
+    
+  })
 })

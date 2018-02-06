@@ -61,6 +61,26 @@ module.exports = (db) => {
     })
   }
 
+  /**
+   * SlackAuth get or create.
+   * @param team {String} The Slack TeamID of a given team. This is likely derived from the uniqueID of a user making a POST request to our server where the unique ID is "[teamID].[userID]"
+   * @returns {Object} The retrieved or newly created SlackAuth record
+   */
+  SlackAuth.getOrCreate = async function (team, token, botToken) {
+    return await SlackAuth.withinTransaction(async () => {
+      let teamSlackAuth = await SlackAuth.oneAsync({team, token, botToken});
+      //TODO: Check all auth tokens for this team, not just one
+      if (!teamSlackAuth) {
+        teamSlackAuth = await SlackAuth.createAsync({
+          team: team,
+          token: token,
+          botToken: botToken
+        })
+      }
+      return teamSlackAuth
+    })
+  }
+
   singleton = SlackAuth;
   return singleton;
 }
