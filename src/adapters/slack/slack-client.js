@@ -208,6 +208,8 @@ module.exports.botClientForUniqueId = function(uniqueId) {
   let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
   console.log(`SlackAuth is: ${JSON.stringify(SlackAuth)}`)
   if(SlackAuth.Singleton().botTokenForTeamId(teamId)){
+    let token = SlackAuth.Singleton().botTokenForTeamId(teamId)
+    console.log(`Found token: ${token}`)
     return new SlackClient(SlackAuth.Singleton().botTokenForTeamId(teamId))
   } else {
     return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
