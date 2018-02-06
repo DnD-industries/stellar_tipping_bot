@@ -156,7 +156,7 @@ class SlackClient extends WebClient {
    * @returns {SlackClient | null}
    */
   static botClientForCommand(command) {
-    return this.botClientForUniqueId(command.uniqueId)
+    return SlackClient.botClientForUniqueId(command.uniqueId)
   }
 
   /**
