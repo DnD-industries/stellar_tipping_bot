@@ -289,7 +289,11 @@ module.exports = (db) => {
     })
   }
 
+
   singleton = Account;
+  console.log("Created Account")
+  console.log(`Singleton: ${JSON.stringify(singleton)}`)
+  console.log(`Account: ${JSON.stringify(Account)}`)
   return singleton;
 }
 
