@@ -137,81 +137,44 @@ class SlackClient extends WebClient {
       });
   }
 
-  // /**
-  //  * Return a non-bot oAuth token for a given command
-  //  * @param command
-  //  * @returns {SlackClient | null}
-  //  */
-  // static clientForCommand(command) {
-  //   if(SlackAuth.authTokenForTeamId(command.teamId)){
-  //     return new SlackClient(SlackAuth.authTokenForTeamId(command.teamId))
-  //   } else {
-  //     return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
-  //   }
-  // }
-  //
-  // /**
-  //  *
-  //  * @param command {Command}
-  //  * @returns {SlackClient | null}
-  //  */
-  // static botClientForCommand(command) {
-  //   return SlackClient.botClientForUniqueId(command.uniqueId)
-  // }
-  //
-  // /**
-  //  *
-  //  * @param uniqueId {String} The unique ID of the user to whom we wish to send a message
-  //  * @returns {SlackClient | null}
-  //  */
-  // static botClientForUniqueId(uniqueId) {
-  //   let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
-  //   console.log(`SlackAuth is: ${JSON.stringify(SlackAuth)}`)
-  //   if(SlackAuth.botTokenForTeamId(teamId)){
-  //     return new SlackClient(SlackAuth.botTokenForTeamId(teamId))
-  //   } else {
-  //     return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
-  //   }
-  // }
+  /**
+   * Return a non-bot oAuth token for a given command
+   * @param command
+   * @returns {SlackClient | null}
+   */
+  static async clientForCommand(command) {
+    let auth = SlackAuth.Singleton();
+    if(SlackAuth.authTokenForTeamId(command.teamId)){
+      return new SlackClient(await auth.authTokenForTeamId(command.teamId))
+    } else {
+      return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
+    }
+  }
+
+  /**
+   *
+   * @param command {Command}
+   * @returns {SlackClient | null}
+   */
+  static async botClientForCommand(command) {
+    return await SlackClient.botClientForUniqueId(command.uniqueId)
+  }
+
+  /**
+   *
+   * @param uniqueId {String} The unique ID of the user to whom we wish to send a message
+   * @returns {SlackClient | null}
+   */
+  static async botClientForUniqueId(uniqueId) {
+    let auth = SlackAuth.Singleton();
+    let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
+    let token = await auth.botTokenForTeamId(teamId)
+    if(token){
+      return new SlackClient(token)
+    } else {
+      return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
+    }
+  }
 }
 
 module.exports = SlackClient
-
-/**
- * Return a non-bot oAuth token for a given command
- * @param command
- * @returns {SlackClient | null}
- */
-module.exports.clientForCommand = function(command) {
-  if(SlackAuth.Singleton().authTokenForTeamId(command.teamId)){
-    return new SlackClient(SlackAuth.Singleton().authTokenForTeamId(command.teamId))
-  } else {
-    return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
-  }
-}
-
-/**
- *
- * @param command {Command}
- * @returns {SlackClient | null}
- */
-module.exports.botClientForCommand = function(command) {
-  return SlackClient.botClientForUniqueId(command.uniqueId)
-}
-
-/**
- *
- * @param uniqueId {String} The unique ID of the user to whom we wish to send a message
- * @returns {SlackClient | null}
- */
-module.exports.botClientForUniqueId = function(uniqueId) {
-  let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
-  console.log(`SlackAuth is: ${JSON.stringify(SlackAuth)}`)
-  if(SlackAuth.Singleton().botTokenForTeamId(teamId)){
-    let token = SlackAuth.Singleton().botTokenForTeamId(teamId)
-    console.log(`Found token: ${token}`)
-    return new SlackClient(SlackAuth.Singleton().botTokenForTeamId(teamId))
-  } else {
-    return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
-  }
-}

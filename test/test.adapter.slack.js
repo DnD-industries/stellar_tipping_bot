@@ -234,7 +234,7 @@ describe('slackAdapter', async () => {
       let recipientId = 'team.bar'
       let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
-      assert(slackAdapter.getBotClientForCommand(command).sendPlainTextDMToSlackUser.calledWith(recipientId,
+      assert(await slackAdapter.getBotClientForCommand(command).sendPlainTextDMToSlackUser.calledWith(recipientId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`), "The client should receive a message telling it to DM the recipient once the tip goes through")
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)    })
 
@@ -283,7 +283,7 @@ describe('slackAdapter', async () => {
     it('should send a message to the receiver of a deposit when their deposit goes through', async () => {
       let amount = 5.0
       await slackAdapter.onDeposit(accountWithWallet, amount)
-      assert(slackAdapter.getBotClientForUniqueId(accountWithWallet.uniqueId).sendPlainTextDMToSlackUser.calledWith(Utils.slackUserIdFromUniqueId(accountWithWallet.uniqueId), `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
+      assert(await slackAdapter.getBotClientForUniqueId(accountWithWallet.uniqueId).sendPlainTextDMToSlackUser.calledWith(Utils.slackUserIdFromUniqueId(accountWithWallet.uniqueId), `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
     })
   })
 })

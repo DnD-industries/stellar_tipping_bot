@@ -60,7 +60,7 @@ class Slack extends Adapter {
    */
   async onTip (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
-    let client = this.getBotClientForCommand(tip)
+    let client = await this.getBotClientForCommand(tip)
     if(!account.walletAddress) {
       client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`)
@@ -189,7 +189,7 @@ class Slack extends Adapter {
   async receivePotentialTip (tip) {
     // Let's validate we can actually find a slack user given the tip command as provided, otherwise we abort
     try {
-      let client = this.getBotClientForCommand(tip)
+      let client = await this.getBotClientForCommand(tip)
       await client.getDMIdForUser(tip.targetId)
     } catch (e) {
       console.log(`${e}\nCould not find user ID in receivePotentialTip. Aborting tip`)
@@ -248,7 +248,7 @@ class Slack extends Adapter {
    */
   async onDeposit (sourceAccount, amount)
   {
-    let client = this.getBotClientForUniqueId(sourceAccount.uniqueId)
+    let client = await this.getBotClientForUniqueId(sourceAccount.uniqueId)
     client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
         `You made a deposit of ${Utils.formatNumber(amount)} XLM`);
   }
@@ -300,8 +300,8 @@ class Slack extends Adapter {
    * @param command {Command}
    * @returns {SlackClient}
    */
-  getBotClientForCommand (command) {
-    return slackClient.botClientForCommand(command)
+  async getBotClientForCommand (command) {
+    return await slackClient.botClientForCommand(command)
   }
 
   /**
@@ -309,8 +309,8 @@ class Slack extends Adapter {
    * @param command {Command}
    * @returns {SlackClient}
    */
-  getBotClientForUniqueId (uniqueId) {
-    return slackClient.botClientForUniqueId(uniqueId)
+  async getBotClientForUniqueId (uniqueId) {
+    return await slackClient.botClientForUniqueId(uniqueId)
   }
 
   constructor (config) {
