@@ -59,14 +59,13 @@ class Slack extends Adapter {
    * @returns {Promise<string>}
    */
   async onTip (tip, amount) {
-    // TODO: Validate that a user exists with this username
     const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
-    // const client = slackClient.clientForCommand(tip);
+    let client = this.getBotClientForCommand(tip)
     if(!account.walletAddress) {
-      this.client.sendPlainTextDMToSlackUser(tip.targetId,
+      client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`)
     } else {
-      this.client.sendPlainTextDMToSlackUser(tip.targetId,
+      client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
     }
     return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
@@ -190,7 +189,8 @@ class Slack extends Adapter {
   async receivePotentialTip (tip) {
     // Let's validate we can actually find a slack user given the tip command as provided, otherwise we abort
     try {
-      await this.client.getDMIdForUser(tip.targetId)
+      let client = this.getBotClientForCommand(tip)
+      await client.getDMIdForUser(tip.targetId)
     } catch (e) {
       console.log(`${e}\nCould not find user ID in receivePotentialTip. Aborting tip`)
       return this.onTipNoTargetFound(tip)
@@ -242,12 +242,14 @@ class Slack extends Adapter {
 
   /**
    *
-   * @param sourceAccount The uniqueId of the account which made the deposit
+   * @param sourceAccount The Account model which made the deposit
    * @param amount The amount in XLM of the deposit
    * @returns String
    */
-  async onDeposit (sourceAccount, amount) {
-    this.client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
+  async onDeposit (sourceAccount, amount)
+  {
+    let client = this.getBotClientForUniqueId(sourceAccount.uniqueId)
+    client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
         `You made a deposit of ${Utils.formatNumber(amount)} XLM`);
   }
 
@@ -293,10 +295,27 @@ class Slack extends Adapter {
     }
   }
 
+  /**
+   * Just a passthrough to our static botClientForCommand constructor. Allows for better testing.
+   * @param command {Command}
+   * @returns {SlackClient}
+   */
+  getBotClientForCommand (command) {
+    return slackClient.botClientForCommand(command)
+  }
+
+  /**
+   * Just a passthrough to our static botClientForUniqueId constructor. Allows for better testing.
+   * @param command {Command}
+   * @returns {SlackClient}
+   */
+  getBotClientForUniqueId (uniqueId) {
+    return slackClient.botClientForUniqueId(uniqueId)
+  }
+
   constructor (config) {
     super(config);
     this.name = 'slack';
-    this.client = new slackClient(oauth_token);
     this.slackAuth = config.models.slackAuth;
   }
 

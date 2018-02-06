@@ -52,12 +52,13 @@ class CommandQueue {
   }
 
   /**
+   * Sends all commands which have been queued up
    *
    * @param slackAdapter {Slack}
-   * @param slackClient {SlackClient}
    */
-  async flush(slackAdapter, slackClient) {
+  async flush(slackAdapter) {
     let command = await this.popCommand();
+    let client
     while(command) {
       console.log(`Command is: ${JSON.stringify(command)}`);
       let textBody = await slackAdapter.handleCommand(command);

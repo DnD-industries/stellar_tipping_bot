@@ -28,7 +28,6 @@ class SlackServer {
   constructor(slackAdapter) {
     var that = this; // Allows us to keep reference to 'this' even in closures, wherein "this" will actually mean the closure we are inside of in that context
     this.adapter = slackAdapter;
-    this.client = new slackClient(oauth_token);
     try{
       console.log("Connecting to redis url:", process.env.REDIS_URL);
       this.CommandQueue = new CommandQueue(redis.createClient(process.env.REDIS_URL));
@@ -180,7 +179,7 @@ class SlackServer {
 
   flushCommandQueue(slackServer) {
     // TODO: Going to need to refactor this when we get OAuth working so that we don't include the client at this time
-    slackServer.CommandQueue.flush(slackServer.adapter, slackServer.client);
+    slackServer.CommandQueue.flush(slackServer.adapter);
   }
 
   close(done){

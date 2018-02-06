@@ -137,7 +137,11 @@ class SlackClient extends WebClient {
       });
   }
 
-
+  /**
+   * Return a non-bot oAuth token for a given command
+   * @param command
+   * @returns {SlackClient | null}
+   */
   static clientForCommand(command) {
     if(SlackAuth.authTokenForTeamId(command.teamId)){
       return new SlackClient(SlackAuth.authTokenForTeamId(command.teamId))
@@ -146,9 +150,24 @@ class SlackClient extends WebClient {
     }
   }
 
+  /**
+   *
+   * @param command {Command}
+   * @returns {SlackClient | null}
+   */
   static botClientForCommand(command) {
-    if(SlackAuth.botTokenForTeamId(command.teamId)){
-      return new SlackClient(SlackAuth.botTokenForTeamId(command.teamId))
+    return this.botClientForUniqueId(command.uniqueId)
+  }
+
+  /**
+   *
+   * @param uniqueId {String} The unique ID of the user to whom we wish to send a message
+   * @returns {SlackClient | null}
+   */
+  static botClientForUniqueId(uniqueId) {
+    let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
+    if(SlackAuth.botTokenForTeamId(teamId)){
+      return new SlackClient(SlackAuth.botTokenForTeamId(teamId))
     } else {
       return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
     }

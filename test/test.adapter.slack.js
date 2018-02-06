@@ -1,18 +1,10 @@
 const assert = require('assert')
-const Slack = require('../src/adapters/slack/slack-adapter')
+
 const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
 const Utils = require('../src/utils')
 
-class TestableSlack extends Slack {
-  constructor (config) {
-    super(config);
-    this.client.sendPlainTextDMToSlackUser = sinon.spy();
-    this.client.getDMIdForUser = async function() {
-      return "dmId"
-    }
-  }
-}
+
 
 describe('slackAdapter', async () => {
 
@@ -20,6 +12,8 @@ describe('slackAdapter', async () => {
   let accountWithWallet;
   let accountWithoutWallet;
   let stellarpubkey;
+  let mockClient;
+  let Slack;
 
   beforeEach(async () => {
     const config = await require('./setup')()
@@ -27,6 +21,30 @@ describe('slackAdapter', async () => {
       createTransaction : function() {},
       send : function() {}
     }
+
+    Slack = require('../src/adapters/slack/slack-adapter')
+
+    mockClient = {
+      sendPlainTextDMToSlackUser : sinon.spy(),
+      getDMIdForUser : async function() {
+        return "dmId"
+      }
+    }
+
+    class TestableSlack extends Slack {
+      constructor (config) {
+        super(config);
+
+        this.getBotClientForCommand = function() {
+          return mockClient;
+        }
+
+        this.getBotClientForUniqueId = function() {
+          return mockClient;
+        }
+      }
+    }
+
     slackAdapter = new TestableSlack(config);
     Account = config.models.account;
 
@@ -202,7 +220,7 @@ describe('slackAdapter', async () => {
 
 
       // Simulate us not finding a corresponding ID
-      slackAdapter.client.getDMIdForUser = async function() {
+      mockClient.getDMIdForUser = async function() {
         throw "Error"
       }
 
@@ -216,7 +234,7 @@ describe('slackAdapter', async () => {
       let recipientId = 'team.bar'
       let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
-      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(recipientId,
+      assert(slackAdapter.getBotClientForCommand(command).sendPlainTextDMToSlackUser.calledWith(recipientId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`), "The client should receive a message telling it to DM the recipient once the tip goes through")
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)    })
 
@@ -225,7 +243,7 @@ describe('slackAdapter', async () => {
       let recipientId = 'team.foo'
       let command = new Command.Tip('testing', 'team.bar', recipientId, amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
-      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(recipientId, `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``), "The client should receive a message telling it to DM the recipient once the tip goes through")
+      assert(slackAdapter.getBotClientForCommand(command).sendPlainTextDMToSlackUser.calledWith(recipientId, `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``), "The client should receive a message telling it to DM the recipient once the tip goes through")
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
     })
   })
@@ -265,7 +283,7 @@ describe('slackAdapter', async () => {
     it('should send a message to the receiver of a deposit when their deposit goes through', async () => {
       let amount = 5.0
       await slackAdapter.onDeposit(accountWithWallet, amount)
-      assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(Utils.slackUserIdFromUniqueId(accountWithWallet.uniqueId), `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
+      assert(slackAdapter.getBotClientForUniqueId(accountWithWallet.uniqueId).sendPlainTextDMToSlackUser.calledWith(Utils.slackUserIdFromUniqueId(accountWithWallet.uniqueId), `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
     })
   })
 })
