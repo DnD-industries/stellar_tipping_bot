@@ -52,7 +52,7 @@ describe('slack-command-utils', () => {
       let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
       let expectedAdapter   = "slack";
       let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
-      let expectedTargetId  = "U8PTZ333N";
+      let expectedTargetId  = "T8MPK3KV1.U8PTZ333N";
       let expectedAmount    = 123.72;
       assert.equal(expectedAdapter, command.adapter);
       assert.equal(expectedSourceId, command.sourceId);

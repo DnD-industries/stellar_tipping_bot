@@ -25,7 +25,7 @@ class SlackCommandUtils {
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
-                targetId = this.extractUserIdFromCommand(params[0]);
+                targetId = msg.team_id + "." + this.extractUserIdFromCommand(params[0]);
                 amount = parseFloat(params[1]);
                 command = new Command.Tip(adapter, sourceId, targetId, amount);
                 break;
@@ -62,8 +62,8 @@ class SlackCommandUtils {
    *
    * See: https://api.slack.com/slash-commands#how_do_commands_work
    *
-   * @param cmd {Command}
-   * @returns {string}
+   * @param cmd {String}
+   * @returns {String}
    */
     extractUserIdFromCommand(cmd) {
         // If it doesn't contain @ and |, we're not interested. Just return what's given to us
