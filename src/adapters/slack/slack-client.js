@@ -1,5 +1,5 @@
 "use strict"
-const SlackAuth = require('../../models/slack-auth').Singleton()
+const SlackAuth = require('../../models/slack-auth')
 const { WebClient }   = require('@slack/client');
 const Utils = require('../../utils')
 
@@ -183,8 +183,8 @@ module.exports = SlackClient
  * @returns {SlackClient | null}
  */
 module.exports.clientForCommand = function(command) {
-  if(SlackAuth.authTokenForTeamId(command.teamId)){
-    return new SlackClient(SlackAuth.authTokenForTeamId(command.teamId))
+  if(SlackAuth.Singleton().authTokenForTeamId(command.teamId)){
+    return new SlackClient(SlackAuth.Singleton().authTokenForTeamId(command.teamId))
   } else {
     return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
   }
@@ -207,8 +207,8 @@ module.exports.botClientForCommand = function(command) {
 module.exports.botClientForUniqueId = function(uniqueId) {
   let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
   console.log(`SlackAuth is: ${JSON.stringify(SlackAuth)}`)
-  if(SlackAuth.botTokenForTeamId(teamId)){
-    return new SlackClient(SlackAuth.botTokenForTeamId(teamId))
+  if(SlackAuth.Singleton().botTokenForTeamId(teamId)){
+    return new SlackClient(SlackAuth.Singleton().botTokenForTeamId(teamId))
   } else {
     return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
   }
