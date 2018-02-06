@@ -149,11 +149,12 @@ class Adapter extends EventEmitter {
    * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
    *
    * @param withdrawal {Withdraw}
+   * @param balance {Number}
    * @returns {Promise<void>}
    */
-  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
+  async onWithdrawalFailedWithInsufficientBalance (withdrawal, balance) {
     // Override this or listen to events!
-    this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance);
+    this.emit('withdrawalFailedWithInsufficientBalance', withdrawal.amount, balance);
   }
 
   /**
@@ -325,7 +326,7 @@ class Adapter extends EventEmitter {
     const target = await withdrawalRequest.getSourceAccount();
     // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(withdrawalAmount)) {
-      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance);
+      return this.onWithdrawalFailedWithInsufficientBalance(withdrawalRequest, target.balance);
     }
 
     // Withdraw

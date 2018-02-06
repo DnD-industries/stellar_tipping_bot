@@ -105,12 +105,12 @@ class Slack extends Adapter {
   /**
    * Called when the user submits a withdrawal but doesn't have enough XLM in balance to cover the amount.
    *
-   * @param amountRequested The user's amount requested to withdraw in XLM
+   * @param withdrawal {Withdraw} The withdraw command
    * @param balance The user's current balance in XLM
    * @returns {Promise<string>}
    */
-  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
-    return `You requested to withdraw \`${Utils.formatNumber(amountRequested)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
+  async onWithdrawalFailedWithInsufficientBalance (withdrawal, balance) {
+    return `You requested to withdraw \`${Utils.formatNumber(withdrawal.amount)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
   /**
