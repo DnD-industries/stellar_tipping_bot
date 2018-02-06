@@ -258,6 +258,7 @@ class Adapter extends EventEmitter {
         return this.onTipWithInsufficientBalance(tip, payment.toFixed(7));
       }
 
+      console.log(`sourceID: ${tip.sourceId}\ntargetID: ${tip.targetId}`)
       if (tip.sourceId === tip.targetId) {
         return this.onTipReferenceError(tip, payment.toFixed(7));
       }
