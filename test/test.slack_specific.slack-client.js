@@ -1,14 +1,22 @@
 const assert = require('assert');
 const expect = require('chai').expect;
+const sinon = require('sinon')
 const SlackClient = require('../src/adapters/slack/slack-client')
 const testTimeout = 6000; //milliseconds
 
 describe('slack-message', async () => {
+  let client;
+  const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
+
+  beforeEach(async () => {
+    const config = await require('./setup')()
+    client = new SlackClient(oauth_token);
+  })
+
  	require('dotenv').config({path: './.env.' + process.env.NODE_ENV });
 
   describe('sendDMToSlackUser', () => {
-    const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
-    let client = new SlackClient(oauth_token);
+
 
     it('should send an attachment DM on the StarryTest slack from Starry', () => {
     	let userID = "U8PTZ287N";
@@ -48,5 +56,22 @@ describe('slack-message', async () => {
         console.log("RESULT:" + JSON.stringify(result));
       })
     }).timeout(testTimeout);
+  })
+
+  describe('getDMIdForUser', () => {
+    it('should call itself again with just the slack user ID if it is originally called with a full uniqueID', async () => {
+      let teamID = "T12345"
+      let userID = "U67890"
+      let uniqueID = teamID + '.' + userID;
+      let spy = sinon.spy(client, "getDMIdForUser") // Spy on ourselves, retaining all original functionality
+
+      try {
+        let value = await client.getDMIdForUser(uniqueID);
+      } catch (e) {
+        // We expect to catch an error here, as no ID will be found
+      }
+      assert(spy.withArgs(uniqueID).calledOnce)
+      assert(spy.withArgs(userID).calledOnce)
+    })
   })
 })
