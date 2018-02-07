@@ -25,8 +25,7 @@ class TipAnalytics extends AbstractLogger {
        * @param amount
        */
       onTipWithInsufficientBalance(tip, balance) {
-        let data = getCommandAnalyticsBase(tip)
-        data.command = this.getCommandAnalyticsBase(tip)
+        let data = this.getCommandAnalyticsBase(tip)
         data.amount = tip.amount
         data.targetId = tip.targetId
         data.balance = balance
