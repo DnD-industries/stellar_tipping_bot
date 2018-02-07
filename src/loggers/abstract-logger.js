@@ -21,7 +21,7 @@ class Logger {
 
       },
 
-      onUserAttemptedToTipThemself(tip, amount) {
+      onUserAttemptedToTipThemself(tip) {
 
       },
 

@@ -3,6 +3,7 @@ const Big = require('big.js')
 const StellarSdk = require('stellar-sdk')
 const EventEmitter = require('events')
 const Promise = require('../../node_modules/bluebird')
+const Logger = require('../loggers/abstract-logger')
 
 class Adapter extends EventEmitter {
 
@@ -25,6 +26,10 @@ class Adapter extends EventEmitter {
     this.Transaction.events.on('REFUND', (transaction) => {
       this.onRefund(transaction);
     });
+  }
+
+  getLogger() {
+    return new Logger();
   }
 
   // *** +++ Deposit Hook Functions +
@@ -261,6 +266,7 @@ class Adapter extends EventEmitter {
 
       console.log(`sourceID: ${tip.sourceId}\ntargetID: ${tip.targetId}`)
       if (tip.sourceId === tip.targetId) {
+        this.getLogger().CommandEvents.onUserAttemptedToTipThemself(tip)
         return this.onTipReferenceError(tip, payment.toFixed(7));
       }
 

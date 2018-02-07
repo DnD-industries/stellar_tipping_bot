@@ -208,8 +208,11 @@ describe('slackAdapter', async () => {
     it (`should return a koan if the tipper tips them self`, async() => {
       let amount = 1
       let command = new Command.Tip('testing', 'team.foo', 'team.foo', amount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onUserAttemptedToTipThemself")
       let returnedValue = await slackAdapter.receivePotentialTip(command)
+
       assert.equal(returnedValue, `What is the sound of one tipper tipping?`)
+      assert(spy.withArgs(command).calledOnce)
     })
 
     it (`should return a confirmation message with transaction hash to the tipper once the tip has gone through, and log a successful tip`, async() => {
@@ -264,9 +267,6 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
       assert(spy.withArgs(command, true).calledOnce)
     })
-
-    // var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onBalanceRequest")
-    // assert(spy.withArgs(balanceCommand, false).calledOnce)
   })
 
   describe('receive Balance Request', () => {
