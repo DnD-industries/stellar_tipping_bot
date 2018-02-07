@@ -1,5 +1,6 @@
 const assert = require('assert');
 const request = require('supertest');
+const sinon = require('sinon');
 const slack = require('../src/adapters/slack/slack-adapter');
 
 describe('Slack Server/Router Middleware', async () => {
@@ -51,10 +52,14 @@ describe('Slack Server/Router Middleware', async () => {
   });
 
   it('responds to GET requests to /slack/oauth with an authorization code', function testSlackOAuthWithCode(done) {
-    request(slackServer.server)
-      .get('/slack/oauth')
-      .query({code: "abc123"})
-      .expect(200, done);
+    let req = {query: {}};
+    req.method      = "GET";
+    req.query.code  = "abc123";
+    req.path        = "/slack/oauth"
+    let next        = sinon.spy();
+    slackServer.validateToken(req, null, next);
+    assert(next.calledOnce);
+    done();
   });
 
   it('responds with 401 to GET requests to /slack/oauth without an authorization code', function testSlackOAuthWithoutCode(done) {

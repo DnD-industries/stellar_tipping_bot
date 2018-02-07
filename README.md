@@ -1,5 +1,7 @@
 # Starry - A Stellar tipbot for Slack
 [![Build Status](https://travis-ci.org/DnD-industries/stellar_tipping_bot.svg?branch=dev)](https://travis-ci.org/DnD-industries/stellar_tipping_bot)
+<p><a href="https://slack.com/oauth/authorize?client_id=293801121987.294020773477&scope=commands,bot,chat:write:bot,pins:read,reactions:read"><img alt="Add to Slack" height="40" width="139" src="https://platform.slack-edge.com/img/add_to_slack.png" srcset="https://platform.slack-edge.com/img/add_to_slack.png 1x, https://platform.slack-edge.com/img/add_to_slack@2x.png 2x" /></a>
+
 ## Description
 Starry is a tipbot which allows Slack participants to send tips directly to other Slack participants without ever compromising their private keys by placing them on a 3rd party server. 
 
@@ -137,3 +139,7 @@ Thank you very much!
 Enjoy.
 
 
+# FAQ / Issues
+
+Q: I have reached the maximum number of allowed apps on my Slack team. How do I remove apps I'm no longer using?
+A: Visit https://[YOUR APP NAME].slack.com/apps/manage, click an app you want to delete, and scroll down until you find and click the "Remove App" button.
