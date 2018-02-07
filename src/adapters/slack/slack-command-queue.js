@@ -1,6 +1,7 @@
 const {promisify} = require('util');
 const Command = require('../commands/command')
 const Utils = require('../../utils')
+const SlackClient = require('../slack/slack-client')
 
 /**
  * Enqueues commands as they are made by Slack users.
@@ -52,16 +53,17 @@ class CommandQueue {
   }
 
   /**
+   * Sends all commands which have been queued up
    *
    * @param slackAdapter {Slack}
-   * @param slackClient {SlackClient}
    */
-  async flush(slackAdapter, slackClient) {
+  async flush(slackAdapter) {
     let command = await this.popCommand();
     while(command) {
+      let client = await SlackClient.botClientForCommand(command);
       console.log(`Command is: ${JSON.stringify(command)}`);
       let textBody = await slackAdapter.handleCommand(command);
-      slackClient.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(command.uniqueId), textBody);
+      client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(command.uniqueId), textBody);
       command = await this.popCommand();
     }
   }

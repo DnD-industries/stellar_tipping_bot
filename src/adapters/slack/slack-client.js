@@ -1,5 +1,5 @@
 "use strict"
-const SlackAuth = require('../../models/slack-auth').Singleton()
+const SlackAuth = require('../../models/slack-auth')
 const { WebClient }   = require('@slack/client');
 const Utils = require('../../utils')
 
@@ -137,18 +137,40 @@ class SlackClient extends WebClient {
       });
   }
 
-
-  static clientForCommand(command) {
+  /**
+   * Return a non-bot oAuth token for a given command
+   * @param command
+   * @returns {SlackClient | null}
+   */
+  static async clientForCommand(command) {
+    let auth = SlackAuth.Singleton();
     if(SlackAuth.authTokenForTeamId(command.teamId)){
-      return new SlackClient(SlackAuth.authTokenForTeamId(command.teamId))
+      return new SlackClient(await auth.authTokenForTeamId(command.teamId))
     } else {
       return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
     }
   }
 
-  static botClientForCommand(command) {
-    if(SlackAuth.botTokenForTeamId(command.teamId)){
-      return new SlackClient(SlackAuth.botTokenForTeamId(command.teamId))
+  /**
+   *
+   * @param command {Command}
+   * @returns {SlackClient | null}
+   */
+  static async botClientForCommand(command) {
+    return await SlackClient.botClientForUniqueId(command.uniqueId)
+  }
+
+  /**
+   *
+   * @param uniqueId {String} The unique ID of the user to whom we wish to send a message
+   * @returns {SlackClient | null}
+   */
+  static async botClientForUniqueId(uniqueId) {
+    let auth = SlackAuth.Singleton();
+    let teamId = Utils.slackTeamIdFromUniqueId(uniqueId);
+    let token = await auth.botTokenForTeamId(teamId)
+    if(token){
+      return new SlackClient(token)
     } else {
       return new SlackClient(process.env.SLACK_BOT_OAUTH_TOKEN);
     }
