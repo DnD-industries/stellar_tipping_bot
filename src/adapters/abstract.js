@@ -280,7 +280,7 @@ class Adapter extends EventEmitter {
     } catch (exc) {
         if (exc !== 'DUPLICATE_TRANSFER') {
           // TODO: Get this under test
-          this.getLogger().onTipTransferFailed(tip)
+          this.getLogger().CommandEvents.onTipTransferFailed(tip)
           this.onTipTransferFailed(tip, payment.toFixed(7));
         }
     }
