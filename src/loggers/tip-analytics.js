@@ -13,9 +13,9 @@ class TipAnalytics extends AbstractLogger {
       getCommandAnalyticsBase(command) {
         return {
           time: new Date(),
-          sourceId: tip.uniqueId,
-          adapter: tip.adapter,
-          hash: tip.hash
+          sourceId: command.uniqueId,
+          adapter: command.adapter,
+          hash: command.hash
         }
       },
 
