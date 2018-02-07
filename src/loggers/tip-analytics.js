@@ -12,6 +12,10 @@ class TipAnalytics extends AbstractLogger {
 
     this.MessagingEvents = {
       onTipReceivedMessageSent(tip, userIsRegistered) {
+
+        let data = TipAnalytics.getTipAnalyticsBase(tip)
+        data.userIsRegistered = userIsRegistered
+        if(mixpanel) mixpanel.track('message sent received tip', data)
       }
     },
 
