@@ -42,28 +42,7 @@ class SlackServer {
 
     //Middleware to perform token validation for slash requests coming from Slack
     app.use(function (req, res, next) {
-      if(process.env.MODE === "development"){
-        console.log("Request received at:", Date.now());
-        console.log("Request path:",req.path);
-        console.log("Headers:", JSON.stringify(req.headers));
-        console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
-      }
-
-      //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
-      if (req.method === "GET" && req.path === "/slack/oauth") {
-        //Check for the presence of an authorization code
-        if (req.query.code) {
-          next();
-        } else {
-          res.status(401).send("Missing Slack authorization code");
-        }
-      } else {
-        //If this is a GET request, use the query token, otherwise look for it in the body
-        let token = req.method === "GET" ? req.query.token : req.body.token;
-        //With the proper validation token from Slack, route the request accordingly.
-        //Otherwise reply with a 401 status code
-        token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
-      }
+      that.validateToken(req, res, next);
     });
 
     // Index route
@@ -71,26 +50,8 @@ class SlackServer {
       res.send('Hello world, I am Starry');
     });
 
-    // Example: /slack/oauth?code=309294713090.310353154935.c44bf12345a25f6bdfe004dd2b0f6006c451c69a0d4745cc2888677024c4ab7d&state=
-    //
-    // {
-    //   "access_token": "xoxp-XXXXXXXX-XXXXXXXX-XXXXX",
-    //   "scope": "incoming-webhook,commands,bot",
-    //   "team_name": "Team Installing Your Hook",
-    //   "team_id": "XXXXXXXXXX",
-    //   "incoming_webhook": {
-    //       "url": "https://hooks.slack.com/TXXXXX/BXXXXX/XXXXXXXXXX",
-    //       "channel": "#channel-it-will-post-to",
-    //       "configuration_url": "https://teamname.slack.com/services/BXXXXX"
-    //   },
-    //   "bot":{
-    //       "bot_user_id":"UTTTTTTTTTTR",
-    //       "bot_access_token":"xoxb-XXXXXXXXXXXX-TTTTTTTTTTTTTT"
-    //   }
-    // }
+    //Receives an oauth request from a Slack user to add the bot to their team
     app.get('/slack/oauth', async function (req, res) {
-      // console.log("auth code:",req.query.code);
-      // console.log("original redirect url:", req.hostname + req.url);
       let reqOptions = {
         method: 'POST',
         uri: 'https://slack.com/api/oauth.access',
@@ -113,8 +74,6 @@ class SlackServer {
         console.log("Slack OAuth Response:", JSON.stringify(oauthResponse, 2));
         //Handle failure response from Slack
         oauthResponse = JSON.parse(oauthResponse);
-        console.log("team_id:", oauthResponse.team_id);
-        console.log("response ok", oauthResponse.ok);
         if(oauthResponse.ok) {
           //Save tokens
           let tokenCreationResult = await that.adapter.receiveNewAuthTokensForTeam(oauthResponse.team_id, 
@@ -205,6 +164,31 @@ class SlackServer {
 
       setInterval(that.flushCommandQueue, MESSAGE_FLUSH_INTERVAL, that);
     });
+  }
+
+  validateToken(req, res, next) {
+    if(process.env.MODE === "development"){
+      console.log("Request received at:", Date.now());
+      console.log("Request path:",req.path);
+      console.log("Headers:", JSON.stringify(req.headers));
+      console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
+    }
+
+    //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
+    if (req.method === "GET" && req.path === "/slack/oauth") {
+      //Check for the presence of an authorization code
+      if (req.query.code) {
+        next();
+      } else {
+        res.status(401).send("Missing Slack authorization code");
+      }
+    } else {
+      //If this is a GET request, use the query token, otherwise look for it in the body
+      let token = req.method === "GET" ? req.query.token : req.body.token;
+      //With the proper validation token from Slack, route the request accordingly.
+      //Otherwise reply with a 401 status code
+      token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
+    }
   }
 
   flushCommandQueue(slackServer) {
