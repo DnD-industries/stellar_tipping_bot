@@ -66,7 +66,7 @@ describe('models / slack-auth', async () => {
       const otherAuth = await SlackAuth.getOrCreate(pupAndSudsName, 'testAuthToken123', 'testBotToken456')
       assert.equal(otherAuth.team, pupAndSudsName);
       assert.equal(otherAuth.token, 'testAuthToken123');
-      assert.equal(otherAuth.botToken, 'testBotToken456');
+      assert.equal(otherAuth.bot_token, 'testBotToken456');
     })
     
   })
