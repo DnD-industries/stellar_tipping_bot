@@ -1,5 +1,6 @@
 const AbstractLogger = require('./abstract-logger')
 const MixPanel = require('mixpanel')
+const Utils = require('../utils')
 var mixpanel = process.env.MIXPANEL_TOKEN ? MixPanel.init(process.env.MIXPANEL_TOKEN, {
   protocol: 'https'
 }) : null;
@@ -21,7 +22,8 @@ class TipAnalytics extends AbstractLogger {
           sourceId: command.uniqueId,
           adapter: command.adapter,
           hash: command.hash,
-          type: command.type
+          type: command.type,
+          teamId: Utils.slackTeamIdFromUniqueId(command.uniqueId)
         }
       },
 
