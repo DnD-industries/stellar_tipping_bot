@@ -8,6 +8,9 @@ class TestableSlack extends Slack {
   constructor (config) {
     super(config);
     this.client.sendPlainTextDMToSlackUser = sinon.spy();
+    this.client.getDMIdForUser = async function() {
+      return "dmId"
+    }
   }
 }
 
@@ -173,7 +176,7 @@ describe('slackAdapter', async () => {
       let amount = 1000
       let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
       let returnedValue = await slackAdapter.receivePotentialTip(command)
-      assert.equal(`Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(accountWithWallet.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``, returnedValue)
+      assert.equal(returnedValue, `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(accountWithWallet.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``)
     })
 
     it (`should return a koan if the tipper tips them self`, async() => {
@@ -190,6 +193,22 @@ describe('slackAdapter', async () => {
       const tippedAccount = await Account.getOrCreate('testing', 'team.new')
       assert.equal(tippedAccount.balance, amount)
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
+    })
+
+    it (`should send back an appropriate error message if the tipper tries to tip a username that doesn't actually exist`, async() => {
+      let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
+      let recipientId = 'NON_EXISTANT_USER'
+      let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
+
+
+      // Simulate us not finding a corresponding ID
+      slackAdapter.client.getDMIdForUser = async function() {
+        throw "Error"
+      }
+
+
+      let returnedValue = await slackAdapter.receivePotentialTip(command)
+      assert.equal(returnedValue, `Your tip was cancelled. We could not find a user with that username. Make sure it is formatted correctly, such as '@username'.`)
     })
 
     it (`should send a message with detailed sign up instructions to any tip receiver who is not yet registered after the tip goes through`, async() => {

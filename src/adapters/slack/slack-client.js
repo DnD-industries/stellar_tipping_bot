@@ -1,6 +1,7 @@
 "use strict"
 const SlackAuth = require('../../models/slack-auth').Singleton()
 const { WebClient }   = require('@slack/client');
+const Utils = require('../../utils')
 
 class SlackClient extends WebClient {
 
@@ -8,10 +9,15 @@ class SlackClient extends WebClient {
    * Given a Slack user ID, will eventually return the ID necessary for DM'ing that user.
    * Note that a User Id for slack is not your human readable @username.
    * For more info on how sending messages works on Slack see https://api.slack.com/methods/chat.postMessage
-   * @param userID
+   * @param userID {String} A String representing either the slack User ID or our own Unique ID
    * @returns {Promise<*|PromiseLike<T>|Promise<T>>}
    */
   async getDMIdForUser(userID) {
+
+    if(userID.includes(".")) {
+      return this.getDMIdForUser(Utils.slackUserIdFromUniqueId(userID));
+    }
+
     return this.im.list()
       .then((res) => {
         console.log(`Response: ${JSON.stringify(res)}`)
