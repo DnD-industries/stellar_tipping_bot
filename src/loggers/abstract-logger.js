@@ -10,6 +10,27 @@ class Logger {
       }
     }
 
+    this.OAuthEvents = {
+
+      /**
+       *
+       * @param adapter {String} The adapter we are calling from
+       * @param blob {Object} A package of key-value pairs that we want to add to the analytics call
+       * @returns {Object}
+       */
+      getOAuthAnalyticsBase(adapter, blob) {
+      },
+
+      onOAuthAddEmptyOAuthToken(adapter, blob) {
+      },
+
+      onAddedNewAuthToken(adapter, blob) {
+      },
+
+      onAddingOAuthFailed(adapter, blob, exception) {
+      },
+    }
+
     this.CommandEvents = {
 
       events: new EventEmitter(),

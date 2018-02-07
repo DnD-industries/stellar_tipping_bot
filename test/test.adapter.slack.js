@@ -361,16 +361,28 @@ describe('slackAdapter', async () => {
   })
 
   describe('receive OAuth request', () => {
-    it('should send a success response if a valid team, auth token, and bot token are passed', async () => {
-      let returnedValue = await slackAdapter.receiveNewAuthTokensForTeam("teamID123", "authtoken123", "bot_token456");
+    it('should send a success response if a valid team, auth token, and bot token are passed, and log the addition', async () => {
+      const teamId = "teamID123"
+      let spy = sinon.spy(slackAdapter.getLogger().OAuthEvents, "onAddedNewAuthToken")
+      let expectedBlob = {
+        teamId
+      }
+      let returnedValue = await slackAdapter.receiveNewAuthTokensForTeam(teamId, "authtoken123", "bot_token456");
       assert.equal(returnedValue, `Adding Starry to Slack succeeded. Open Slack to start tipping!`);
+      assert(spy.withArgs('slack', expectedBlob).calledOnce)
     })
 
     it('should send a failure response if a valid team, auth token, and bot token are not passed', async () => {
+      const teamId = "teamID123"
+      let spy = sinon.spy(slackAdapter.getLogger().OAuthEvents, "onOAuthAddEmptyOAuthToken")
+      let expectedBlob = {
+        teamId
+      }
       try {
-        let result = await slackAdapter.receiveNewAuthTokensForTeam("teamID123", "authtoken123", "");        
+        let result = await slackAdapter.receiveNewAuthTokensForTeam(teamId, "authtoken123", "");
       } catch (err) {
         assert.equal(err, "Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.")
+        assert(spy.withArgs('slack', expectedBlob).calledOnce)
       }
     }) 
   })

@@ -9,6 +9,44 @@ class TipAnalytics extends AbstractLogger {
 
   constructor() {
     super()
+
+    this.MessagingEvents = {
+      onTipReceivedMessageSent(tip, userIsRegistered) {
+      }
+    },
+
+    this.OAuthEvents = {
+
+      /**
+       *
+       * @param adapter {String} The adapter we are calling from
+       * @param blob {Object} A package of key-value pairs that we want to add to the analytics call
+       * @returns {Object}
+       */
+      getOAuthAnalyticsBase(adapter, blob) {
+        return Object.assign(blob, {
+          time: new Date(),
+          adapter: adapter
+        })
+      },
+
+      onOAuthAddEmptyOAuthToken(adapter, blob) {
+        let data = this.getOAuthAnalyticsBase(adapter, blob)
+        if(mixpanel) mixpanel.track('added missing oauth token', data)
+      },
+
+      onAddedNewAuthToken(adapter, blob) {
+        let data = this.getOAuthAnalyticsBase(adapter, blob)
+        if(mixpanel) mixpanel.track('added new oauth token', data)
+      },
+
+      onAddingOAuthFailed(adapter, blob, exception) {
+        let data = this.getOAuthAnalyticsBase(adapter, blob)
+        data = Object.assign(data, exception)
+        if(mixpanel) mixpanel.track('oauth add failed', data)
+      },
+    }
+
     this.CommandEvents = {
 
       /**
@@ -89,18 +127,6 @@ class TipAnalytics extends AbstractLogger {
           account_createdAt: account.createdAt,
           account_balance: account.balance,
           account_address: account.walletAddress
-        }
-      },
-
-      /**
-       *
-       * @param command {Command}
-       * @returns {Object}
-       */
-      getSlackOAuthAnalyticsBase(teamId) {
-        return {
-          time: new Date(),
-          teamId: teamId
         }
       },
 
@@ -193,22 +219,6 @@ class TipAnalytics extends AbstractLogger {
         let data = this.getInfoAnalyticsBase(infoCmd)
         data.userIsRegistered = userIsRegistered
         if(mixpanel) mixpanel.track('info request made', data)
-      },
-
-      onOAuthAddMissingAuthTokenForTeam(team) {
-        let data = this.getSlackOAuthAnalyticsBase(team)
-        mixpanel.track('added missing oauth token for team', data)
-      },
-
-      onAddedNewAuthTokenForTeam(team) {
-        let data = this.getSlackOAuthAnalyticsBase(team)
-        mixpanel.track('added new oauth token for team', data)
-      },
-
-      onAddingOAuthForTeamFailed(team, exception) {
-        let data = this.getSlackOAuthAnalyticsBase(team)
-        data = Object.assign(data, exception)
-        mixpanel.track('oauth add for team failed', data)
       },
 
       onRegisteredWithBadWallet(registration) {
