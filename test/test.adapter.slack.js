@@ -221,10 +221,11 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
     })
 
-    it (`should send back an appropriate error message if the tipper tries to tip a username that doesn't actually exist`, async() => {
+    it (`should send back an appropriate error message if the tipper tries to tip a username that doesn't actually exist, and log it`, async() => {
       let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let recipientId = 'NON_EXISTANT_USER'
       let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onTipNoTargetFound")
 
 
       // Simulate us not finding a corresponding ID
@@ -235,25 +236,34 @@ describe('slackAdapter', async () => {
 
       let returnedValue = await slackAdapter.receivePotentialTip(command)
       assert.equal(returnedValue, `Your tip was cancelled. We could not find a user with that username. Make sure it is formatted correctly, such as '@username'.`)
+      assert(spy.withArgs(command).calledOnce)
     })
 
-    it (`should send a message with detailed sign up instructions to any tip receiver who is not yet registered after the tip goes through`, async() => {
+    it (`should send a message with detailed sign up instructions to any tip receiver who is not yet registered after the tip goes through, and make a log of it`, async() => {
       let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let recipientId = 'team.bar'
       let command = new Command.Tip('testing', 'team.foo', recipientId, amount)
+      var spy = sinon.spy(slackAdapter.getLogger().MessagingEvents, "onTipReceivedMessageSent")
       let returnedValue = await slackAdapter.receivePotentialTip(command)
       assert(await slackAdapter.getBotClientForCommand(command).sendPlainTextDMToSlackUser.calledWith(recipientId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`), "The client should receive a message telling it to DM the recipient once the tip goes through")
-      assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)    })
+      assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
+      assert(spy.withArgs(command, false).calledOnce)
+    })
 
-    it (`should send a simple message to any tip receiver who has already registered after the tip goes through`, async() => {
+    it (`should send a simple message and to any tip receiver who has already registered after the tip goes through, and make a log of doing so`, async() => {
       let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let recipientId = 'team.foo'
       let command = new Command.Tip('testing', 'team.bar', recipientId, amount)
+      var spy = sinon.spy(slackAdapter.getLogger().MessagingEvents, "onTipReceivedMessageSent")
       let returnedValue = await slackAdapter.receivePotentialTip(command)
       assert(slackAdapter.getBotClientForCommand(command).sendPlainTextDMToSlackUser.calledWith(recipientId, `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``), "The client should receive a message telling it to DM the recipient once the tip goes through")
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
+      assert(spy.withArgs(command, true).calledOnce)
     })
+
+    // var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onBalanceRequest")
+    // assert(spy.withArgs(balanceCommand, false).calledOnce)
   })
 
   describe('receive Balance Request', () => {

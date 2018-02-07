@@ -5,6 +5,10 @@ class Logger {
 
   constructor() {
 
+    this.MessagingEvents = {
+      onTipReceivedMessageSent(tip, userIsRegistered) {
+      }
+    }
 
     this.CommandEvents = {
 

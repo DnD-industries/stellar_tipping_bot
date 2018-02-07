@@ -68,9 +68,11 @@ class Slack extends Adapter {
     const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
     let client = await this.getBotClientForCommand(tip)
     if(!account.walletAddress) {
+      this.getLogger().MessagingEvents.onTipReceivedMessageSent(tip, false)
       client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`)
     } else {
+      this.getLogger().MessagingEvents.onTipReceivedMessageSent(tip, true)
       client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
     }
@@ -199,6 +201,7 @@ class Slack extends Adapter {
       await client.getDMIdForUser(tip.targetId)
     } catch (e) {
       console.log(`${e}\nCould not find user ID in receivePotentialTip. Aborting tip`)
+      this.getLogger().CommandEvents.onTipNoTargetFound(tip)
       return this.onTipNoTargetFound(tip)
     }
     return super.receivePotentialTip(tip)
