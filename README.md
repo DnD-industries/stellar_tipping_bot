@@ -139,3 +139,7 @@ Thank you very much!
 Enjoy.
 
 
+# FAQ / Issues
+
+Q: I have reached the maximum number of allowed apps on my Slack team. How do I remove apps I'm no longer using?
+A: Visit https://[YOUR APP NAME].slack.com/apps/manage, click an app you want to delete, and scroll down until you find and click the "Remove App" button.
