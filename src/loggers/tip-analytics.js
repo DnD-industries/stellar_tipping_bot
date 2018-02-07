@@ -29,12 +29,10 @@ class TipAnalytics extends AbstractLogger {
       getAccountAnalyticsBase(account) {
         return {
           time: new Date(),
-          account: {
-            uniqueId: account.uniqueId,
-            createdAt: account.createdAt,
-            balance: account.balance,
-            address: account.walletAddress
-          }
+          account_uniqueId: account.uniqueId,
+          account_createdAt: account.createdAt,
+          account_balance: account.balance,
+          account_address: account.walletAddress
         }
       },
 
