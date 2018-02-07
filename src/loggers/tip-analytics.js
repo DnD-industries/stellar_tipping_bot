@@ -10,19 +10,73 @@ class TipAnalytics extends AbstractLogger {
     super()
     this.CommandEvents = {
 
+      /**
+       *
+       * @param command {Command}
+       * @returns {Object}
+       */
       getCommandAnalyticsBase(command) {
         return {
           time: new Date(),
           sourceId: command.uniqueId,
           adapter: command.adapter,
-          hash: command.hash
+          hash: command.hash,
+          type: command.type
         }
       },
 
+      /**
+       *
+       * @param tip {Tip}
+       * @returns {Object}
+       */
       getTipAnalyticsBase(tip) {
         return Object.assign(this.getCommandAnalyticsBase(tip), {
           amount: tip.amount,
           targetId: tip.targetId
+        })
+      },
+
+      /**
+       *
+       * @param withdrawal {Withdraw}
+       * @returns {Object}
+       */
+      getWithdrawalAnalyticsBase(withdrawal) {
+        return Object.assign(this.getCommandAnalyticsBase(withdrawal), {
+          amount: withdrawal.amount,
+          address: withdrawal.address
+        })
+      },
+
+      /**
+       *
+       * @param balance {Register}
+       * @returns {Object}
+       */
+      getBalanceAnalyticsBase(balance) {
+        return Object.assign(this.getCommandAnalyticsBase(balance), {
+          address: balance.walletPublicKey,
+        })
+      },
+
+      /**
+       *
+       * @param balance {Info}
+       * @returns {Object}
+       */
+      getInfoAnalyticsBase(info) {
+        return this.getCommandAnalyticsBase(info)
+      },
+
+      /**
+       *
+       * @param register {Register}
+       * @returns {Object}
+       */
+      getRegistrationAnalyticsBase(register) {
+        return Object.assign(this.getCommandAnalyticsBase(register), {
+          walletAddress: register.walletPublicKey,
         })
       },
 
@@ -34,18 +88,6 @@ class TipAnalytics extends AbstractLogger {
           account_balance: account.balance,
           account_address: account.walletAddress
         }
-      },
-
-      /**
-       *
-       * @param withdrawal {Withdraw}
-       * @returns {(*|{time, sourceId, adapter, hash}) & {amount, targetId: *}}
-       */
-      getWithdrawalAnalyticsBase(withdrawal) {
-        return Object.assign(this.getCommandAnalyticsBase(withdrawal), {
-          amount: withdrawal.amount,
-          address: withdrawal.address
-        })
       },
 
       /**
@@ -128,11 +170,15 @@ class TipAnalytics extends AbstractLogger {
       },
 
       onBalanceRequest(balanceCmd, userIsRegistered) {
-
+        let data = this.getBalanceAnalyticsBase(balanceCmd)
+        data.userIsRegistered = userIsRegistered
+        mixpanel.track('balance request made', data)
       },
 
       onInfoRequest(infoCmd, userIsRegistered) {
-
+        let data = this.getInfoAnalyticsBase(infoCmd)
+        data.userIsRegistered = userIsRegistered
+        mixpanel.track('info request made', data)
       },
 
       onAddedNonExistantAuthTokenForTeam(team) {
@@ -146,6 +192,38 @@ class TipAnalytics extends AbstractLogger {
       onAddingOAuthForTeamFailed(team) {
 
       },
+
+      onRegisteredWithBadWallet(registration) {
+        let data = this.getRegistrationAnalyticsBase(registration)
+        mixpanel.track('registration with bad wallet', data)
+      },
+
+      onRegisteredWithCurrentWallet(registration) {
+        let data = this.getRegistrationAnalyticsBase(registration)
+        mixpanel.track('registration with current wallet', data)
+      },
+
+      onRegisteredWithWalletRegisteredToOtherUser(registration, otherUser) {
+        let data = Object.assign(this.getRegistrationAnalyticsBase(registration), {
+          otherUser_uniqueId: otherUser.uniqueId,
+          otherUser_balance: otherUser.balance,
+          otherUser_createdAt: otherUser.createdAt,
+          otherUser_adapter: otherUser.adapter
+        })
+        mixpanel.track('registration with wallet registered to other user', data)
+      },
+
+      onRegisteredWithRobotsWalletAddress(registration) {
+        let data = this.getRegistrationAnalyticsBase(registration)
+        mixpanel.track(`registration with robots wallet address`, data)
+      },
+
+      onRegisteredSuccessfully(registration, isFirstRegistration) {
+        let data = Object.assign(this.getRegistrationAnalyticsBase(registration), {
+          isFirstRegistration: isFirstRegistration
+        })
+        mixpanel.track('registration success', data)
+      }
     }
   }
 
