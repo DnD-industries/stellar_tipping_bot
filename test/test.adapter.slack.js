@@ -249,4 +249,19 @@ describe('slackAdapter', async () => {
       assert(slackAdapter.client.sendPlainTextDMToSlackUser.calledWith(Utils.slackUserIdFromUniqueId(accountWithWallet.uniqueId), `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
     })
   })
+
+  describe('receive OAuth request', () => {
+    it('should send a success response if a valid team, auth token, and bot token are passed', async () => {
+      let returnedValue = await slackAdapter.receiveNewAuthTokensForTeam("teamID123", "authtoken123", "bot_token456");
+      assert.equal(returnedValue, `Adding Starry to Slack succeeded. Open Slack to start tipping!`);
+    })
+
+    it('should send a failure response if a valid team, auth token, and bot token are not passed', async () => {
+      try {
+        let result = await slackAdapter.receiveNewAuthTokensForTeam("teamID123", "authtoken123", "");        
+      } catch (err) {
+        assert.equal(err, "Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.")
+      }
+    }) 
+  })
 })

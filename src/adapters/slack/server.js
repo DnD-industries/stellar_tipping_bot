@@ -73,6 +73,22 @@ class SlackServer {
     });
 
     // Example: /slack/oauth?code=309294713090.310353154935.c44bf12345a25f6bdfe004dd2b0f6006c451c69a0d4745cc2888677024c4ab7d&state=
+    //
+    // {
+    //   "access_token": "xoxp-XXXXXXXX-XXXXXXXX-XXXXX",
+    //   "scope": "incoming-webhook,commands,bot",
+    //   "team_name": "Team Installing Your Hook",
+    //   "team_id": "XXXXXXXXXX",
+    //   "incoming_webhook": {
+    //       "url": "https://hooks.slack.com/TXXXXX/BXXXXX/XXXXXXXXXX",
+    //       "channel": "#channel-it-will-post-to",
+    //       "configuration_url": "https://teamname.slack.com/services/BXXXXX"
+    //   },
+    //   "bot":{
+    //       "bot_user_id":"UTTTTTTTTTTR",
+    //       "bot_access_token":"xoxb-XXXXXXXXXXXX-TTTTTTTTTTTTTT"
+    //   }
+    // }
     app.get('/slack/oauth', async function (req, res) {
       // console.log("auth code:",req.query.code);
       // console.log("original redirect url:", req.hostname + req.url);
@@ -91,16 +107,30 @@ class SlackServer {
       };
       console.log("request options:", JSON.stringify(reqOptions));
 
+      //We will be sending text back regardless of the result, so set the content type now
+      res.set('Content-Type', 'text/html');
       try {
         let oauthResponse = await request(reqOptions);
-        console.log("oauthResponse:", JSON.stringify(oauthResponse));
-        //Handle failure response
-        //Save token
-        res.status(200).send("Authorized Stellar Slack Tipping Bot for your team. Welcome.");         
+        console.log("Slack OAuth Response:", JSON.stringify(oauthResponse, 2));
+        //Handle failure response from Slack
+        oauthResponse = JSON.parse(oauthResponse);
+        console.log("team_id:", oauthResponse.team_id);
+        console.log("response ok", oauthResponse.ok);
+        if(oauthResponse.ok) {
+          //Save tokens
+          let tokenCreationResult = await that.adapter.receiveNewAuthTokensForTeam(oauthResponse.team_id, 
+                                              oauthResponse.access_token, 
+                                              oauthResponse.bot.bot_access_token);
+          res.status(200).send(tokenCreationResult);
+        } else {
+          throw new Error("OAuth response from Slack failed. Please try again.");
+        }
       } catch (exc) {
-        //Handle exception from slack
-        res.status(200).send("Adding bot to your Slack team failed, please try again.");
-      }
+        //Handle exception from slack oauth request
+        console.error("Caught exception:", exc);
+        res.status(401).send(exc.message);
+        return;
+      }        
     });
 
     /**

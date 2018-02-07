@@ -10,20 +10,20 @@ module.exports = (db) => {
   const SlackAuth = db.define('slackauth', {
     team: String,
     token: String,
-    botToken: String,
-    createdAt: String
+    bot_token: String,
+    created_at: String
   }, {
     validations : {
       team: orm.enforce.required('Team is required.'),
       token: orm.enforce.required('Token is required.'),
-      botToken: orm.enforce.required('Bot Token is required'),
-      createdAt: orm.enforce.required('createdAt is required.')
+      bot_token: orm.enforce.required('Bot Token is required'),
+      created_at: orm.enforce.required('created_at is required.')
     },
     hooks: {
       beforeSave: function () {
         const now = new Date()
-        if (!this.createdAt) {
-          this.createdAt = now.toISOString()
+        if (!this.created_at) {
+          this.created_at = now.toISOString()
         }
       }
     }
@@ -54,7 +54,7 @@ module.exports = (db) => {
     return await SlackAuth.withinTransaction(async () => {
       let auth = await SlackAuth.oneAsync({team});
       if (auth) {
-        return auth.botToken;
+        return auth.bot_token;
       } else {
         return null;
       }
@@ -68,16 +68,20 @@ module.exports = (db) => {
    */
   SlackAuth.getOrCreate = async function (team, token, botToken) {
     return await SlackAuth.withinTransaction(async () => {
-      let teamSlackAuth = await SlackAuth.oneAsync({team, token, botToken});
-      //TODO: Check all auth tokens for this team, not just one
-      if (!teamSlackAuth) {
-        teamSlackAuth = await SlackAuth.createAsync({
-          team: team,
-          token: token,
-          botToken: botToken
-        })
+      try {
+        let teamSlackAuth = await SlackAuth.oneAsync({team: team, token:token, bot_token:botToken});
+        //TODO: Check all auth tokens for this team, not just one
+        if (!teamSlackAuth) {
+          teamSlackAuth = await SlackAuth.createAsync({
+            team: team,
+            token: token,
+            bot_token: botToken
+          })
+        }
+        return teamSlackAuth;  
+      } catch (exc) {
+        return exc
       }
-      return teamSlackAuth
     })
   }
 

@@ -252,16 +252,15 @@ class Slack extends Adapter {
     }
   }
 
-  async receiveNewAuthTokensForTeam (team, authToken, botToken = "") {
-    if (!authToken.length) {
-      throw new Error(`Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.`);
-    }
-
-    const newAuth = await this.slackAuth.getOrCreate(team, authToken, botToken);
-    if (newAuth.team && newAuth.token) {
+  async receiveNewAuthTokensForTeam (team, authToken, botToken) {
+    try {
+      if (!authToken.length || !botToken.length) {
+        throw `Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.`;
+      }
+      const newAuth = await this.slackAuth.getOrCreate(team, authToken, botToken);
       return `Adding Starry to Slack succeeded. Open Slack to start tipping!`;
-    } else {
-      throw new Error(`Adding Starry to Slack failed. Please try again.`);
+    } catch (exc) {
+      throw exc;
     }
   }
 
