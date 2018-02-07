@@ -269,8 +269,10 @@ class Slack extends Adapter {
     console.log("in Receive balance request");
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
     if(!account.walletAddress) {
+      this.getLogger().CommandEvents.onBalanceRequest(cmd, false)
       return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
     } else {
+      this.getLogger().CommandEvents.onBalanceRequest(cmd, true)
       return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
     }
   }
@@ -282,6 +284,8 @@ class Slack extends Adapter {
    */
   async receiveInfoRequest (cmd) {
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
+    // Use !! to hard convert to boolean
+    this.getLogger().CommandEvents.onInfoRequest(cmd, !!account.walletAddress)
     if(!account.walletAddress) {
       return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
     } else {

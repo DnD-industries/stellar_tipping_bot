@@ -127,11 +127,11 @@ class TipAnalytics extends AbstractLogger {
         mixpanel.track('deposit success', data)
       },
 
-      onBalanceRequest(balanceCmd) {
+      onBalanceRequest(balanceCmd, userIsRegistered) {
 
       },
 
-      onInfoRequest(infoCmd) {
+      onInfoRequest(infoCmd, userIsRegistered) {
 
       },
 

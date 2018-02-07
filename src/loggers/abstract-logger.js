@@ -65,11 +65,11 @@ class Logger {
 
       },
 
-      onBalanceRequest(balanceCmd) {
+      onBalanceRequest(balanceCmd, userIsRegistered) {
 
       },
 
-      onInfoRequest(infoCmd) {
+      onInfoRequest(infoCmd, userIsRegistered) {
 
       },
 

@@ -263,6 +263,20 @@ describe('slackAdapter', async () => {
       assert.equal(returned, `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${accountWithoutWallet.balance}\'`)
     })
 
+    it('should properly log a balance request if the user is not registered', async () => {
+      let balanceCommand = new Command.Balance(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId, accountWithoutWallet.walletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onBalanceRequest")
+      await slackAdapter.receiveBalanceRequest(balanceCommand)
+      assert(spy.withArgs(balanceCommand, false).calledOnce)
+    })
+
+    it('should properly log a balance request if the user is registered', async () => {
+      let balanceCommand = new Command.Balance(accountWithWallet.adapter, accountWithWallet.uniqueId, accountWithWallet.walletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onBalanceRequest")
+      const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
+      assert(spy.withArgs(balanceCommand, true).calledOnce)
+    })
+
     it(`should return the user's wallet address & account balance if they are registered`, async () => {
       let balanceCommand = new Command.Balance(accountWithWallet.adapter, accountWithWallet.uniqueId, accountWithWallet.walletAddress)
       const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
@@ -274,7 +288,9 @@ describe('slackAdapter', async () => {
     it('should return the GitHub page info and a standin for the stellar bot`s address if they are not registered', async () => {
       process.env.GITHUB_URL = 'testurl'
       let infoCommand = new Command.Info(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onInfoRequest")
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
+      assert(spy.withArgs(infoCommand, false).calledOnce)
       assert.equal(returned, `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
 
@@ -282,7 +298,10 @@ describe('slackAdapter', async () => {
       process.env.GITHUB_URL = 'testurl'
       process.env.STELLAR_PUBLIC_KEY = 'testpubkey'
       let infoCommand = new Command.Info(accountWithWallet.adapter, accountWithWallet.uniqueId)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onInfoRequest")
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
+
+      assert(spy.withArgs(infoCommand, true).calledOnce)
       assert.equal(returned, `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
   })
