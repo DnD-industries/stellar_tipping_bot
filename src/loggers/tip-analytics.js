@@ -17,222 +17,127 @@ class TipAnalytics extends AbstractLogger {
 
     this.OAuthEvents = {
 
-      /**
-       *
-       * @param adapter {String} The adapter we are calling from
-       * @param blob {Object} A package of key-value pairs that we want to add to the analytics call
-       * @returns {Object}
-       */
-      getOAuthAnalyticsBase(adapter, blob) {
-        return Object.assign(blob, {
-          time: new Date(),
-          adapter: adapter
-        })
-      },
-
       onOAuthAddEmptyOAuthToken(adapter, blob) {
-        let data = this.getOAuthAnalyticsBase(adapter, blob)
+        let data = TipAnalytics.getOAuthAnalyticsBase(adapter, blob)
         if(mixpanel) mixpanel.track('added missing oauth token', data)
       },
 
       onAddedNewAuthToken(adapter, blob) {
-        let data = this.getOAuthAnalyticsBase(adapter, blob)
+        let data = TipAnalytics.getOAuthAnalyticsBase(adapter, blob)
         if(mixpanel) mixpanel.track('added new oauth token', data)
       },
 
       onAddingOAuthFailed(adapter, blob, exception) {
-        let data = this.getOAuthAnalyticsBase(adapter, blob)
+        let data = TipAnalytics.getOAuthAnalyticsBase(adapter, blob)
         data = Object.assign(data, exception)
         if(mixpanel) mixpanel.track('oauth add failed', data)
       },
     }
 
     this.CommandEvents = {
-
-      /**
-       *
-       * @param command {Command}
-       * @returns {Object}
-       */
-      getCommandAnalyticsBase(command) {
-        return {
-          time: new Date(),
-          sourceId: command.uniqueId,
-          adapter: command.adapter,
-          hash: command.hash,
-          type: command.type,
-          teamId: Utils.slackTeamIdFromUniqueId(command.uniqueId)
-        }
-      },
-
-      /**
-       *
-       * @param tip {Tip}
-       * @returns {Object}
-       */
-      getTipAnalyticsBase(tip) {
-        return Object.assign(this.getCommandAnalyticsBase(tip), {
-          amount: tip.amount,
-          targetId: tip.targetId
-        })
-      },
-
-      /**
-       *
-       * @param withdrawal {Withdraw}
-       * @returns {Object}
-       */
-      getWithdrawalAnalyticsBase(withdrawal) {
-        return Object.assign(this.getCommandAnalyticsBase(withdrawal), {
-          amount: withdrawal.amount,
-          address: withdrawal.address
-        })
-      },
-
-      /**
-       *
-       * @param balance {Register}
-       * @returns {Object}
-       */
-      getBalanceAnalyticsBase(balance) {
-        return Object.assign(this.getCommandAnalyticsBase(balance), {
-          address: balance.walletPublicKey,
-        })
-      },
-
-      /**
-       *
-       * @param balance {Info}
-       * @returns {Object}
-       */
-      getInfoAnalyticsBase(info) {
-        return this.getCommandAnalyticsBase(info)
-      },
-
-      /**
-       *
-       * @param register {Register}
-       * @returns {Object}
-       */
-      getRegistrationAnalyticsBase(register) {
-        return Object.assign(this.getCommandAnalyticsBase(register), {
-          walletAddress: register.walletPublicKey,
-        })
-      },
-
-      getAccountAnalyticsBase(account) {
-        return {
-          time: new Date(),
-          account_uniqueId: account.uniqueId,
-          account_createdAt: account.createdAt,
-          account_balance: account.balance,
-          account_address: account.walletAddress
-        }
-      },
-
       /**
        *
        * @param tip {Tip}
        * @param amount
        */
       onTipWithInsufficientBalance(tip, balance) {
-        let data = this.getTipAnalyticsBase(tip)
+        let data = TipAnalytics.getTipAnalyticsBase(tip)
         data.balance = balance
         if(mixpanel) mixpanel.track('tip with insufficient balance', data)
       },
 
       onTipTransferFailed(tip) {
-        let data = this.getTipAnalyticsBase(tip)
+        let data = TipAnalytics.getTipAnalyticsBase(tip)
         if(mixpanel) mixpanel.track('tip transfer failed', data)
       },
 
       onUserAttemptedToTipThemself(tip) {
-        let data = this.getTipAnalyticsBase(tip)
+        let data = TipAnalytics.getTipAnalyticsBase(tip)
         if(mixpanel) mixpanel.track('user attempted to tip themself', data)
       },
 
       onTipNoTargetFound(tip) {
-        let data = this.getTipAnalyticsBase(tip)
+        let data = TipAnalytics.getTipAnalyticsBase(tip)
         if(mixpanel) mixpanel.track('tip no target found for id', data)
       },
 
       onTipSuccess(tip, amount) {
-        let data = this.getTipAnalyticsBase(tip)
+        let data = TipAnalytics.getTipAnalyticsBase(tip)
         if(mixpanel) mixpanel.track('tip success', data)
       },
 
       onWithdrawalNoAddressProvided(withdrawal) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track('withdrawal no address provided', data)
       },
 
       onWithdrawalAttemptedToRobotTippingAddress(withdrawal) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track(`withdrawal attempted with robot's tipping address`, data)
       },
 
       onWithdrawalDestinationAccountDoesNotExist(withdrawal) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track('withdrawal destination account does not exist', data)
       },
 
       onWithdrawalInsufficientBalance(withdrawal, balance) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track('withdrawal insufficient balance', data)
       },
 
       onWithdrawalBadlyFormedAddress(withdrawal, badWalletAddress) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track('withdrawal no address provided', data)
       },
 
       onWithdrawalSubmissionToHorizonFailed(withdrawal) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track('withdrawal submission to horizon failed', data)
       },
 
       onWithdrawalInvalidAmountProvided(withdrawal) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         if(mixpanel) mixpanel.track('withdrawal invalid amount', data)
       },
 
       onWithdrawalSuccess(withdrawal, address, txHash) {
-        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        let data = TipAnalytics.getWithdrawalAnalyticsBase(withdrawal)
         data.address = address
         data.txHash = txHash
         if(mixpanel) mixpanel.track('withdrawal success', data)
       },
 
       onDepositSuccess(sourceAccount, amount) {
-        let data = this.getAccountAnalyticsBase(sourceAccount)
+        let data = TipAnalytics.getAccountAnalyticsBase(sourceAccount)
         data.amount = amount
         if(mixpanel) mixpanel.track('deposit success', data)
       },
 
       onBalanceRequest(balanceCmd, userIsRegistered) {
-        let data = this.getBalanceAnalyticsBase(balanceCmd)
+        let data = TipAnalytics.getBalanceAnalyticsBase(balanceCmd)
         data.userIsRegistered = userIsRegistered
         if(mixpanel) mixpanel.track('balance request made', data)
       },
 
       onInfoRequest(infoCmd, userIsRegistered) {
-        let data = this.getInfoAnalyticsBase(infoCmd)
+        let data = TipAnalytics.getInfoAnalyticsBase(infoCmd)
         data.userIsRegistered = userIsRegistered
         if(mixpanel) mixpanel.track('info request made', data)
       },
 
       onRegisteredWithBadWallet(registration) {
-        let data = this.getRegistrationAnalyticsBase(registration)
+        let data = TipAnalytics.getRegistrationAnalyticsBase(registration)
         if(mixpanel) mixpanel.track('registration with bad wallet', data)
       },
 
       onRegisteredWithCurrentWallet(registration) {
-        let data = this.getRegistrationAnalyticsBase(registration)
+        let data = TipAnalytics.getRegistrationAnalyticsBase(registration)
         if(mixpanel) mixpanel.track('registration with current wallet', data)
       },
 
       onRegisteredWithWalletRegisteredToOtherUser(registration, otherUser) {
-        let data = Object.assign(this.getRegistrationAnalyticsBase(registration), {
+        let data = Object.assign(TipAnalytics.getRegistrationAnalyticsBase(registration), {
           otherUser_uniqueId: otherUser.uniqueId,
           otherUser_balance: otherUser.balance,
           otherUser_createdAt: otherUser.createdAt,
@@ -242,17 +147,112 @@ class TipAnalytics extends AbstractLogger {
       },
 
       onRegisteredWithRobotsWalletAddress(registration) {
-        let data = this.getRegistrationAnalyticsBase(registration)
+        let data = TipAnalytics.getRegistrationAnalyticsBase(registration)
         if(mixpanel) mixpanel.track(`registration with robots wallet address`, data)
       },
 
       onRegisteredSuccessfully(registration, isFirstRegistration) {
-        let data = Object.assign(this.getRegistrationAnalyticsBase(registration), {
+        let data = Object.assign(TipAnalytics.getRegistrationAnalyticsBase(registration), {
           isFirstRegistration: isFirstRegistration
         })
         if(mixpanel) mixpanel.track('registration success', data)
       }
     }
+  }
+
+  /**
+   *
+   * @param command {Command}
+   * @returns {Object}
+   */
+  static getCommandAnalyticsBase(command) {
+    return {
+      time: new Date(),
+      sourceId: command.uniqueId,
+      adapter: command.adapter,
+      hash: command.hash,
+      type: command.type,
+      teamId: Utils.slackTeamIdFromUniqueId(command.uniqueId)
+    }
+  }
+
+  /**
+   *
+   * @param tip {Tip}
+   * @returns {Object}
+   */
+  static getTipAnalyticsBase(tip) {
+    return Object.assign(TipAnalytics.getCommandAnalyticsBase(tip), {
+      amount: tip.amount,
+      targetId: tip.targetId
+    })
+  }
+
+  /**
+   *
+   * @param withdrawal {Withdraw}
+   * @returns {Object}
+   */
+  static getWithdrawalAnalyticsBase(withdrawal) {
+    return Object.assign(TipAnalytics.getCommandAnalyticsBase(withdrawal), {
+      amount: withdrawal.amount,
+      address: withdrawal.address
+    })
+  }
+
+  /**
+   *
+   * @param balance {Register}
+   * @returns {Object}
+   */
+  static getBalanceAnalyticsBase(balance) {
+    return Object.assign(TipAnalytics.getCommandAnalyticsBase(balance), {
+      address: balance.walletPublicKey,
+    })
+  }
+
+  /**
+   *
+   * @param balance {Info}
+   * @returns {Object}
+   */
+  static getInfoAnalyticsBase(info) {
+    return TipAnalytics.getCommandAnalyticsBase(info)
+  }
+
+  /**
+   *
+   * @param register {Register}
+   * @returns {Object}
+   */
+  static getRegistrationAnalyticsBase(register) {
+    return Object.assign(TipAnalytics.getCommandAnalyticsBase(register), {
+      walletAddress: register.walletPublicKey,
+    })
+  }
+
+  static getAccountAnalyticsBase(account) {
+    return {
+      time: new Date(),
+      account_uniqueId: account.uniqueId,
+      account_createdAt: account.createdAt,
+      account_balance: account.balance,
+      account_address: account.walletAddress
+    }
+  }
+
+
+  /**
+   *
+   * @param adapter {String} The adapter we are calling from
+   * @param blob {Object} A package of key-value pairs that we want to add to the analytics call
+   * @returns {Object}
+   */
+  static getOAuthAnalyticsBase(adapter, blob) {
+    return Object.assign(blob, {
+      time: new Date(),
+      adapter: adapter
+    })
   }
 
 }
