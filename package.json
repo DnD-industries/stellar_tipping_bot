@@ -11,6 +11,7 @@
     "dotenv": "^4.0.0",
     "express": "^4.14.1",
     "md5": "^2.2.1",
+    "mixpanel": "^0.8.0",
     "orm": "^4.0.2",
     "pg": "^7.4.0",
     "pm2": "^2.9.3",
@@ -33,7 +34,7 @@
     "logs": "ssh root@stellar 'docker logs -f app'",
     "restart": "ssh root@stellar 'docker restart app'"
   },
-  "author": "https://github.com/shredding",
+  "author": "https://github.com/dnd-industries",
   "license": "MIT",
-  "repository": "https://github.com/shredding/stellar-bot"
+  "repository": "https://github.com/dnd-industries/stellar_tipping_bot"
 }

@@ -4,6 +4,7 @@ const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const Command     = require('../commands/command')
+const Analytics   = require('../../loggers/tip-analytics')
 
 /**
  * The Slack adapter itself is actually what is responsible for generating
@@ -11,8 +12,13 @@ const Command     = require('../commands/command')
  */
 class Slack extends Adapter {
 
+  getLogger() {
+    return Analytics;
+  }
+
   async onTipWithInsufficientBalance (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
+    this.getLogger().CommandEvents.onTipWithInsufficientBalance(tip, account.balance)
     return `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(account.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``
   }
 
@@ -116,7 +122,7 @@ class Slack extends Adapter {
   /**
    * Called when the user attempts to withdraw to an invalid address. Should only occur when supplying
    * a secondary wallet address, which is to say validation should prevent users from registering
-   * an invalid address (though they may be able to register a non-existant address).
+   * an invalid address.
    *
    * @param withdrawal {Withdraw}
    * @returns {Promise<string>}

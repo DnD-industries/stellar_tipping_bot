@@ -3,7 +3,7 @@ const assert = require('assert')
 const Command = require('../src/adapters/commands/command')
 const sinon = require('sinon')
 const Utils = require('../src/utils')
-
+const Logger = require('../src/loggers/abstract-logger')
 
 
 describe('slackAdapter', async () => {
@@ -34,6 +34,7 @@ describe('slackAdapter', async () => {
     class TestableSlack extends Slack {
       constructor (config) {
         super(config);
+        this.logger = new Logger();
 
         this.getBotClientForCommand = function() {
           return mockClient;
@@ -41,6 +42,10 @@ describe('slackAdapter', async () => {
 
         this.getBotClientForUniqueId = function() {
           return mockClient;
+        }
+
+        this.getLogger = function() {
+          return this.logger;
         }
       }
     }
@@ -190,10 +195,13 @@ describe('slackAdapter', async () => {
   })
 
   describe(`receive potential tip`, () => {
-    it (`should return an error message if the user's balance is not high enough`, async() => {
+    it (`should return an error message, and a log should be made, if the user's balance is not high enough`, async() => {
       let amount = 1000
       let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onTipWithInsufficientBalance")
       let returnedValue = await slackAdapter.receivePotentialTip(command)
+
+      assert(spy.withArgs(command, accountWithWallet.balance).calledOnce)
       assert.equal(returnedValue, `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(accountWithWallet.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``)
     })
 
