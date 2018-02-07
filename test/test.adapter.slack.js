@@ -212,13 +212,16 @@ describe('slackAdapter', async () => {
       assert.equal(returnedValue, `What is the sound of one tipper tipping?`)
     })
 
-    it (`should return a confirmation message with transaction hash to the tipper once the tip has gone through`, async() => {
+    it (`should return a confirmation message with transaction hash to the tipper once the tip has gone through, and log a successful tip`, async() => {
       let amount = 0.9128341 // Made this out to seven digits rather than just "1" to ensure robustness in testing
       let command = new Command.Tip('testing', 'team.foo', 'team.new', amount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onTipSuccess")
       let returnedValue = await slackAdapter.receivePotentialTip(command)
       const tippedAccount = await Account.getOrCreate('testing', 'team.new')
+
       assert.equal(tippedAccount.balance, amount)
       assert.equal(returnedValue, `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``)
+      assert(spy.withArgs(command).calledOnce)
     })
 
     it (`should send back an appropriate error message if the tipper tries to tip a username that doesn't actually exist, and log it`, async() => {

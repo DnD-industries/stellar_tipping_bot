@@ -29,7 +29,7 @@ class Logger {
 
       },
 
-      onSuccessfulTip(tip, amount) {
+      onTipSuccess(tip, amount) {
 
       },
 

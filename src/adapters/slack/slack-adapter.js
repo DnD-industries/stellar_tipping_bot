@@ -76,6 +76,8 @@ class Slack extends Adapter {
       client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
     }
+
+    this.getLogger().CommandEvents.onTipSuccess(tip)
     return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
@@ -206,7 +208,6 @@ class Slack extends Adapter {
     }
     return super.receivePotentialTip(tip)
   }
-
 
   /**
    * handleRegistrationRequest(command)

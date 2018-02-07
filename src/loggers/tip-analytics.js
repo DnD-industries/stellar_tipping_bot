@@ -74,7 +74,7 @@ class TipAnalytics extends AbstractLogger {
         mixpanel.track('tip no target found for id', data)
       },
 
-      onSuccessfulTip(tip, amount) {
+      onTipSuccess(tip, amount) {
         let data = this.getTipAnalyticsBase(tip)
         mixpanel.track('tip success', data)
       },
