@@ -98,18 +98,6 @@ class Logger {
 
       },
 
-      onOAuthAddMissingAuthTokenForTeam(team) {
-
-      },
-
-      onAddedNewAuthTokenForTeam(team) {
-
-      },
-
-      onAddingOAuthForTeamFailed(team, exception) {
-
-      },
-
       onRegisteredWithBadWallet(registration) {
 
       },
