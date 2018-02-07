@@ -19,71 +19,114 @@ class TipAnalytics extends AbstractLogger {
         }
       },
 
+      getTipAnalyticsBase(tip) {
+        return Object.assign(this.getCommandAnalyticsBase(tip), {
+          amount: tip.amount,
+          targetId: tip.targetId
+        })
+      },
+
+      getAccountAnalyticsBase(account) {
+        return {
+          time: new Date(),
+          account: {
+            uniqueId: account.uniqueId,
+            createdAt: account.createdAt,
+            balance: account.balance,
+            address: account.walletAddress
+          }
+        }
+      },
+
+      /**
+       *
+       * @param withdrawal {Withdraw}
+       * @returns {(*|{time, sourceId, adapter, hash}) & {amount, targetId: *}}
+       */
+      getWithdrawalAnalyticsBase(withdrawal) {
+        return Object.assign(this.getCommandAnalyticsBase(withdrawal), {
+          amount: withdrawal.amount,
+          address: withdrawal.address
+        })
+      },
+
       /**
        *
        * @param tip {Tip}
        * @param amount
        */
       onTipWithInsufficientBalance(tip, balance) {
-        let data = this.getCommandAnalyticsBase(tip)
-        data.amount = tip.amount
-        data.targetId = tip.targetId
+        let data = this.getTipAnalyticsBase(tip)
         data.balance = balance
-
         mixpanel.track('tip with insufficient balance', data)
-
       },
 
-      onTipTransferFailed(tip, amount) {
-
+      onTipTransferFailed(tip) {
+        let data = this.getTipAnalyticsBase(tip)
+        mixpanel.track('tip transfer failed', data)
       },
 
-      onUserAttemptedToTipThemself(tip, amount) {
-
+      onUserAttemptedToTipThemself(tip) {
+        let data = this.getTipAnalyticsBase(tip)
+        mixpanel.track('user attempted to tip themself', data)
       },
 
       onTipNoTargetFound(tip) {
-
+        let data = this.getTipAnalyticsBase(tip)
+        mixpanel.track('tip no target found for id', data)
       },
 
       onSuccessfulTip(tip, amount) {
-
+        let data = this.getTipAnalyticsBase(tip)
+        mixpanel.track('tip success', data)
       },
 
       onWithdrawalNoAddressProvided(withdrawal) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track('withdrawal no address provided', data)
       },
 
       onWithdrawalAttemptedToRobotTippingAddress(withdrawal) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track(`withdrawal attempted with robot's tipping address`, data)
       },
 
       onWithdrawalDestinationAccountDoesNotExist(withdrawal) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track('withdrawal destination account does not exist', data)
       },
 
       onWithdrawalInsufficientBalance(withdrawal, balance) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track('withdrawal insufficient balance', data)
       },
 
       onWithdrawalBadlyFormedAddress(withdrawal) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track('withdrawal no address provided', data)
       },
 
       onWithdrawalSubmissionToHorizonFailed(withdrawal) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track('withdrawal submission to horizon failed', data)
       },
 
       onWithdrawalInvalidAmountProvided(withdrawal) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        mixpanel.track('withdrawal invalid amount', data)
       },
 
       onWithdrawalSuccess(withdrawal, address, txHash) {
-
+        let data = this.getWithdrawalAnalyticsBase(withdrawal)
+        data.address = address
+        data.txHash = txHash
+        mixpanel.track('withdrawal success', data)
       },
 
       onDepositSuccess(sourceAccount, amount) {
-
+        let data = this.getAccountAnalyticsBase(sourceAccount)
+        data.amount = amount
+        mixpanel.track('deposit success', data)
       },
 
       onBalanceRequest(balanceCmd) {

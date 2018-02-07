@@ -254,6 +254,7 @@ class Slack extends Adapter {
    */
   async onDeposit (sourceAccount, amount)
   {
+    this.getLogger().CommandEvents.onDepositSuccess(sourceAccount, amount)
     let client = await this.getBotClientForUniqueId(sourceAccount.uniqueId)
     client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
         `You made a deposit of ${Utils.formatNumber(amount)} XLM`);
