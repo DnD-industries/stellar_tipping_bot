@@ -78,47 +78,58 @@ describe('slackAdapter', async () => {
     it ('should return a message to be sent back to the user if their wallet fails validation', async () => {
       const badWalletAddress = 'badwalletaddress013934888318';
       let msg = new Command.Register('testing', 'someUserId', badWalletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredWithBadWallet")
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, `${badWalletAddress} is not a valid Public Key / wallet address`);
+      assert(spy.withArgs(msg).calledOnce)
     })
 
     it ('should return a message to send back to the user if this user has already registered with that wallet', async () => {
       const sameAddressAsOtherAccount = accountWithWallet.walletAddress
       let msg = new Command.Register('testing', 'team.foo', sameAddressAsOtherAccount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredWithCurrentWallet")
 
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, `You are already using the public key \`${accountWithWallet.walletAddress}\``);
+      assert(spy.withArgs(msg).calledOnce)
     })
 
     it ('should send a message back to the user if someone else has already registered with that wallet', async () => {
       let msg = new Command.Register('testing', 'newTeam.someNewUserId', accountWithWallet.walletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredWithWalletRegisteredToOtherUser")
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, `Another user has already registered the wallet address \`${accountWithWallet.walletAddress}\`. If you think this is a mistake, please contact @dlohnes on Slack.`);
+      assert(spy.withArgs(msg, accountWithWallet).calledOnce)
     })
 
     // TODO: Make sure this updates the 'updatedAt' value of the Account object
     it (`should overwrite the user's current wallet info if they have a preexisting wallet, and send an appropriate message`, async () => {
       const newWalletId = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN"
       const msg = new Command.Register('testing', 'team.foo', newWalletId)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
       const returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       const refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
       assert.equal(returnedValue, `Your old wallet \`${accountWithWallet.walletAddress}\` has been replaced by \`${newWalletId}\``);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
+      assert(spy.withArgs(msg, false).calledOnce)
     })
 
     it ('should send a message back to the user if they are trying to register with the robot`s own wallet address', async () => {
       process.env.STELLAR_PUBLIC_KEY = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
       let msg = new Command.Register('testing', 'newTeam.someNewUserId', process.env.STELLAR_PUBLIC_KEY)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredWithRobotsWalletAddress")
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, `That is my address. You must register with your own address.`);
+      assert(spy.withArgs(msg).calledOnce)
     })
 
     it ('should otherwise save the wallet info to the database for the user and return an appropriate message', async () => {
       const desiredWalletAddress = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
       let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
-
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
+      assert(spy.withArgs(msg, true).calledOnce)
     })
   })
 

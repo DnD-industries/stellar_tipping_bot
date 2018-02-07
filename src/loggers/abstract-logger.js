@@ -88,6 +88,26 @@ class Logger {
       onAddingOAuthForTeamFailed(team) {
 
       },
+
+      onRegisteredWithBadWallet(registration) {
+
+      },
+
+      onRegisteredWithCurrentWallet(registration) {
+
+      },
+
+      onRegisteredWithWalletRegisteredToOtherUser(registration, otherUser) {
+
+      },
+
+      onRegisteredWithRobotsWalletAddress(registration) {
+
+      },
+
+      onRegisteredSuccessfully(registration, isFirstRegistration) {
+
+      }
     }
   }
 

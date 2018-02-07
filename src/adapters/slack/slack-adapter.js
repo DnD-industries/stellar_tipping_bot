@@ -216,10 +216,12 @@ class Slack extends Adapter {
    */
   async handleRegistrationRequest(command) {
     if (!(command.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(command.walletPublicKey))) {
+      this.getLogger().CommandEvents.onRegisteredWithBadWallet(command)
       return this.onRegistrationBadWallet(command.walletPublicKey)
     }
 
     if(command.walletPublicKey == process.env.STELLAR_PUBLIC_KEY) {
+      this.getLogger().CommandEvents.onRegisteredWithRobotsWalletAddress(command)
       return `That is my address. You must register with your own address.`;
     }
 
@@ -228,12 +230,14 @@ class Slack extends Adapter {
 
     // If it's the same wallet, just send a message back
     if(usersExistingWallet && usersExistingWallet == command.walletPublicKey) {
+      this.getLogger().CommandEvents.onRegisteredWithCurrentWallet(command)
       return this.onRegistrationSameAsExistingWallet(usersExistingWallet)
     }
 
     // Check to see if a user already exists with that wallet
     const userWithWalletId = await this.Account.userForWalletAddress(command.walletPublicKey)
     if(userWithWalletId) {
+      this.getLogger().CommandEvents.onRegisteredWithWalletRegisteredToOtherUser(command, userWithWalletId)
       return this.onRegistrationOtherUserHasRegisteredWallet(command.walletPublicKey)
     }
 
@@ -243,9 +247,11 @@ class Slack extends Adapter {
 
     // If we replaced an old wallet, send the appropriate message
     if (usersExistingWallet) {
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, false)
       return this.onRegistrationReplacedOldWallet(usersExistingWallet, command.walletPublicKey)
     } else {
       // Otherwise, we've simply saved the user's first wallet
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, true)
       return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
   }
