@@ -18,13 +18,12 @@ class Slack extends Adapter {
 
   async onTipWithInsufficientBalance (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
-    this.getLogger().CommandEvents.onTipWithInsufficientBalance(tip, account.balance)
     return `Sorry, your tip could not be processed. Your account only contains \`${Utils.formatNumber(account.balance)} XLM\` but you tried to send \`${Utils.formatNumber(amount)} XLM\``
   }
 
   // TODO: Put this under test.
   /**
-   * Called when our attempt at placing the tip transaction through Horizon fails for some reason.
+   * Called when our attempt at placing the tip transaction fails for some reason.
    * Could be a non-responsive server, or any number of reasons.
    * @param tip
    * @param amount

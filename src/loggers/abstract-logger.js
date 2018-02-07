@@ -17,7 +17,7 @@ class Logger {
       onTipWithInsufficientBalance(tip, balance) {
       },
 
-      onTipTransferFailed(tip, amount) {
+      onTipTransferFailed(tip) {
 
       },
 

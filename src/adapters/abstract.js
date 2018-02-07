@@ -261,6 +261,7 @@ class Adapter extends EventEmitter {
       const hash = tip.hash;
 
       if (!source.canPay(payment)) {
+        this.getLogger().CommandEvents.onTipWithInsufficientBalance(tip, source.balance)
         return this.onTipWithInsufficientBalance(tip, payment.toFixed(7));
       }
 
@@ -278,6 +279,8 @@ class Adapter extends EventEmitter {
         return this.onTip(tip, payment.toFixed(7));
     } catch (exc) {
         if (exc !== 'DUPLICATE_TRANSFER') {
+          // TODO: Get this under test
+          this.getLogger().onTipTransferFailed(tip)
           this.onTipTransferFailed(tip, payment.toFixed(7));
         }
     }
