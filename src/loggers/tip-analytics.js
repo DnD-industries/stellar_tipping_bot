@@ -99,7 +99,7 @@ class TipAnalytics extends AbstractLogger {
         mixpanel.track('withdrawal insufficient balance', data)
       },
 
-      onWithdrawalBadlyFormedAddress(withdrawal) {
+      onWithdrawalBadlyFormedAddress(withdrawal, badWalletAddress) {
         let data = this.getWithdrawalAnalyticsBase(withdrawal)
         mixpanel.track('withdrawal no address provided', data)
       },

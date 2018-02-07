@@ -125,29 +125,36 @@ describe('slackAdapter', async () => {
   describe(`handle withdrawal request`, () => {
     it (`should not do the withdrawal and should return an appropriate message if the user is not registered`, async() => {
       let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalNoAddressProvided")
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, "You must register a wallet address before making a withdrawal, or provide a wallet address as an additional argument");
+      assert(spy.withArgs(command).calledOnce)
     })
 
-    it (`should not do the withdrawal and should return an appropriate message if the user provides an invalid public key`, async() => {
+    it (`should not do the withdrawal and should return an appropriate message if the user provides an invalid public key, and log the invalid key event`, async() => {
       const badWalletAddress = "badWallet"
       let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1, badWalletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalBadlyFormedAddress")
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `\`${badWalletAddress}\` is not a valid public key. Please try again with a valid public key.`);
+      assert(spy.withArgs(command, badWalletAddress).calledOnce)
     })
 
-    it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance`, async() => {
+    it (`should not do the withdrawal and should return an appropriate message if the  user does not have a sufficient balance, and log an insufficient balance on withdrawal event`, async() => {
       const withdrawAmount = 500.0142
       let command = new Command.Withdraw(accountWithWallet.adapter, accountWithWallet.uniqueId, 500.0142)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalInsufficientBalance")
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `You requested to withdraw \`${withdrawAmount} XLM\` but your wallet only contains \`${Utils.formatNumber(accountWithWallet.balance)} XLM\``);
+      assert(spy.withArgs(command, accountWithWallet.balance).calledOnce)
     })
 
-    it (`should complete the withdrawal and should return a message with the amount withdrawn and a transaction receipt if the  user has a sufficient balance`, async() =>
+    it (`should complete the withdrawal and should return a message with the amount withdrawn and a transaction receipt if the  user has a sufficient balance, and make a log of this`, async() =>
     {
       const transactionHash = "txHash"
       const amount = 11
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, amount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalSuccess")
       // A little messy, but the general idea here is that we are getting the command to just
       // return what it would have already been returning, but with its 'withdraw' function's return value pre-determined for testing purposes
       let sourceAccount = await command.getSourceAccount()
@@ -159,18 +166,23 @@ describe('slackAdapter', async () => {
       }
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `You withdrew \`${amount} XLM\` to your wallet at \`${accountWithWallet.walletAddress}\`\n\nYour transaction hash is \`${transactionHash}\`\nYou can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${transactionHash}`);
+      assert(spy.withArgs(command, accountWithWallet.walletAddress, transactionHash).calledOnce)
     })
 
-    it (`should return an appropriate message if the  user supplies a string in place of a number`, async() => {
+    it (`should return an appropriate message if the  user supplies a string in place of a number, and log this occurring`, async() => {
       let amount = 'asdf'
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, amount)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalInvalidAmountProvided")
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
+
       assert.equal(returnedValue, `\`${amount}\` is not a valid withdrawal amount. Please try again.`);
+      assert(spy.withArgs(command).calledOnce)
     })
 
-    it (`should return an appropriate message if the user supplies a public address that doesn't exist on the chain`, async() => {
+    it (`should return an appropriate message if the user supplies a public address that doesn't exist on the chain, and log the outcome`, async() => {
       let nonexistantButValidAddress = "GBZKOHL2DJHVNPWWRFCDBDGMC2T5OWNVA33LN7DOY55ETALXU3PBXTN3";
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1, nonexistantButValidAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalDestinationAccountDoesNotExist")
       slackAdapter.config.stellar = {
         createTransaction: () => new Promise((res, rej) => {
           return rej('DESTINATION_ACCOUNT_DOES_NOT_EXIST')
@@ -178,12 +190,14 @@ describe('slackAdapter', async () => {
       }
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `I could not complete your request. The address you tried to withdraw from does not exist.`);
+      assert(spy.withArgs(command).calledOnce)
     })
 
-    it (`should return an appropriate message if the user tries to tip out to the tipping bot's wallet address`, async() => {
+    it (`should return an appropriate message if the user tries to tip out to the tipping bot's wallet address, and log the attempt`, async() => {
       // This isn't actually the bot's address, but the var name should tell you "what is going on here" for purposes of testability
       let robotsOwnTippingAddress = "GBZKOHL2DJHVNPWWRFCDBDGMC2T5OWNVA33LN7DOY55ETALXU3PBXTN3";
       let command = new Command.Withdraw('testing', accountWithWallet.uniqueId, 1, robotsOwnTippingAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onWithdrawalAttemptedToRobotTippingAddress")
       slackAdapter.config.stellar = {
         createTransaction: () => new Promise((res, rej) => {
           return rej('TRANSACTION_REFERENCE_ERROR')
@@ -191,6 +205,7 @@ describe('slackAdapter', async () => {
       }
       let returnedValue = await slackAdapter.receiveWithdrawalRequest(command);
       assert.equal(returnedValue, `You're not allowed to send money through this interface to the tipping bot. If you'd like to tip the creators, check our repository on GitHub.`);
+      assert(spy.withArgs(command).calledOnce)
     })
   })
 

@@ -49,7 +49,7 @@ class Logger {
 
       },
 
-      onWithdrawalBadlyFormedAddress(withdrawal) {
+      onWithdrawalBadlyFormedAddress(withdrawal, badWalletAddress) {
 
       },
 

@@ -315,16 +315,19 @@ class Adapter extends EventEmitter {
     } catch (e) {
       console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`);
       console.log(`Withdrawal request amount is ${amountRequested}`);
+      this.getLogger().CommandEvents.onWithdrawalInvalidAmountProvided(withdrawalRequest)
       return this.onWithdrawalInvalidAmountProvided(withdrawalRequest);
     }
     const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
+      this.getLogger().CommandEvents.onWithdrawalNoAddressProvided(withdrawalRequest)
         return this.onWithdrawalNoAddressProvided(withdrawalRequest);
     }
 
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
+      this.getLogger().CommandEvents.onWithdrawalBadlyFormedAddress(withdrawalRequest, address)
       return this.onWithdrawalInvalidAddress(withdrawalRequest);
     }
 
@@ -332,6 +335,7 @@ class Adapter extends EventEmitter {
     const target = await withdrawalRequest.getSourceAccount();
     // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(withdrawalAmount)) {
+      this.getLogger().CommandEvents.onWithdrawalInsufficientBalance(withdrawalRequest, target.balance)
       return this.onWithdrawalFailedWithInsufficientBalance(withdrawalRequest, target.balance);
     }
 
@@ -339,12 +343,15 @@ class Adapter extends EventEmitter {
     try {
       // txHash is the hash from the stellar blockchain, not our internal hash
       const txHash = await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
+      this.getLogger().CommandEvents.onWithdrawalSuccess(withdrawalRequest, address, txHash)
       return this.onWithdrawal(withdrawalRequest, address, txHash);
     } catch (exc) {
       if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
+        this.getLogger().CommandEvents.onWithdrawalDestinationAccountDoesNotExist(withdrawalRequest)
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'TRANSACTION_REFERENCE_ERROR') {
+        this.getLogger().CommandEvents.onWithdrawalAttemptedToRobotTippingAddress(withdrawalRequest)
         return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {
