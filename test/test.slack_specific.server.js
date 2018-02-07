@@ -56,9 +56,10 @@ describe('Slack Server/Router Middleware', async () => {
     req.method      = "GET";
     req.query.code  = "abc123";
     req.path        = "/slack/oauth"
-    let next        = sinon.spy(); 
+    let next        = sinon.spy();
     slackServer.validateToken(req, null, next);
     assert(next.calledOnce);
+    done();
   });
 
   it('responds with 401 to GET requests to /slack/oauth without an authorization code', function testSlackOAuthWithoutCode(done) {
