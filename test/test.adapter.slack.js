@@ -352,11 +352,13 @@ describe('slackAdapter', async () => {
       assert(await slackAdapter.getBotClientForUniqueId(accountWithWallet.uniqueId).sendPlainTextDMToSlackUser.calledWith(Utils.slackUserIdFromUniqueId(accountWithWallet.uniqueId), `You made a deposit of ${Utils.formatNumber(amount)} XLM`));
     })
 
-    it('should log a deposit when their deposit goes through', async () => {
+    it('should log a deposit and a message send when their deposit goes through', async () => {
       let amount = 5.0
-      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onDepositSuccess")
+      let spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onDepositSuccess");
+      let msgSpy = sinon.spy(slackAdapter.getLogger().MessagingEvents, "onDepositReceiptMessageSent");
       await slackAdapter.onDeposit(accountWithWallet, amount)
       assert(spy.withArgs(accountWithWallet, amount).calledOnce)
+      assert(msgSpy.withArgs(accountWithWallet).calledOnce)
     })
   })
 

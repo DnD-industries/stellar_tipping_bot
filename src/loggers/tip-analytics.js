@@ -16,6 +16,11 @@ class TipAnalytics extends AbstractLogger {
         let data = TipAnalytics.getTipAnalyticsBase(tip)
         data.userIsRegistered = userIsRegistered
         if(mixpanel) mixpanel.track('message sent received tip', data)
+      },
+
+      onDepositReceiptMessageSent(account) {
+        let data = TipAnalytics.getAccountAnalyticsBase(account)
+        if(mixpanel) mixpanel.track('message sent received tip', data)
       }
     },
 

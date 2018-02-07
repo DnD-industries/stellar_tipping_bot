@@ -7,6 +7,9 @@ class Logger {
 
     this.MessagingEvents = {
       onTipReceivedMessageSent(tip, userIsRegistered) {
+      },
+
+      onDepositReceiptMessageSent(account) {
       }
     }
 
