@@ -355,6 +355,7 @@ class Adapter extends EventEmitter {
         return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {
+        this.getLogger().CommandEvents.onWithdrawalSubmissionToHorizonFailed(withdrawalRequest)
         return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash);
       }
       // throw (exc)
