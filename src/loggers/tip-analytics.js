@@ -25,12 +25,13 @@ class TipAnalytics extends AbstractLogger {
        * @param amount
        */
       onTipWithInsufficientBalance(tip, balance) {
-        mixpanel.track('tip with insufficient balance', {
-          command: this.getCommandAnalyticsBase(tip),
-          amount: tip.amount,
-          targetId: tip.targetId,
-          balance: balance
-        })
+        let data = getCommandAnalyticsBase(tip)
+        data.command = this.getCommandAnalyticsBase(tip)
+        data.amount = tip.amount
+        data.targetId = tip.targetId
+        data.balance = balance
+
+        mixpanel.track('tip with insufficient balance', data)
 
       },
 
