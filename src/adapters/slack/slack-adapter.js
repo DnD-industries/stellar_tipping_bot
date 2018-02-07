@@ -305,11 +305,14 @@ class Slack extends Adapter {
   async receiveNewAuthTokensForTeam (team, authToken, botToken) {
     try {
       if (!authToken.length || !botToken.length) {
+        this.getLogger().onOAuthAddMissingAuthTokenForTeam(team)
         throw `Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.`;
       }
       const newAuth = await this.slackAuth.getOrCreate(team, authToken, botToken);
+      this.getLogger().onAddedNewAuthTokenForTeam(team)
       return `Adding Starry to Slack succeeded. Open Slack to start tipping!`;
     } catch (exc) {
+      this.getLogger().onAddingOAuthForTeamFailed(team, exc)
       throw exc;
     }
   }

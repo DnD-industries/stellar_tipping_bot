@@ -94,6 +94,18 @@ class TipAnalytics extends AbstractLogger {
 
       /**
        *
+       * @param command {Command}
+       * @returns {Object}
+       */
+      getSlackOAuthAnalyticsBase(teamId) {
+        return {
+          time: new Date(),
+          teamId: teamId
+        }
+      },
+
+      /**
+       *
        * @param tip {Tip}
        * @param amount
        */
@@ -183,16 +195,20 @@ class TipAnalytics extends AbstractLogger {
         mixpanel.track('info request made', data)
       },
 
-      onAddedNonExistantAuthTokenForTeam(team) {
-
+      onOAuthAddMissingAuthTokenForTeam(team) {
+        let data = this.getSlackOAuthAnalyticsBase(team)
+        mixpanel.track('added missing oauth token for team', data)
       },
 
       onAddedNewAuthTokenForTeam(team) {
-
+        let data = this.getSlackOAuthAnalyticsBase(team)
+        mixpanel.track('added new oauth token for team', data)
       },
 
-      onAddingOAuthForTeamFailed(team) {
-
+      onAddingOAuthForTeamFailed(team, exception) {
+        let data = this.getSlackOAuthAnalyticsBase(team)
+        data = Object.assign(data, exception)
+        mixpanel.track('oauth add for team failed', data)
       },
 
       onRegisteredWithBadWallet(registration) {

@@ -77,7 +77,7 @@ class Logger {
 
       },
 
-      onAddedNonExistantAuthTokenForTeam(team) {
+      onOAuthAddMissingAuthTokenForTeam(team) {
 
       },
 
@@ -85,7 +85,7 @@ class Logger {
 
       },
 
-      onAddingOAuthForTeamFailed(team) {
+      onAddingOAuthForTeamFailed(team, exception) {
 
       },
 
