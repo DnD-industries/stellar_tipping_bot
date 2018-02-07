@@ -63,11 +63,31 @@ class Command {
       case "info":
         return new Info(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
         break;
+      case "tipdevelopers":
+        return new TipDevelopers(serializedObj.adapter, serializedObj.sourceId, serializedObj.amount, serializedObj.hash);
+        break;
       default:
         //We don't know what type the command is, so return a generic Command
         return new Command(serializedObj.adapter, serializedObj.sourceId, serializedObj.hash);
         break;
     }
+  }
+}
+
+/**
+ * TipDevelopers is used to tip the developers who created the bot :)
+ */
+class TipDevelopers extends Command {
+  constructor(adapter, sourceId, amount, hash = null){
+    super(adapter, sourceId, hash);
+    this.amount = amount;
+    this.type = "tipdevelopers";
+  }
+
+  serialize() {
+    let serialized = JSON.parse(super.serialize());
+    serialized.amount = this.amount;
+    return JSON.stringify(serialized);
   }
 }
 
@@ -171,5 +191,6 @@ module.exports = {
   Withdraw,
   Balance,
   Info,
+  TipDevelopers,
   Deserialize: Command.deserialize
 }

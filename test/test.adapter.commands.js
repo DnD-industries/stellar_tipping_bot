@@ -35,6 +35,17 @@ describe('Command', () => {
       assert.equal(newCommand.hash.length, 36);
     });
 
+    it("should create a tipDevelopers command object", () => {
+      let adapter = "slack";
+      let sourceId = "U12345678";
+      let amount = "5"
+      let newCommand = new Command.TipDevelopers(adapter, sourceId, amount)
+      assert.equal(newCommand.adapter, adapter);
+      assert.equal(newCommand.sourceId, sourceId);
+      assert.equal(newCommand.hash.length, 36);
+      assert.equal(newCommand.amount, amount);
+    });
+
     it("should create a register command object", () => {
       let adapter = "slack";
       let sourceId = "U12345678";
@@ -99,6 +110,14 @@ describe('Command', () => {
       assert.equal(command.adapter, serializedCommand.adapter);
       assert.equal(command.sourceId, serializedCommand.sourceId);
       assert.equal(command.hash, serializedCommand.hash);
+    })
+
+    it('should create TipDevelopers objects if the serialized type is `tipdevelopers`', () => {
+      serializedCommand.type = 'tipdevelopers';
+      let command = Command.Deserialize(JSON.stringify(serializedCommand));
+      assert(command instanceof Command.TipDevelopers, "Command should be an instance of the type TipDevelopers");
+      assert.equal(command.amount, serializedCommand.amount);
+      assert.equal(command.type, serializedCommand.type);
     })
 
     it('should create Register objects if the serialized type is `register`', () => {
