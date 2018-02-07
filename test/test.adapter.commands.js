@@ -82,6 +82,14 @@ describe('Command', () => {
     });
   })
 
+  describe('getters', () => {
+    it('should return a team id correctly', () => {
+      let cmd = new Command.Tip('testing', 'theTeamId.TheUserId', targetId, walletPublicKey);
+      let teamID = cmd.teamId;
+      assert.equal(teamID, "theTeamId");
+    })
+  })
+
   describe('deserialization', () => {
 
     it('should create a new Command object with correct base characteristics, regardless of the type', () => {

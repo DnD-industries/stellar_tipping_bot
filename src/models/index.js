@@ -43,6 +43,7 @@ module.exports = async () => {
     account: configure(require('./account')(db), db),
     transaction: configure(require('./transaction')(db), db),
     action: configure(require('./action')(db), db),
+    slackAuth: configure(require('./slack-auth')(db), db),
   };
 
   await db.syncPromise();

@@ -3,6 +3,7 @@ const Big = require('big.js')
 const StellarSdk = require('stellar-sdk')
 const EventEmitter = require('events')
 const Promise = require('../../node_modules/bluebird')
+const Logger = require('../loggers/abstract-logger')
 
 class Adapter extends EventEmitter {
 
@@ -11,8 +12,8 @@ class Adapter extends EventEmitter {
 
     this.config = config;
 
-    this.Account = config.models.account;
-    this.Transaction = config.models.transaction;
+    this.Account      = config.models.account;
+    this.Transaction  = config.models.transaction;
 
     this.Account.events.on('DEPOSIT', (sourceAccount, amount) => {
       if (this.name === sourceAccount.adapter) {
@@ -25,6 +26,10 @@ class Adapter extends EventEmitter {
     this.Transaction.events.on('REFUND', (transaction) => {
       this.onRefund(transaction);
     });
+  }
+
+  getLogger() {
+    return new Logger();
   }
 
   // *** +++ Deposit Hook Functions +
@@ -149,11 +154,12 @@ class Adapter extends EventEmitter {
    * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
    *
    * @param withdrawal {Withdraw}
+   * @param balance {Number}
    * @returns {Promise<void>}
    */
-  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
+  async onWithdrawalFailedWithInsufficientBalance (withdrawal, balance) {
     // Override this or listen to events!
-    this.emit('withdrawalFailedWithInsufficientBalance', amountRequested, balance);
+    this.emit('withdrawalFailedWithInsufficientBalance', withdrawal.amount, balance);
   }
 
   /**
@@ -255,10 +261,13 @@ class Adapter extends EventEmitter {
       const hash = tip.hash;
 
       if (!source.canPay(payment)) {
+        this.getLogger().CommandEvents.onTipWithInsufficientBalance(tip, source.balance)
         return this.onTipWithInsufficientBalance(tip, payment.toFixed(7));
       }
 
+      console.log(`sourceID: ${tip.sourceId}\ntargetID: ${tip.targetId}`)
       if (tip.sourceId === tip.targetId) {
+        this.getLogger().CommandEvents.onUserAttemptedToTipThemself(tip)
         return this.onTipReferenceError(tip, payment.toFixed(7));
       }
 
@@ -270,6 +279,8 @@ class Adapter extends EventEmitter {
         return this.onTip(tip, payment.toFixed(7));
     } catch (exc) {
         if (exc !== 'DUPLICATE_TRANSFER') {
+          // TODO: Get this under test
+          this.getLogger().CommandEvents.onTipTransferFailed(tip)
           this.onTipTransferFailed(tip, payment.toFixed(7));
         }
     }
@@ -307,16 +318,19 @@ class Adapter extends EventEmitter {
     } catch (e) {
       console.log(`Bad data fed to new Big() in Adapter::receiveWithdrawalRequest()\n${JSON.stringify(e)}`);
       console.log(`Withdrawal request amount is ${amountRequested}`);
+      this.getLogger().CommandEvents.onWithdrawalInvalidAmountProvided(withdrawalRequest)
       return this.onWithdrawalInvalidAmountProvided(withdrawalRequest);
     }
     const fixedAmount = withdrawalAmount.toFixed(7);
 
     if(typeof address === 'undefined' || address === null) {
+      this.getLogger().CommandEvents.onWithdrawalNoAddressProvided(withdrawalRequest)
         return this.onWithdrawalNoAddressProvided(withdrawalRequest);
     }
 
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(address)) {
+      this.getLogger().CommandEvents.onWithdrawalBadlyFormedAddress(withdrawalRequest, address)
       return this.onWithdrawalInvalidAddress(withdrawalRequest);
     }
 
@@ -324,22 +338,27 @@ class Adapter extends EventEmitter {
     const target = await withdrawalRequest.getSourceAccount();
     // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(withdrawalAmount)) {
-      return this.onWithdrawalFailedWithInsufficientBalance(fixedAmount, target.balance);
+      this.getLogger().CommandEvents.onWithdrawalInsufficientBalance(withdrawalRequest, target.balance)
+      return this.onWithdrawalFailedWithInsufficientBalance(withdrawalRequest, target.balance);
     }
 
     // Withdraw
     try {
       // txHash is the hash from the stellar blockchain, not our internal hash
       const txHash = await target.withdraw(this.config.stellar, address, withdrawalAmount, hash);
+      this.getLogger().CommandEvents.onWithdrawalSuccess(withdrawalRequest, address, txHash)
       return this.onWithdrawal(withdrawalRequest, address, txHash);
     } catch (exc) {
       if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
+        this.getLogger().CommandEvents.onWithdrawalDestinationAccountDoesNotExist(withdrawalRequest)
         return this.onWithdrawalDestinationAccountDoesNotExist(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'TRANSACTION_REFERENCE_ERROR') {
+        this.getLogger().CommandEvents.onWithdrawalAttemptedToRobotTippingAddress(withdrawalRequest)
         return this.onWithdrawalReferenceError(uniqueId, address, fixedAmount, hash);
       }
       if (exc === 'WITHDRAWAL_SUBMISSION_FAILED') {
+        this.getLogger().CommandEvents.onWithdrawalSubmissionToHorizonFailed(withdrawalRequest)
         return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash);
       }
       // throw (exc)

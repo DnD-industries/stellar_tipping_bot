@@ -4,12 +4,17 @@ const StellarSdk = require('stellar-sdk')
 const Utils       = require('../../utils')
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const Command     = require('../commands/command')
+const Analytics   = require('../../loggers/tip-analytics')
 
 /**
  * The Slack adapter itself is actually what is responsible for generating
  * messages during particular events (such as when a user withdraws XLM, or doesn't have a high enough balance).
  */
 class Slack extends Adapter {
+
+  getLogger() {
+    return Analytics;
+  }
 
   async onTipWithInsufficientBalance (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.sourceId);
@@ -18,7 +23,7 @@ class Slack extends Adapter {
 
   // TODO: Put this under test.
   /**
-   * Called when our attempt at placing the tip transaction through Horizon fails for some reason.
+   * Called when our attempt at placing the tip transaction fails for some reason.
    * Could be a non-responsive server, or any number of reasons.
    * @param tip
    * @param amount
@@ -41,6 +46,15 @@ class Slack extends Adapter {
   }
 
   /**
+   * Called when a user tries to tip someone but there isn't actually a user with that username.
+   * @param tip
+   * @returns {Promise<string>}
+   */
+  async onTipNoTargetFound (tip) {
+    return `Your tip was cancelled. We could not find a user with that username. Make sure it is formatted correctly, such as '@username'.`
+  }
+
+  /**
    * Called when the tip goes through successfully.
    * For the Slack Adapter, a DM will get sent to the tip recipient whose content depends on whether or not they are already registered.
    * Text is also returned so that the Slack Server can respond with an appropriate message.
@@ -51,13 +65,18 @@ class Slack extends Adapter {
    */
   async onTip (tip, amount) {
     const account = await this.Account.getOrCreate(tip.adapter, tip.targetId)
+    let client = await this.getBotClientForCommand(tip)
     if(!account.walletAddress) {
-      this.client.sendPlainTextDMToSlackUser(tip.targetId,
+      this.getLogger().MessagingEvents.onTipReceivedMessageSent(tip, false)
+      client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\`\n\nIn order to withdraw your funds, first register your public key by typing /register [your public key]\n\nYou can also tip other users using the /tip command.`)
     } else {
-      this.client.sendPlainTextDMToSlackUser(tip.targetId,
+      this.getLogger().MessagingEvents.onTipReceivedMessageSent(tip, true)
+      client.sendPlainTextDMToSlackUser(tip.targetId,
           `Someone tipped you \`${Utils.formatNumber(amount)} XLM\``);
     }
+
+    this.getLogger().CommandEvents.onTipSuccess(tip)
     return `You successfully tipped \`${Utils.formatNumber(amount)} XLM\``
   }
 
@@ -95,18 +114,18 @@ class Slack extends Adapter {
   /**
    * Called when the user submits a withdrawal but doesn't have enough XLM in balance to cover the amount.
    *
-   * @param amountRequested The user's amount requested to withdraw in XLM
+   * @param withdrawal {Withdraw} The withdraw command
    * @param balance The user's current balance in XLM
    * @returns {Promise<string>}
    */
-  async onWithdrawalFailedWithInsufficientBalance (amountRequested, balance) {
-    return `You requested to withdraw \`${Utils.formatNumber(amountRequested)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
+  async onWithdrawalFailedWithInsufficientBalance (withdrawal, balance) {
+    return `You requested to withdraw \`${Utils.formatNumber(withdrawal.amount)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
   /**
    * Called when the user attempts to withdraw to an invalid address. Should only occur when supplying
    * a secondary wallet address, which is to say validation should prevent users from registering
-   * an invalid address (though they may be able to register a non-existant address).
+   * an invalid address.
    *
    * @param withdrawal {Withdraw}
    * @returns {Promise<string>}
@@ -171,17 +190,37 @@ class Slack extends Adapter {
   }
 
   /**
+   * Will transfer the tip provided if possible, otherwise will call the appropriate function on the adapter
+   * in the event that there is an insufficient balance or other issue.
+   * @param tip {Tip}
+   * @returns {Promise<void>}
+   */
+  async receivePotentialTip (tip) {
+    // Let's validate we can actually find a slack user given the tip command as provided, otherwise we abort
+    try {
+      let client = await this.getBotClientForCommand(tip)
+      await client.getDMIdForUser(tip.targetId)
+    } catch (e) {
+      console.log(`${e}\nCould not find user ID in receivePotentialTip. Aborting tip`)
+      this.getLogger().CommandEvents.onTipNoTargetFound(tip)
+      return this.onTipNoTargetFound(tip)
+    }
+    return super.receivePotentialTip(tip)
+  }
+
+  /**
    * handleRegistrationRequest(command)
    *
    * @param command a Registration command object
    */
   async handleRegistrationRequest(command) {
-
     if (!(command.walletPublicKey && StellarSdk.StrKey.isValidEd25519PublicKey(command.walletPublicKey))) {
+      this.getLogger().CommandEvents.onRegisteredWithBadWallet(command)
       return this.onRegistrationBadWallet(command.walletPublicKey)
     }
 
     if(command.walletPublicKey == process.env.STELLAR_PUBLIC_KEY) {
+      this.getLogger().CommandEvents.onRegisteredWithRobotsWalletAddress(command)
       return `That is my address. You must register with your own address.`;
     }
 
@@ -190,12 +229,14 @@ class Slack extends Adapter {
 
     // If it's the same wallet, just send a message back
     if(usersExistingWallet && usersExistingWallet == command.walletPublicKey) {
+      this.getLogger().CommandEvents.onRegisteredWithCurrentWallet(command)
       return this.onRegistrationSameAsExistingWallet(usersExistingWallet)
     }
 
     // Check to see if a user already exists with that wallet
     const userWithWalletId = await this.Account.userForWalletAddress(command.walletPublicKey)
     if(userWithWalletId) {
+      this.getLogger().CommandEvents.onRegisteredWithWalletRegisteredToOtherUser(command, userWithWalletId)
       return this.onRegistrationOtherUserHasRegisteredWallet(command.walletPublicKey)
     }
 
@@ -205,22 +246,26 @@ class Slack extends Adapter {
 
     // If we replaced an old wallet, send the appropriate message
     if (usersExistingWallet) {
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, false)
       return this.onRegistrationReplacedOldWallet(usersExistingWallet, command.walletPublicKey)
     } else {
       // Otherwise, we've simply saved the user's first wallet
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, true)
       return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
   }
 
   /**
    *
-   * @param sourceAccount The uniqueId of the account which made the deposit
+   * @param sourceAccount The Account model which made the deposit
    * @param amount The amount in XLM of the deposit
    * @returns String
    */
-  async onDeposit (sourceAccount, amount) {
-    // Override this or listen to events!
-    this.client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
+  async onDeposit (sourceAccount, amount)
+  {
+    this.getLogger().CommandEvents.onDepositSuccess(sourceAccount, amount)
+    let client = await this.getBotClientForUniqueId(sourceAccount.uniqueId)
+    client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(sourceAccount.uniqueId),
         `You made a deposit of ${Utils.formatNumber(amount)} XLM`);
   }
 
@@ -233,8 +278,10 @@ class Slack extends Adapter {
     console.log("in Receive balance request");
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
     if(!account.walletAddress) {
+      this.getLogger().CommandEvents.onBalanceRequest(cmd, false)
       return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
     } else {
+      this.getLogger().CommandEvents.onBalanceRequest(cmd, true)
       return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
     }
   }
@@ -246,6 +293,8 @@ class Slack extends Adapter {
    */
   async receiveInfoRequest (cmd) {
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
+    // Use !! to hard convert to boolean
+    this.getLogger().CommandEvents.onInfoRequest(cmd, !!account.walletAddress)
     if(!account.walletAddress) {
       return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
     } else {
@@ -253,10 +302,40 @@ class Slack extends Adapter {
     }
   }
 
+  async receiveNewAuthTokensForTeam (team, authToken, botToken) {
+    try {
+      if (!authToken.length || !botToken.length) {
+        throw `Missing OAuth token for your team. Adding Starry to Slack failed. Please try again.`;
+      }
+      const newAuth = await this.slackAuth.getOrCreate(team, authToken, botToken);
+      return `Adding Starry to Slack succeeded. Open Slack to start tipping!`;
+    } catch (exc) {
+      throw exc;
+    }
+  }
+
+  /**
+   * Just a passthrough to our static botClientForCommand constructor. Allows for better testing.
+   * @param command {Command}
+   * @returns {SlackClient}
+   */
+  async getBotClientForCommand (command) {
+    return await slackClient.botClientForCommand(command)
+  }
+
+  /**
+   * Just a passthrough to our static botClientForUniqueId constructor. Allows for better testing.
+   * @param command {Command}
+   * @returns {SlackClient}
+   */
+  async getBotClientForUniqueId (uniqueId) {
+    return await slackClient.botClientForUniqueId(uniqueId)
+  }
+
   constructor (config) {
     super(config);
     this.name = 'slack';
-    this.client = new slackClient(oauth_token);
+    this.slackAuth = config.models.slackAuth;
   }
 
 }

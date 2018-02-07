@@ -7,10 +7,10 @@ services:
     volumes:
       # make our .env file available inside the container. We need an absolute path (using pwd) because it is a single file volume.
       - ${PWD}/.env:/usr/src/app/.env
-      #- ./:/usr/src/app/
+      - ./:/usr/src/app/
     working_dir: /usr/src/app
-    stdin_open: true # necessary for a shell session inside the container
-    tty: true # shell session
+    #stdin_open: true # necessary for a shell session inside the container
+    #tty: true # shell session
     ports:
       - 5000:5000
     links:

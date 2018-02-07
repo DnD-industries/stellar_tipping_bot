@@ -15,6 +15,10 @@ class Command {
     this.type     = "none";
   }
 
+  get teamId() {
+    return utils.slackTeamIdFromUniqueId(this.uniqueId);
+  }
+
   get Account() {
     return AccountInstance.Singleton();
   }

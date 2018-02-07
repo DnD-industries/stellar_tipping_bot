@@ -289,6 +289,7 @@ module.exports = (db) => {
     })
   }
 
+
   singleton = Account;
   return singleton;
 }
