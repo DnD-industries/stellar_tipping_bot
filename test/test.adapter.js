@@ -3,6 +3,8 @@ const Adapter = require('../src/adapters/abstract')
 const Big = require('big.js')
 const Utils = require('../src/utils')
 const Command = require('../src/adapters/commands/command');
+const sinon = require('sinon')
+const Logger = require('../src/loggers/abstract-logger')
 
 let Account;
 
@@ -13,6 +15,10 @@ describe('adapter', async () => {
   beforeEach(async () => {
     const config = await require('./setup')()
     adapter = new Adapter(config)
+    var logger = new Logger();
+    adapter.getLogger = function() {
+      return logger
+    }
     Account = adapter.config.models.account;
     // Require again so that we re-get the new Account stuff
     accountWithWallet = await Account.createAsync({
@@ -188,13 +194,9 @@ describe('adapter', async () => {
       })
     })
 
-    it ('should refund withdrawalSubmissionFailed if transaction send fails', (done) => {
-      adapter.on('withdrawalSubmissionFailed', async () => {
-        // account should be refunded
-        const account = await Account.getOrCreate('testing', 'foo')
-        assert.equal('5.0000000', account.balance)
-        done()
-      })
+    it ('should refund withdrawalSubmissionFailed if transaction send fails, and log the horizon failure', (done) => {
+      var spy = sinon.spy(adapter.getLogger().CommandEvents, "onWithdrawalSubmissionToHorizonFailed")
+
       const Transaction = adapter.config.models.transaction
       const Account = adapter.config.models.account
       const source = 'GCFXHS4GXL6BVUCXBWXGTITROWLVYXQKQLF4YH5O5JT3YZXCYPAFBJZB'
@@ -214,6 +216,15 @@ describe('adapter', async () => {
           }
         }
         let cmd = new Command.Withdraw('testing', 'foo', '5', target)
+
+        adapter.on('withdrawalSubmissionFailed', async () => {
+          // account should be refunded
+          const account = await Account.getOrCreate('testing', 'foo')
+          assert.equal('5.0000000', account.balance)
+          assert(spy.withArgs(cmd).calledOnce)
+          done()
+        })
+
         adapter.receiveWithdrawalRequest(cmd)
       })
     })
