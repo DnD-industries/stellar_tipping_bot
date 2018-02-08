@@ -130,7 +130,7 @@ module.exports = (db) => {
       /**
        *
        * @param stellar The adapter's config.stellar object, in most cases (except during testing)
-       * @param to {String} The oybkuc address to which the XLM is being withdrawn
+       * @param to {String} The wallet address to which the XLM is being withdrawn
        * @param withdrawalAmount {String|Big}
        * @param hash {String} A unique identifier for the withdrawal
        * @returns {Promise<*>}
@@ -141,7 +141,7 @@ module.exports = (db) => {
 
         return await Account.withinTransaction(async () => {
           if (!this.canPay(withdrawalAmount)) {
-            throw new Error('Unsufficient balance. Always check with `canPay` before withdrawing money!')
+            throw 'Insufficient balance. Always check with `canPay` before withdrawing money!'
           }
           const sourceBalance = new Big(this.balance)
           const amount = new Big(withdrawalAmount)

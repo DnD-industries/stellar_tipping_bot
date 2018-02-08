@@ -1,20 +1,27 @@
 const assert = require('assert')
 const sinon = require('sinon')
-
+const Big = require('big.js')
 
 describe('models / account', async () => {
 
   let Account
   let Transaction
   let Action
+  let Stellar
   let account
   let accountWithWallet
 
   beforeEach(async () => {
-    const config = await require('./setup')()
+    let config = await require('./setup')()
+
     Account = config.models.account
     Transaction = config.models.transaction
     Action = config.models.action
+    Stellar = {
+      createTransaction : function() {},
+      send : function() {},
+      address : process.env.STELLAR_PUBLIC_KEY
+    }
 
     account = await Account.createAsync({
       adapter: 'reddit',
@@ -130,6 +137,19 @@ describe('models / account', async () => {
       account.setWalletAddress(desiredWalletAddress).catch (e => {
         done()
       })
+    })
+  })
+
+  describe('withdraw', () => {
+    it ('should throw an error if the user cannot pay', async () => {
+      let withdrawalAmount = (parseFloat(accountWithWallet.balance) + 0.0000001).toString()
+      try {
+        await account.withdraw(Stellar, accountWithWallet.walletAddress, new Big(withdrawalAmount), "hash12345")
+        assert(false, "Should have fallen into catch")
+      } catch (e) {
+        assert.equal(e, 'Insufficient balance. Always check with `canPay` before withdrawing money!')
+      }
+
     })
   })
 
