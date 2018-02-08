@@ -144,12 +144,30 @@ describe('models / account', async () => {
     it ('should throw an error if the user cannot pay', async () => {
       let withdrawalAmount = (parseFloat(accountWithWallet.balance) + 0.0000001).toString()
       try {
-        await account.withdraw(Stellar, accountWithWallet.walletAddress, new Big(withdrawalAmount), "hash12345")
+        await accountWithWallet.withdraw(Stellar, accountWithWallet.walletAddress, new Big(withdrawalAmount), "hash12345")
         assert(false, "Should have fallen into catch")
       } catch (e) {
         assert.equal(e, 'Insufficient balance. Always check with `canPay` before withdrawing money!')
       }
+    })
 
+    it ('should throw an error if a transaction with that hash already exists. Account`s balance should not change', async () => {
+      let startingBalance = accountWithWallet.balance
+      let withdrawalAmount = accountWithWallet.balance
+      // mock
+      let MockTransaction =
+      {
+        existsAsync: () => {
+          return true;
+        }
+      }
+      try {
+        await account.withdraw(Stellar, accountWithWallet.walletAddress, new Big(withdrawalAmount), "hash12345", MockTransaction)
+        assert(false, "Should have fallen into catch")
+      } catch (e) {
+        assert.equal(e, 'DUPLICATE_WITHDRAWAL')
+        assert.equal(accountWithWallet.balance, startingBalance)
+      }
     })
   })
 

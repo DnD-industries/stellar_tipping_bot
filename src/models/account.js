@@ -125,18 +125,15 @@ module.exports = (db) => {
        *
        * Should return response body from transaction send
        * See: https://www.stellar.org/developers/horizon/reference/endpoints/transactions-create.html
-       */
-
-      /**
        *
        * @param stellar The adapter's config.stellar object, in most cases (except during testing)
        * @param to {String} The wallet address to which the XLM is being withdrawn
        * @param withdrawalAmount {String|Big}
        * @param hash {String} A unique identifier for the withdrawal
+       * @param Transaction {Transaction} The Transaction model interface. A substitute should really only be passed in during tests
        * @returns {Promise<*>}
        */
-      withdraw: async function (stellar, to, withdrawalAmount, hash) {
-        const Transaction = db.models.transaction
+      withdraw: async function (stellar, to, withdrawalAmount, hash, Transaction = db.models.transaction) {
         const Action = db.models.action
 
         return await Account.withinTransaction(async () => {
