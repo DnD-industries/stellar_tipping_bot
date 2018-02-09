@@ -92,7 +92,8 @@ class SlackServer {
     });
 
     app.post('/slack/interactive', async function (req, res) {
-      res.send(`Button touched. Payload: ${JSON.stringify(req, null, 2)}`)
+      console.log(`Button touched. Payload: ${JSON.stringify(req, null, 2)}`)
+      res.send(`Button touched`)
     })
 
     /**
