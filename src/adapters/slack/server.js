@@ -91,6 +91,10 @@ class SlackServer {
       }        
     });
 
+    app.post('/slack/interactive', async function (req, res) {
+      res.send(`Button touched. Payload: ${JSON.stringify(req, null, 2)}`)
+    })
+
     /**
      * Set up how /tip command should be dealt with
      */
