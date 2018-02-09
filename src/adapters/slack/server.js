@@ -196,9 +196,17 @@ class SlackServer {
       }
     } else {
       //If this is a GET request, use the query token, otherwise look for it in the body
+      let token = req.method === "GET" ? req.query.token : req.body.token);
       // NOTE that the /slack/interactive POST calls we receive are formatted slightly differently for some reason.
       // Instead of everything being at the req.body level it's at the req.body.payload level. No idea why, just how Slack implemented it.
-      let token = req.method === "GET" ? req.query.token : (req.body.payload ? req.body.payload.token : req.body.token);
+      if(req.body.payload) {
+        console.log("\n\n\n\n")
+        let theObj = JSON.parse(req.body)
+        if(!theObj) {
+          console.log("Failed to make the payload object")
+        }
+        token = JSON.parse(req.body.payload).token
+      }
       //With the proper validation token from Slack, route the request accordingly.
       //Otherwise reply with a 401 status code
       token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
