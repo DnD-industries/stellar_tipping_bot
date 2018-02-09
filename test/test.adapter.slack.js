@@ -88,7 +88,7 @@ describe('slackAdapter', async () => {
       adapter: 'testing',
       uniqueId: 'team.foo',
       balance: '100.0000000',
-      hasAcceptedTerms: 'true',
+      hasAcceptedTerms: true,
       walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB'
     });
 
