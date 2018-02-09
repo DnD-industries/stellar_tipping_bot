@@ -21,7 +21,8 @@ module.exports = (db) => {
       createdAt: String,
       updatedAt: String,
       balance: String,
-      walletAddress: String // THIS IS A PUBLIC KEY, NOT THE SECRET KEY. DO NOT STORE USERS' SECRET KEYS EVER
+      walletAddress: String, // THIS IS A PUBLIC KEY, NOT THE SECRET KEY. DO NOT STORE USERS' SECRET KEYS EVER
+      hasAcceptedTerms: Boolean
     }, {
 
     methods: {
