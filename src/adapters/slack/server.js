@@ -201,7 +201,7 @@ class SlackServer {
       // Instead of everything being at the req.body level it's at the req.body.payload level. No idea why, just how Slack implemented it.
       if(req.body.payload) {
         console.log("\n\n\n\n")
-        let theObj = req.body
+        let theObj = JSON.parse(req.body.payload)
         if(!theObj) {
           console.log("Failed to make the payload object")
         }
