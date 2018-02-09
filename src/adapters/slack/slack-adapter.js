@@ -297,9 +297,9 @@ class Slack extends Adapter {
     // Use !! to hard convert to boolean
     this.getLogger().CommandEvents.onInfoRequest(cmd, !!account.walletAddress)
     if(!account.walletAddress) {
-      return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
+      return `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
     } else {
-      return `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`
+      return `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`
     }
   }
 
