@@ -207,7 +207,7 @@ class SlackServer {
         if(!theObj) {
           console.log("Failed to make the payload object")
         }
-        token = req.body.payload.token
+        token = JSON.stringify(req.body).payload.token
         console.log(`Payload is ${JSON.stringify(payload)}`)
         console.log(`Token is ${token}`)
       }
