@@ -224,6 +224,10 @@ module.exports = (db) => {
           }
         }
 
+        if(!this.hasAcceptedTerms) {
+          this.hasAcceptedTerms = false
+        }
+
         if (!this.createdAt) {
           this.createdAt = now.toISOString()
         }
