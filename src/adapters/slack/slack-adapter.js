@@ -233,26 +233,69 @@ class Slack extends Adapter {
       return this.onRegistrationSameAsExistingWallet(usersExistingWallet)
     }
 
-    // Check to see if a user already exists with that wallet
+    // Check to see if a user already exists with that wallet. If they do, send a message back to the user about it.
     const userWithWalletId = await this.Account.userForWalletAddress(command.walletPublicKey)
     if(userWithWalletId) {
       this.getLogger().CommandEvents.onRegisteredWithWalletRegisteredToOtherUser(command, userWithWalletId)
       return this.onRegistrationOtherUserHasRegisteredWallet(command.walletPublicKey)
     }
 
-    // In both remaining cases, we save the new wallet
-    const account = await this.Account.getOrCreate(command.adapter, command.sourceId)
-    await account.setWalletAddress(command.walletPublicKey)
-
-    // If we replaced an old wallet, send the appropriate message
+    // In the case where we are replacing an old wallet, we go ahead and replace it immediately
     if (usersExistingWallet) {
+      const account = await this.Account.getOrCreate(command.adapter, command.sourceId)
+      await account.setWalletAddress(command.walletPublicKey)
       this.getLogger().CommandEvents.onRegisteredSuccessfully(command, false)
       return this.onRegistrationReplacedOldWallet(usersExistingWallet, command.walletPublicKey)
-    } else {
-      // Otherwise, we've simply saved the user's first wallet
-      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, true)
-      return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
     }
+
+    // Otherwise, we send them a terms confirmation message. Final registration is handled using callbacks from button pushes on that message. See server.js
+    this.getLogger().CommandEvents.onRegistrationSentTermsAgreement(command)
+    return this.getTermsAgreement(command)
+
+    // If we replaced an old wallet, send the appropriate message
+    //  else {
+    //   // Otherwise, we've simply saved the user's first wallet
+    //   this.getLogger().CommandEvents.onRegisteredSuccessfully(command, true)
+    //   return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
+    // }
+  }
+
+
+  /**
+   * Returns a JSON payload
+   *
+   * @param registrationCommand {Register}
+   * @returns {Promise<string>}
+   */
+  getTermsAgreement(registrationCommand) {
+    return JSON.parse('{\n' +
+        '    "text": "Do you understand you could lose all your deposits?",\n' +
+        '    "attachments": [\n' +
+        '        {\n' +
+        '            "text": "You should not put anything in this bot that you can\'t afford to lose!\\nHere are just a few things that could result in you losing your XLM.\\n1) Our servers get hacked.\\n2) We run away with everything.\\n3) Our code is exploited.",\n' +
+        '            "fallback": "You are unable to choose a game",\n' +
+        '            "callback_id": "terms_agreement",\n' +
+        '            "color": "#00CC00",\n' +
+        '            "attachment_type": "default",\n' +
+        '            "actions": [\n' +
+        '                {\n' +
+        '                    "name": "confirm",\n' +
+        '                    "text": "I Understand. Sign me up.",\n' +
+        '                    "style": "primary",\n' +
+        '                    "type": "button",\n' +
+        '                    "value": ' + `"${registrationCommand.walletPublicKey}"` + '\n' +
+        '                },\n' +
+        '                {\n' +
+        '                    "name": "cancel",\n' +
+        '                    "text": "Cancel sign up.",\n' +
+        '                    "style": "danger",\n' +
+        '                    "type": "button",\n' +
+        '                    "value": "false"\n' +
+        '                }\n' +
+        '            ]\n' +
+        '        }\n' +
+        '    ]\n' +
+        '}')
   }
 
   /**
