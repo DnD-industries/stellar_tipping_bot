@@ -35,7 +35,7 @@ class SlackCommandUtils {
                   amount = params[0];
                 }
                 address = params.length > 1 ? params[1] : null;
-                console.log(`Creating Command.Withdraw with amountn of ${amount}`);
+                console.log(`Creating Command.Withdraw with amount of ${amount}`);
                 command = new Command.Withdraw(adapter, sourceId, amount, address);
                 break;
             case "balance":
