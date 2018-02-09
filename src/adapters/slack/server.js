@@ -183,7 +183,9 @@ class SlackServer {
       console.log("Request received at:", Date.now());
       console.log("Request path:",req.path);
       console.log("Headers:", JSON.stringify(req.headers));
-      console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
+      // console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
+
+      console.log("\n\n" + JSON.stringify(req.body))
     }
 
     //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
