@@ -205,7 +205,7 @@ class SlackServer {
         if(!theObj) {
           console.log("Failed to make the payload object")
         }
-        token = JSON.parse(req.body.payload).token
+        token = req.body.payload.token
       }
       //With the proper validation token from Slack, route the request accordingly.
       //Otherwise reply with a 401 status code
