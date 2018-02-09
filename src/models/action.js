@@ -7,7 +7,7 @@ module.exports = (db) => {
    * A generic action
    */
   const Action = db.define('action', {
-      type: ['withdrawal', 'deposit', 'transfer', 'refund'],
+      type: ['withdrawal', 'deposit', 'transfer', 'refund', 'tipdevelopers'],
       amount: String,
       address: String,
       hash: String,

@@ -13,7 +13,7 @@ module.exports = (db) => {
       target: String,
       cursor: String,
       memoId: String,
-      type: ['deposit', 'withdrawal', 'refund'],
+      type: ['deposit', 'withdrawal', 'refund', 'developer_tip'],
       createdAt: String,
       amount: String,
       asset: String,
