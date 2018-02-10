@@ -183,7 +183,7 @@ class SlackServer {
       console.log("Request received at:", Date.now());
       console.log("Request path:",req.path);
       console.log("Headers:", JSON.stringify(req.headers));
-      // console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
+      console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
 
       console.log("\n\n" + JSON.stringify(req.body))
     }
@@ -207,7 +207,9 @@ class SlackServer {
         if(!theObj) {
           console.log("Failed to make the payload object")
         }
-        token = JSON.stringify(req.body).payload.token
+        console.log("Req body: " + req.body)
+
+        token = req.body.payload.token
         console.log(`Payload is ${JSON.stringify(payload)}`)
         console.log(`Token is ${token}`)
       }
