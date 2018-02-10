@@ -5,38 +5,6 @@ const sinon = require('sinon')
 const Utils = require('../src/utils')
 const Logger = require('../src/loggers/abstract-logger')
 
-const termsMessage = function(regCmd) {
-  return JSON.parse('{\n' +
-  '    "text": "Do you understand you could lose all your deposits?",\n' +
-  '    "attachments": [\n' +
-  '        {\n' +
-  '            "text": "You should not put anything in this bot that you can\'t afford to lose!\\nHere are just a few things that could result in you losing your XLM.\\n1) Our servers get hacked.\\n2) We run away with everything.\\n3) Our code is exploited.",\n' +
-  '            "fallback": "You are unable to choose a game",\n' +
-  '            "callback_id": "terms_agreement",\n' +
-  '            "color": "#00CC00",\n' +
-  '            "attachment_type": "default",\n' +
-  '            "actions": [\n' +
-  '                {\n' +
-  '                    "name": "confirm",\n' +
-  '                    "text": "I Understand. Sign me up.",\n' +
-  '                    "style": "primary",\n' +
-  '                    "type": "button",\n' +
-  '                    "value": ' + JSON.stringify(regCmd) + '\n' +
-  '                },\n' +
-  '                {\n' +
-  '                    "name": "cancel",\n' +
-  '                    "text": "Cancel sign up.",\n' +
-  '                    "style": "danger",\n' +
-  '                    "type": "button",\n' +
-  '                    "value": "false"\n' +
-  '                }\n' +
-  '            ]\n' +
-  '        }\n' +
-  '    ]\n' +
-  '}');
-}
-
-
 describe('slackAdapter', async () => {
 
   let slackAdapter;
@@ -120,7 +88,6 @@ describe('slackAdapter', async () => {
       assert.equal(cmd.type, generatedCommand.type, "Terms generation should attach the serialized command object")
   })
 
-
   })
   describe('handle registration request', () => {
 
@@ -177,7 +144,7 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
       var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegistrationSentTermsAgreement")
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `${termsMessage(desiredWalletAddress)}`);
+      assert.equal(returnedValue, `${slackAdapter.getTermsAgreement(msg)}`);
       assert(spy.withArgs(msg).calledOnce)
     })
 
