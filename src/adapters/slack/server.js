@@ -211,6 +211,8 @@ class SlackServer {
 
         let payload = JSON.parse(req.body.payload);
         console.log(`Payload is ${payload}`)
+        console.log(`TeamID: ${payload.team.id}`)
+        console.log(`UserID: ${payload.user.id}`)
         token = payload.token
         console.log(`Token is ${token}`)
 
