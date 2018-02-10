@@ -22,7 +22,7 @@ git_fetch_reset () {
 }
 
 #Performs a docker-compose pull and up on the app
-#Args:
+#Args: 
 #$1: middle sub_name of second docker-compose file to merge with the top level docker-compose.yml file.
 docker-compose_pull_up () {
     docker-compose -f docker-compose.$1.yml pull app && docker-compose -f docker-compose.yml -f docker-compose.$1.yml up -d app
