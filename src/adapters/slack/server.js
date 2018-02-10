@@ -7,6 +7,7 @@ const slackClient   = require('./slack-client');
 const SlackAdapter  = require('../slack/slack-adapter');
 const CommandQueue  = require('./slack-command-queue');
 const request       = require('request-promise');
+const Command       = require('../commands/command')
 const redis         = require('redis');
 //Redis consts
 const MESSAGE_FLUSH_INTERVAL = 1; // milliseconds
@@ -92,6 +93,15 @@ class SlackServer {
     });
 
     app.post('/slack/interactive', async function (req, res) {
+      let payload = JSON.parse(req.body.payload)
+      try {
+        let registrationCommand = Command.Deserialize(JSON.stringify(payload.actions[0].value))
+        console.log("Created registration command!")
+        console.log(registrationCommand.serialize())
+      } catch (e) {
+        console.log("Error when getting registration command");
+        console.log(`${JSON.stringify(e)}`)
+      }
       res.send(`Button touched`)
     })
 
