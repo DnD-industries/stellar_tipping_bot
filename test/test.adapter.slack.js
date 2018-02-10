@@ -82,7 +82,7 @@ describe('slackAdapter', async () => {
       let cmd = new Command.Register(adapter, userId, walletAddress)
       let terms = slackAdapter.getTermsAgreement(cmd)
       let payload = terms.attachments[0].actions[0].value
-      let generatedCommand = Command.Deserialize(JSON.stringify(payload))
+      let generatedCommand = Command.Deserialize(payload)
       assert.equal(cmd.walletPublicKey, generatedCommand.walletPublicKey, "Terms generation should attach the serialized command object")
       assert.equal(cmd.adapter, generatedCommand.adapter, "Terms generation should attach the serialized command object")
       assert.equal(cmd.type, generatedCommand.type, "Terms generation should attach the serialized command object")

@@ -286,7 +286,7 @@ class Slack extends Adapter {
         '                    "text": "I Understand. Sign me up.",\n' +
         '                    "style": "primary",\n' +
         '                    "type": "button",\n' +
-        '                    "value": ' + `${registrationCommand.serialize()}` + '\n' +
+        '                    "value": ' + `${JSON.stringify(registrationCommand.serialize())}` + '\n' +
         '                },\n' +
         '                {\n' +
         '                    "name": "cancel",\n' +
@@ -300,6 +300,7 @@ class Slack extends Adapter {
         '    ]\n' +
         '}')
   }
+
 
   /**
    *

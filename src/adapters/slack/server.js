@@ -95,7 +95,7 @@ class SlackServer {
     app.post('/slack/interactive', async function (req, res) {
       let payload = JSON.parse(req.body.payload)
       try {
-        let registrationCommand = Command.Deserialize(JSON.stringify(payload.actions[0].value))
+        let registrationCommand = Command.Deserialize(payload.actions[0].value)
         console.log("Created registration command!")
         console.log(registrationCommand.serialize())
       } catch (e) {
