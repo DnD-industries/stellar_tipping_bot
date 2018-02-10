@@ -25,7 +25,7 @@ git_fetch_reset () {
 #Args:
 #$1: middle sub_name of second docker-compose file to merge with the top level docker-compose.yml file.
 docker-compose_pull_up () {
-    docker-compose -f docker-compose.yml -f docker-compose.$1.yml pull app && docker-compose -f docker-compose.yml -f docker-compose.$1.yml up -d app
+    docker-compose -f docker-compose.$1.yml pull app && docker-compose -f docker-compose.yml -f docker-compose.$1.yml up -d app
 }
 
 #Removes the prefix in a tag, $1, specified by $2
@@ -40,27 +40,25 @@ remove_tag_prefix () {
     echo "Tag with prefix removed: ${PREFIX_REMOVED_TAG}"
 }
 
-#Needs to be set in /etc/environment to be available outside of just terminal sessions
-echo "STELLARBOT_PATH: "$STELLARBOT_PATH
 echo "TAG: "$TAG
 
 #Check the tag is not "latest"
 if !( echo $TAG | grep -q "latest" ) ; then
-    #Change our path to the relative path where our stellar bot docker-compose.yml resides
-    cd $STELLARBOT_PATH
-    #Change our path back
-    #cd -
     #Validate that our tag is from master or staging
     if echo "$TAG" | grep -q "master"; then
+        #Change our path to the relative absolute where our stellar bot docker-compose.yml resides
+        cd $STELLARBOT_MASTER_PATH #Needs to be set in /etc/environment to be available outside of just terminal sessions
         #Set our env variable for the master tag to $TAG, and remove the prefix, storing in $PREFIX_REMOVED_TAG
         remove_tag_prefix $TAG "master_"
-        export STELLARBOT_MASTER_TAG=$TAG
+        export STELLARBOT_MASTER_TAG=$TAG #Needs to be set in /etc/environment to be available outside of just terminal sessions
         git_fetch_reset "master" $PREFIX_REMOVED_TAG
         docker-compose_pull_up "master"     
     elif echo "$TAG" | grep -q "staging"; then
+        #Change our path to the relative absolute where our stellar bot docker-compose.yml resides
+        cd $STELLARBOT_STAGING_PATH #Needs to be set in /etc/environment to be available outside of just terminal sessions
         #Set our env variable for the staging tag to $TAG, and remove the prefix, storing in $PREFIX_REMOVED_TAG
         remove_tag_prefix $TAG "staging_"    
-        export STELLARBOT_STAGING_TAG=$TAG
+        export STELLARBOT_STAGING_TAG=$TAG 
         git_fetch_reset "staging" $PREFIX_REMOVED_TAG
         docker-compose_pull_up "staging"
     else     
