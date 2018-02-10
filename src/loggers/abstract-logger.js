@@ -119,6 +119,10 @@ class Logger {
 
       onRegisteredSuccessfully(registration, isFirstRegistration) {
 
+      },
+
+      onRegistrationSentTermsAgreement(registration) {
+
       }
     }
   }

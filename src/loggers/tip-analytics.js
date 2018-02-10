@@ -165,6 +165,11 @@ class TipAnalytics extends AbstractLogger {
           isFirstRegistration: isFirstRegistration
         })
         if(mixpanel) mixpanel.track('registration success', data)
+      },
+
+      onRegistrationSentTermsAgreement(registration) {
+        let data = TipAnalytics.getRegistrationAnalyticsBase(registration)
+        if(mixpanel) mixpanel.track('registration sent terms agreement', data)
       }
     }
   }

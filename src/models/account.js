@@ -21,7 +21,8 @@ module.exports = (db) => {
       createdAt: String,
       updatedAt: String,
       balance: String,
-      walletAddress: String // THIS IS A PUBLIC KEY, NOT THE SECRET KEY. DO NOT STORE USERS' SECRET KEYS EVER
+      walletAddress: String, // THIS IS A PUBLIC KEY, NOT THE SECRET KEY. DO NOT STORE USERS' SECRET KEYS EVER
+      hasAcceptedTerms: Boolean
     }, {
 
     methods: {
@@ -221,6 +222,10 @@ module.exports = (db) => {
             this.walletAddress = null
             return Promise.reject(new Error('BAD_PUBLIC_WALLET_ADDRESS'))
           }
+        }
+
+        if(!this.hasAcceptedTerms) {
+          this.hasAcceptedTerms = false
         }
 
         if (!this.createdAt) {

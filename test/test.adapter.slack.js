@@ -5,7 +5,6 @@ const sinon = require('sinon')
 const Utils = require('../src/utils')
 const Logger = require('../src/loggers/abstract-logger')
 
-
 describe('slackAdapter', async () => {
 
   let slackAdapter;
@@ -57,6 +56,7 @@ describe('slackAdapter', async () => {
       adapter: 'testing',
       uniqueId: 'team.foo',
       balance: '100.0000000',
+      hasAcceptedTerms: true,
       walletAddress: 'GDTWLOWE34LFHN4Z3LCF2EGAMWK6IHVAFO65YYRX5TMTER4MHUJIWQKB'
     });
 
@@ -73,6 +73,22 @@ describe('slackAdapter', async () => {
     process.env.STELLAR_PUBLIC_KEY = stellarpubkey;
   })
 
+
+  describe('getTermsAgreement', () => {
+    it ('should attach the full serialized registration command as the value of the accept terms button', () => {
+      const walletAddress = 'walletAddress1230498123';
+      const adapter = 'testing'
+      const userId = 'someteam.someuserid'
+      let cmd = new Command.Register(adapter, userId, walletAddress)
+      let terms = slackAdapter.getTermsAgreement(cmd)
+      let payload = terms.attachments[0].actions[0].value
+      let generatedCommand = Command.Deserialize(payload)
+      assert.equal(cmd.walletPublicKey, generatedCommand.walletPublicKey, "Terms generation should attach the serialized command object")
+      assert.equal(cmd.adapter, generatedCommand.adapter, "Terms generation should attach the serialized command object")
+      assert.equal(cmd.type, generatedCommand.type, "Terms generation should attach the serialized command object")
+  })
+
+  })
   describe('handle registration request', () => {
 
     it ('should return a message to be sent back to the user if their wallet fails validation', async () => {
@@ -102,6 +118,15 @@ describe('slackAdapter', async () => {
       assert(spy.withArgs(msg, accountWithWallet).calledOnce)
     })
 
+    it ('should send a message back to the user if they are trying to register with the robot`s own wallet address', async () => {
+      process.env.STELLAR_PUBLIC_KEY = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+      let msg = new Command.Register('testing', 'newTeam.someNewUserId', process.env.STELLAR_PUBLIC_KEY)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredWithRobotsWalletAddress")
+      let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
+      assert.equal(returnedValue, `That is my address. You must register with your own address.`);
+      assert(spy.withArgs(msg).calledOnce)
+    })
+
     // TODO: Make sure this updates the 'updatedAt' value of the Account object
     it (`should overwrite the user's current wallet info if they have a preexisting wallet, and send an appropriate message`, async () => {
       const newWalletId = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN"
@@ -114,23 +139,23 @@ describe('slackAdapter', async () => {
       assert(spy.withArgs(msg, false).calledOnce)
     })
 
-    it ('should send a message back to the user if they are trying to register with the robot`s own wallet address', async () => {
-      process.env.STELLAR_PUBLIC_KEY = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
-      let msg = new Command.Register('testing', 'newTeam.someNewUserId', process.env.STELLAR_PUBLIC_KEY)
-      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredWithRobotsWalletAddress")
+    it ('should send the user the "terms" of usage if they have not already agreed to them', async () => {
+      const desiredWalletAddress = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+      let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegistrationSentTermsAgreement")
       let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `That is my address. You must register with your own address.`);
+      assert.equal(returnedValue, `${slackAdapter.getTermsAgreement(msg)}`);
       assert(spy.withArgs(msg).calledOnce)
     })
 
-    it ('should otherwise save the wallet info to the database for the user and return an appropriate message', async () => {
-      const desiredWalletAddress = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
-      let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
-      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
-      let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-      assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
-      assert(spy.withArgs(msg, true).calledOnce)
-    })
+    // it ('should otherwise save the wallet info to the database for the user and return an appropriate message', async () => {
+    //   const desiredWalletAddress = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+    //   let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
+    //   var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
+    //   let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
+    //   assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
+    //   assert(spy.withArgs(msg, true).calledOnce)
+    // })
   })
 
   describe(`handle withdrawal request`, () => {
@@ -330,7 +355,7 @@ describe('slackAdapter', async () => {
       var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onInfoRequest")
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
       assert(spy.withArgs(infoCommand, false).calledOnce)
-      assert.equal(returned, `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      assert.equal(returned, `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
 
     it(`should return the bot's wallet address and the GitHub url info if they are registered`, async () => {
@@ -341,7 +366,7 @@ describe('slackAdapter', async () => {
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
 
       assert(spy.withArgs(infoCommand, true).calledOnce)
-      assert.equal(returned, `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      assert.equal(returned, `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`)
     })
   })
 
