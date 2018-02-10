@@ -53,6 +53,7 @@ if !( echo $TAG | grep -q "latest" ) ; then
         export STELLARBOT_MASTER_TAG=$TAG #Needs to be set in /etc/environment to be available outside of just terminal sessions
         git_fetch_reset "master" $PREFIX_REMOVED_TAG
         docker-compose_pull_up "master"     
+        cp $STELLARBOT_MASTER_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
     elif echo "$TAG" | grep -q "staging"; then
         #Change our path to the relative absolute where our stellar bot docker-compose.yml resides
         cd $STELLARBOT_STAGING_PATH #Needs to be set in /etc/environment to be available outside of just terminal sessions
@@ -61,6 +62,8 @@ if !( echo $TAG | grep -q "latest" ) ; then
         export STELLARBOT_STAGING_TAG=$TAG 
         git_fetch_reset "staging" $PREFIX_REMOVED_TAG
         docker-compose_pull_up "staging"
+        #copy our script
+        cp $STELLARBOT_STAGING_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
     else     
         echo "NOT PULLING: staging or master not found in tag"
     fi
@@ -69,8 +72,6 @@ else
 fi
 
 sleep 1
-#copy our script
-cp $STELLARBOT_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
 
 exit
 }
