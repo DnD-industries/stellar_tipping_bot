@@ -189,6 +189,7 @@ class SlackServer {
     }
 
     //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
+    // TODO: Adopt this same convention for /slack/interactive
     if (req.method === "GET" && req.path === "/slack/oauth") {
       //Check for the presence of an authorization code
       if (req.query.code) {
@@ -209,9 +210,9 @@ class SlackServer {
         }
         // console.log("Req body: " + req.body)
 
-
-        console.log(`Payload is ${JSON.parse(req.body.payload)}`)
-        token = req.body.payload.token
+        let payload = JSON.parse(req.body.payload);
+        console.log(`Payload is ${payload}`)
+        token = payload.token
         console.log(`Token is ${token}`)
 
       }
