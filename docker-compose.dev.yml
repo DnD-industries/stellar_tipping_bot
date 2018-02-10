@@ -3,6 +3,8 @@ services:
   app:
     ports:
       - 5000:5000
+    volumes:
+      - ./:/usr/src/app/
   db:
     ports:
       - 5455:5432
