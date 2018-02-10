@@ -210,7 +210,7 @@ class SlackServer {
         console.log("Req body: " + req.body)
 
         token = req.body.payload.token
-        console.log(`Payload is ${JSON.stringify(payload)}`)
+        console.log(`Payload is ${JSON.stringify(req.body.payload)}`)
         console.log(`Token is ${token}`)
       }
       //With the proper validation token from Slack, route the request accordingly.
