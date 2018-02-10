@@ -207,7 +207,7 @@ class SlackServer {
         if(!theObj) {
           console.log("Failed to make the payload object")
         }
-        console.log("Req body: " + req.body)
+        // console.log("Req body: " + req.body)
 
 
         console.log(`Payload is ${JSON.parse(req.body.payload)}`)
