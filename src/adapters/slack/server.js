@@ -92,7 +92,6 @@ class SlackServer {
     });
 
     app.post('/slack/interactive', async function (req, res) {
-      console.log(`Button touched. Payload: ${JSON.stringify(req, null, 2)}`)
       res.send(`Button touched`)
     })
 
@@ -216,6 +215,7 @@ class SlackServer {
         console.log(`Token is ${token}`)
 
       }
+      console.log(`Token is ${token}`)
       //With the proper validation token from Slack, route the request accordingly.
       //Otherwise reply with a 401 status code
       token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
