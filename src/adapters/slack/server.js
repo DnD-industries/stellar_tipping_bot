@@ -93,16 +93,19 @@ class SlackServer {
     });
 
     app.post('/slack/interactive', async function (req, res) {
-      let payload = JSON.parse(req.body.payload)
       try {
-        let registrationCommand = Command.Deserialize(payload.actions[0].value)
-        console.log("Created registration command!")
-        console.log(registrationCommand.serialize())
-      } catch (e) {
+        let payload = JSON.parse(req.body.payload)
+        if (payload.actions[0].value == "false") {
+          res.send("We won't register you now. Feel free to register another time.")
+        } else {
+          let registrationCommand = Command.Deserialize(payload.actions[0].value)
+          res.send(await that.adapter.registerUser(registrationCommand))
+        }
+      }catch (e) {
         console.log("Error when getting registration command");
         console.log(`${JSON.stringify(e)}`)
+        res.status(401).send("There was an error. Please try again.")
       }
-      res.send(`Button touched`)
     })
 
     /**
