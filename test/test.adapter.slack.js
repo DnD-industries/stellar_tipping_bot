@@ -5,7 +5,7 @@ const sinon = require('sinon')
 const Utils = require('../src/utils')
 const Logger = require('../src/loggers/abstract-logger')
 
-const termsMessage = function(walletAddress) {
+const termsMessage = function(regCmd) {
   return JSON.parse('{\n' +
   '    "text": "Do you understand you could lose all your deposits?",\n' +
   '    "attachments": [\n' +
@@ -21,7 +21,7 @@ const termsMessage = function(walletAddress) {
   '                    "text": "I Understand. Sign me up.",\n' +
   '                    "style": "primary",\n' +
   '                    "type": "button",\n' +
-  '                    "value": ' + `"${walletAddress}"` + '\n' +
+  '                    "value": ' + JSON.stringify(regCmd) + '\n' +
   '                },\n' +
   '                {\n' +
   '                    "name": "cancel",\n' +
@@ -105,6 +105,23 @@ describe('slackAdapter', async () => {
     process.env.STELLAR_PUBLIC_KEY = stellarpubkey;
   })
 
+
+  describe('getTermsAgreement', () => {
+    it ('should attach the full serialized registration command as the value of the accept terms button', () => {
+      const walletAddress = 'walletAddress1230498123';
+      const adapter = 'testing'
+      const userId = 'someteam.someuserid'
+      let cmd = new Command.Register(adapter, userId, walletAddress)
+      let terms = slackAdapter.getTermsAgreement(cmd)
+      let payload = terms.attachments[0].actions[0].value
+      let generatedCommand = Command.Deserialize(JSON.stringify(payload))
+      assert.equal(cmd.walletPublicKey, generatedCommand.walletPublicKey, "Terms generation should attach the serialized command object")
+      assert.equal(cmd.adapter, generatedCommand.adapter, "Terms generation should attach the serialized command object")
+      assert.equal(cmd.type, generatedCommand.type, "Terms generation should attach the serialized command object")
+  })
+
+
+  })
   describe('handle registration request', () => {
 
     it ('should return a message to be sent back to the user if their wallet fails validation', async () => {

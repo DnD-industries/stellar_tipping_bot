@@ -224,7 +224,6 @@ class Slack extends Adapter {
       return `That is my address. You must register with your own address.`;
     }
 
-    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
     const usersExistingWallet = await this.Account.walletAddressForUser(command.adapter, command.sourceId)
 
     // If it's the same wallet, just send a message back
@@ -242,22 +241,26 @@ class Slack extends Adapter {
 
     // In the case where we are replacing an old wallet, we go ahead and replace it immediately
     if (usersExistingWallet) {
-      const account = await this.Account.getOrCreate(command.adapter, command.sourceId)
-      await account.setWalletAddress(command.walletPublicKey)
-      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, false)
-      return this.onRegistrationReplacedOldWallet(usersExistingWallet, command.walletPublicKey)
+      return this.registerUser(command)
     }
 
     // Otherwise, we send them a terms confirmation message. Final registration is handled using callbacks from button pushes on that message. See server.js
     this.getLogger().CommandEvents.onRegistrationSentTermsAgreement(command)
     return this.getTermsAgreement(command)
+  }
 
-    // If we replaced an old wallet, send the appropriate message
-    //  else {
-    //   // Otherwise, we've simply saved the user's first wallet
-    //   this.getLogger().CommandEvents.onRegisteredSuccessfully(command, true)
-    //   return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
-    // }
+  async registerUser(registrationCommand) {
+    const account = await this.Account.getOrCreate(registrationCommand.adapter, registrationCommand.sourceId)
+    const usersExistingWallet = await this.Account.walletAddressForUser(registrationCommand.adapter, registrationCommand.sourceId)
+    await account.setWalletAddress(registrationCommand.walletPublicKey)
+    // Not their first time registering a wallet
+    if(usersExistingWallet) {
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(registrationCommand, false)
+      return this.onRegistrationReplacedOldWallet(usersExistingWallet, registrationCommand.walletPublicKey)
+    } else {
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(registrationCommand, true)
+      return this.onRegistrationRegisteredFirstWallet(registrationCommand.walletPublicKey)
+    }
   }
 
 
@@ -283,7 +286,7 @@ class Slack extends Adapter {
         '                    "text": "I Understand. Sign me up.",\n' +
         '                    "style": "primary",\n' +
         '                    "type": "button",\n' +
-        '                    "value": ' + `"${registrationCommand.walletPublicKey}"` + '\n' +
+        '                    "value": ' + registrationCommand.serialize() + '\n' +
         '                },\n' +
         '                {\n' +
         '                    "name": "cancel",\n' +
