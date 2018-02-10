@@ -121,7 +121,7 @@ module.exports = (db) => {
        *
        * to should be a public address
        * withdrawalAmount can be a string or a Big
-       * hash should just be something unique - we use the msg id from reddit,
+       * hash should just be something unique
        * but a uuid4 or sth like that would work as well.
        *
        * Should return response body from transaction send

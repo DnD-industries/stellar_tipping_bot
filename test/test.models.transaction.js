@@ -13,88 +13,63 @@ describe('models / transaction', async () => {
   });
 
   describe('deposit', () => {
-    it ('should credit reddit deposits with proper memo to associated accounts', async () => {
+    it ('should credit deposits from known public wallet addresses to associated accounts', async () => {
       await Account.createAsync({
-        adapter: 'reddit',
+        adapter: 'slack',
         uniqueId: 'foo',
-        balance: '1.5000000'
+        balance: '1.5000000',
+        walletAddress: 'GAV3KFQ3NP5FFPBOMUACINRWSK2GPJUEUOIWO5R7GZSZVB5SCEHLLC7N'
       });
 
+      //'slack/foo' will not be recognized as a valid memo id string.
+      //The deposit should clear regardless.
       await Transaction.createAsync({
-            memoId: 'reddit/foo',
-            amount: '5.0000000',
-            createdAt: new Date('2018-01-01'),
-            asset: 'native',
-            cursor: 'token',
-            source: 'source',
-            target: 'target',
-            hash: 'hash',
-            type: 'deposit'
+        memoId: 'slack/foo',
+        amount: '5.0000000',
+        createdAt: new Date('2018-01-01'),
+        asset: 'native',
+        cursor: 'token',
+        source: 'GAV3KFQ3NP5FFPBOMUACINRWSK2GPJUEUOIWO5R7GZSZVB5SCEHLLC7N',
+        target: 'target',
+        hash: 'hash',
+        type: 'deposit'
       });
 
       await utils.sleep(100);
 
-      const acc = await Account.oneAsync({ adapter: 'reddit', uniqueId: 'foo'});
+      const acc = await Account.oneAsync({ adapter: 'slack', uniqueId: 'foo'});
       assert.equal('6.5000000', acc.balance);
 
       const txn = await Transaction.oneAsync({ hash: 'hash' });
       assert.ok(txn.credited);
-    })
-  });
-
-  it ('should credit deposits from known public wallet addresses to associated accounts', async () => {
-    await Account.createAsync({
-      adapter: 'slack',
-      uniqueId: 'foo',
-      balance: '1.5000000',
-      walletAddress: 'GAV3KFQ3NP5FFPBOMUACINRWSK2GPJUEUOIWO5R7GZSZVB5SCEHLLC7N'
     });
 
-    //'slack/foo' will not be recognized as a valid memo id string.
-    //The deposit should clear regardless.
-    await Transaction.createAsync({
-          memoId: 'slack/foo',
-          amount: '5.0000000',
-          createdAt: new Date('2018-01-01'),
-          asset: 'native',
-          cursor: 'token',
-          source: 'GAV3KFQ3NP5FFPBOMUACINRWSK2GPJUEUOIWO5R7GZSZVB5SCEHLLC7N',
-          target: 'target',
-          hash: 'hash',
-          type: 'deposit'
-    });
+    it ('should refund deposits from unknown public wallet addresses', (done) => {
+      Transaction.events.on('REFUND',  () => done());
 
-    await utils.sleep(100);
+      Account.createAsync({
+        adapter: 'testing',
+        uniqueId: 'foo',
+        balance: '1.5000000',
+        walletAddress: 'GCDPCA3F2FP7HHOUDMVWPZJK6GLBGCCHX5EAIM3JNFZTW6CP2IOP3OQ4'
+      });
 
-    const acc = await Account.oneAsync({ adapter: 'slack', uniqueId: 'foo'});
-    assert.equal('6.5000000', acc.balance);
-
-    const txn = await Transaction.oneAsync({ hash: 'hash' });
-    assert.ok(txn.credited);
-  });
-
-  it ('should refund deposits from unknown public wallet addresses', (done) => {
-    Transaction.events.on('REFUND',  () => done());
-    
-    Account.createAsync({
-      adapter: 'testing',
-      uniqueId: 'foo',
-      balance: '1.5000000',
-      walletAddress: 'GCDPCA3F2FP7HHOUDMVWPZJK6GLBGCCHX5EAIM3JNFZTW6CP2IOP3OQ4'
-    });
-
-    Transaction.createAsync({
-          memoId: '',
-          amount: '5.0000000',
-          createdAt: new Date('2018-01-01'),
-          asset: 'native',
-          cursor: 'token',
-          source: 'GC6ELROZMOANRK4E7RUCI2SKDY24EG2R6Z23F5AO3BIZDIKI5RMJAKI6',
-          target: 'target',
-          hash: 'hash',
-          type: 'deposit'
+      Transaction.createAsync({
+        memoId: '',
+        amount: '5.0000000',
+        createdAt: new Date('2018-01-01'),
+        asset: 'native',
+        cursor: 'token',
+        source: 'GC6ELROZMOANRK4E7RUCI2SKDY24EG2R6Z23F5AO3BIZDIKI5RMJAKI6',
+        target: 'target',
+        hash: 'hash',
+        type: 'deposit'
+      });
     });
   });
+
+
+
 
   describe('CLOSE_DEPOSITS flag', () => {
     it ('should not credit valid deposits when the CLOSE_DEPOSITS env variable is "true"', async () => {
