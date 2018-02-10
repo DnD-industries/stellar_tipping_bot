@@ -11,8 +11,7 @@ services:
     working_dir: /usr/src/app
     #stdin_open: true # necessary for a shell session inside the container
     #tty: true # shell session
-    ports:
-      - 5000:5000
+    ports: ['5000:5000']
     links:
       - db
       - redis
