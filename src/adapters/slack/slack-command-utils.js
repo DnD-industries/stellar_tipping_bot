@@ -31,9 +31,6 @@ class SlackCommandUtils {
                 break;
             case "withdraw":
                 amount = parseFloat(params[0]) || params[0]; // If we don't have a valid float, just include the info all the same for reference later on]
-                if(!amount) {
-                  amount = params[0];
-                }
                 address = params.length > 1 ? params[1] : null;
                 console.log(`Creating Command.Withdraw with amount of ${amount}`);
                 command = new Command.Withdraw(adapter, sourceId, amount, address);
@@ -43,6 +40,11 @@ class SlackCommandUtils {
                 break;
             case "info":
               command = new Command.Info(adapter, sourceId);
+              break;
+            case "tipdevelopers":
+              amount = parseFloat(params[0]) || params[0]; // If we don't have a valid float, just include the info all the same for reference later on]
+              console.log(`Creating Command.TipDevelopers with amount of ${amount}`);
+              command = new Command.TipDevelopers(adapter, sourceId, amount)
               break;
             default:
                 console.error("Unknown command type:", msg.command);
