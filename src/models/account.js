@@ -65,7 +65,7 @@ module.exports = (db) => {
           })
 
           if (exists) {
-            throw new 'DUPLICATE_TRANSFER'
+            throw 'DUPLICATE_TRANSFER'
           }
           await this.saveAsync()
           await targetAccount.saveAsync()
