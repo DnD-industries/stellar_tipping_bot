@@ -141,6 +141,20 @@ class SlackServer {
     });
 
     /**
+     * Set up how /withdraw command should be dealt with
+     */
+    app.post('/slack/tipdevelopers', async function (req, res) {
+      console.log('someone wants to tip the devs!');
+      console.log(JSON.stringify(req.body));
+      let msg = new slackMessage(req.body);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      that.CommandQueue.pushCommand(command);
+
+      res.send(REQUEST_BEING_PROCESSED);
+    });
+
+    /**
      * Set up how /register command should be dealt with
      */
     app.post('/slack/register', async function (req, res) {
