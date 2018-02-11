@@ -158,6 +158,17 @@ describe('slackAdapter', async () => {
     // })
   })
 
+  describe('register user', async () => {
+    it('should return an appropriate message if the user has not registered before, and log the event', async () => {
+      const desiredWalletAddress = 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
+      let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
+      var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
+      let returnedValue = await slackAdapter.registerUser(msg);
+      assert.equal(returnedValue, `${slackAdapter.onRegistrationRegisteredFirstWallet(msg.walletPublicKey)}`);
+      assert(spy.withArgs(msg, true).calledOnce)
+    })
+  })
+
   describe(`handle withdrawal request`, () => {
     it (`should not do the withdrawal and should return an appropriate message if the user is not registered`, async() => {
       let command = new Command.Withdraw('testing', accountWithoutWallet.uniqueId, 1)
