@@ -122,7 +122,7 @@ class SlackServer {
 
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      respondToCommand(command, res, that.adapter)
     });
 
 
@@ -149,10 +149,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      // Don't send immediately: We need to check the type first. If it's a string just send it. If it's JSON, set the content type
-      let toSend = await that.adapter.handleCommand(command)
-      configureRes(res, toSend)
-      res.send(toSend);
+      respondToCommand(command, res, that.adapter)
     });
 
     /**
@@ -164,7 +161,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      respondToCommand(command, res, that.adapter)
     });
 
     /**
@@ -174,9 +171,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      let toSend = await that.adapter.handleCommand(command)
-      configureRes(res, toSend)
-      res.send(toSend);
+      respondToCommand(command, res, that.adapter)
     });
 
 
@@ -245,6 +240,18 @@ class SlackServer {
   }
 }
 
+/**
+ *
+ * @param command {Command}
+ * @param res A response object
+ * @param adapter {SlackAdapter}
+ * @returns {Promise<void>}
+ */
+respondToCommand = async function(command, res, adapter) {
+  let toSend = await adapter.handleCommand(command)
+  configureRes(res, toSend)
+  res.send(toSend);
+}
 
 configureRes = function(res, toSend) {
   // Check if we're sending back a JSON object
