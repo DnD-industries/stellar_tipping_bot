@@ -325,13 +325,9 @@ class Slack extends Adapter {
   async receiveBalanceRequest (cmd) {
     console.log("in Receive balance request");
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
-    if(!account.walletAddress) {
-      this.getLogger().CommandEvents.onBalanceRequest(cmd, false)
-      return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
-    } else {
-      this.getLogger().CommandEvents.onBalanceRequest(cmd, true)
-      return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
-    }
+    let userIsRegistered = !!account.walletAddress
+    this.getLogger().CommandEvents.onBalanceRequest(cmd, userIsRegistered)
+    return this.getBalanceInfo(account)
   }
 
   /**
@@ -377,6 +373,53 @@ class Slack extends Adapter {
    */
   async getBotClientForUniqueId (uniqueId) {
     return await slackClient.botClientForUniqueId(uniqueId)
+  }
+
+
+  getBalanceInfo (account) {
+    let userIsRegistered = !!account.walletAddress
+    let obj = {
+      "attachments": [
+        {
+          "fallback": "Information about your balance.",
+          "color": "#36a64f",
+          "fields": []
+        }
+      ]
+    }
+    if (userIsRegistered) {
+      obj.attachments[0].fields = [
+        {
+          "title": "Your wallet address",
+          "value": account.walletAddress,
+          "short": false
+        },
+        {
+          "title": "Your balance",
+          "value": account.balance,
+          "short": true
+        },
+        {
+          "title": "To deposit, send XLM to",
+          "value": process.env.STELLAR_PUBLIC_KEY,
+          "short": false
+        },
+        {
+          "title": "To tip users",
+          "value": "Use the /tip command",
+          "short": false
+        }
+      ]
+    } else {
+      obj.attachments[0].fields = [
+        {
+          "title": "You must register to have a balance",
+          "value": "Use the /register command",
+          "short": false
+        }
+      ]
+    }
+    return obj;
   }
 
   getBotInfo (userIsRegistered) {

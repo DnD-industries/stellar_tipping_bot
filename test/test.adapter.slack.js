@@ -332,10 +332,14 @@ describe('slackAdapter', async () => {
   })
 
   describe('receive Balance Request', () => {
-    it('should return the user`s account balance and instructions on how to register if they are not registered', async () => {
+    it('should return instructions on how to register if the user is not registered', async () => {
+      process.env.STELLAR_PUBLIC_KEY = "pubKey123"
       let balanceCommand = new Command.Balance(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId, accountWithoutWallet.walletAddress)
       const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
-      assert.equal(returned, `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${accountWithoutWallet.balance}\'`)
+      let expected = slackAdapter.getBalanceInfo(accountWithoutWallet)
+      assert.equal(JSON.stringify(returned), JSON.stringify(expected))
+      assert(JSON.stringify(returned).includes(accountWithoutWallet.balance) == false)
+      assert(JSON.stringify(returned).includes(process.env.STELLAR_PUBLIC_KEY) == false)
     })
 
     it('should properly log a balance request if the user is not registered', async () => {
@@ -352,10 +356,15 @@ describe('slackAdapter', async () => {
       assert(spy.withArgs(balanceCommand, true).calledOnce)
     })
 
-    it(`should return the user's wallet address & account balance if they are registered`, async () => {
+    it(`should return the user's wallet address, account balance, and deposit info if they are registered`, async () => {
+      process.env.STELLAR_PUBLIC_KEY = "pubKey123"
       let balanceCommand = new Command.Balance(accountWithWallet.adapter, accountWithWallet.uniqueId, accountWithWallet.walletAddress)
       const returned = await slackAdapter.receiveBalanceRequest(balanceCommand)
-      assert.equal(returned, `Your wallet address is: \`${accountWithWallet.walletAddress}\`\nYour balance is: \'${accountWithWallet.balance}\'`)
+      let expected = slackAdapter.getBalanceInfo(accountWithWallet)
+      assert.equal(JSON.stringify(returned), JSON.stringify(expected))
+      assert(JSON.stringify(returned).includes(accountWithWallet.walletAddress) == true)
+      assert(JSON.stringify(returned).includes(accountWithWallet.balance) == true)
+      assert(JSON.stringify(returned).includes(process.env.STELLAR_PUBLIC_KEY) == true)
     })
   })
 
