@@ -186,6 +186,8 @@ class Slack extends Adapter {
       return this.receiveWithdrawalRequest(command);
     } else if (command instanceof Command.Info) {
       return this.receiveInfoRequest(command);
+    } else if (command instanceof Command.TipDevelopers) {
+      return this.receiveTipDevelopersRequest(command);
     }
   }
 

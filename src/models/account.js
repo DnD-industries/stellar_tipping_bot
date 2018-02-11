@@ -114,6 +114,73 @@ module.exports = (db) => {
         })
       },
 
+      tipDevelopers: async function (stellar, to, tipAmount, hash, Transaction = db.models.transaction) {
+        const Action = db.models.action
+
+        return await Account.withinTransaction(async () => {
+          if (!this.canPay(tipAmount)) {
+            throw 'Insufficient balance. Always check with `canPay` before tipping devs!'
+          }
+          const sourceBalance = new Big(this.balance)
+          const amount = new Big(tipAmount)
+          this.balance = sourceBalance.minus(amount).toFixed(7)
+          const refundBalance = new Big(this.balance)
+
+          const now = new Date()
+          const doc = {
+            memoId: 'Donation for tipping bot',
+            amount: amount.toFixed(7),
+            createdAt: now.toISOString(),
+            asset: 'native',
+            source: stellar.address,
+            target: to,
+            hash: hash,
+            type: 'developer_tip'
+          }
+          const txExists = await Transaction.existsAsync({
+            hash: hash,
+            type: 'developer_tip',
+            target: to
+          })
+
+          if (txExists) {
+            // Withdrawal already happened within a concurrent transaction, let's skip
+            this.balance = refundBalance.plus(amount).toFixed(7)
+            throw 'DUPLICATE_DEV_TIP'
+          }
+
+          let txSendResponse;
+
+          try {
+            const tx = await stellar.createTransaction(to, tipAmount.toFixed(7), hash)
+            txSendResponse = await stellar.send(tx)
+          } catch (exc) {
+            this.balance = refundBalance.plus(amount).toFixed(7)
+            throw exc
+          }
+
+          await this.saveAsync()
+          await Transaction.createAsync(doc)
+          try {
+            await Action.createAsync({
+              hash: hash,
+              type: 'developer_tip',
+              sourceaccount_id: this.id,
+              amount: amount.toFixed(7),
+              address: to
+            })
+
+            await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
+            console.log(`Send response: ${txSendResponse}`);
+            console.log(`Hash: ${hash}`);
+            return txSendResponse
+
+          } catch (e) {
+            console.log(e)
+          }
+        })
+      },
+
       /**
        * Withdraw money from the main account to the requested account by the user.
        *

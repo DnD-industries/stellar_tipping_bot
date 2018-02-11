@@ -89,6 +89,34 @@ class Logger {
 
       },
 
+      onTipDevsNoAddressProvided(withdrawal) {
+
+      },
+
+      onTipDevsDestinationAccountDoesNotExist(withdrawal) {
+
+      },
+
+      onTipDevsInsufficientBalance(withdrawal, balance) {
+
+      },
+
+      onTipDevsBadlyFormedAddress(withdrawal, badWalletAddress) {
+
+      },
+
+      onTipDevsSubmissionToHorizonFailed(withdrawal) {
+
+      },
+
+      onTipDevsInvalidAmountProvided(withdrawal) {
+
+      },
+
+      onTipDevsSuccess(withdrawal, address, txHash) {
+
+      },
+
       onDepositSuccess(sourceAccount, amount) {
 
       },

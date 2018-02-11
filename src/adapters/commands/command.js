@@ -82,6 +82,7 @@ class TipDevelopers extends Command {
     super(adapter, sourceId, hash);
     this.amount = amount;
     this.type = "tipdevelopers";
+    this.address = process.env.DEVELOPER_DONATION_WALLET
   }
 
   serialize() {

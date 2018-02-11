@@ -117,6 +117,43 @@ class TipAnalytics extends AbstractLogger {
         if(mixpanel) mixpanel.track('withdrawal success', data)
       },
 
+      onTipDevsNoAddressProvided(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs no address provided', data)
+      },
+
+      onTipDevsDestinationAccountDoesNotExist(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs destination account does not exist', data)
+      },
+
+      onTipDevsInsufficientBalance(withdrawal, balance) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs insufficient balance', data)
+      },
+
+      onTipDevsBadlyFormedAddress(withdrawal, badWalletAddress) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs no address provided', data)
+      },
+
+      onTipDevsSubmissionToHorizonFailed(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs submission to horizon failed', data)
+      },
+
+      onTipDevsInvalidAmountProvided(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs invalid amount', data)
+      },
+
+      onTipDevsSuccess(withdrawal, address, txHash) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        data.address = address
+        data.txHash = txHash
+        if(mixpanel) mixpanel.track('tipDevs success', data)
+      },
+
       onDepositSuccess(sourceAccount, amount) {
         let data = TipAnalytics.getAccountAnalyticsBase(sourceAccount)
         data.amount = amount
@@ -211,6 +248,18 @@ class TipAnalytics extends AbstractLogger {
     return Object.assign(TipAnalytics.getCommandAnalyticsBase(withdrawal), {
       amount: withdrawal.amount,
       address: withdrawal.address
+    })
+  }
+
+  /**
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {Object}
+   */
+  static getTipDevsAnalyticsBase(tipDevs) {
+    return Object.assign(TipAnalytics.getCommandAnalyticsBase(tipDevs), {
+      amount: tipDevs.amount,
+      address: tipDevs.address
     })
   }
 
