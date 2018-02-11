@@ -343,11 +343,7 @@ class Slack extends Adapter {
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
     // Use !! to hard convert to boolean
     this.getLogger().CommandEvents.onInfoRequest(cmd, !!account.walletAddress)
-    if(!account.walletAddress) {
-      return `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
-    } else {
-      return `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`
-    }
+    return this.getBotInfo(!!account.walletAddress)
   }
 
   async receiveNewAuthTokensForTeam (team, authToken, botToken) {
@@ -381,6 +377,43 @@ class Slack extends Adapter {
    */
   async getBotClientForUniqueId (uniqueId) {
     return await slackClient.botClientForUniqueId(uniqueId)
+  }
+
+  getBotInfo (userIsRegistered) {
+    let obj = {
+      "attachments": [{
+        "fallback": "Required plain-text summary of the attachment.",
+        "color": "#36a64f",
+        "title": "Bot Info",
+        "fields": [
+          {
+            "title": "Authors",
+            "value": "@dlohnes and @dbulnes",
+            "short": true
+          },
+          {
+            "title": "Source and License",
+            "value": "<" + process.env.GITHUB_URL + "|Github>",
+            "short": true
+          },
+          {
+            "title": "Disclaimer",
+            "value": "This bot is not affiliated with the Stellar Development Foundation in any official capacity.\nYou should keep no more funds in this bot than you can afford to lose.",
+            "short": false
+          }
+        ]
+      }]
+    }
+
+    if(userIsRegistered) {
+      // Add in the other field at array position 2
+      obj.attachments[0].fields.splice(2, 0, {
+        "title": "Send deposits to ",
+        "value": process.env.STELLAR_PUBLIC_KEY,
+        "short": false
+      })
+    }
+    return obj
   }
 
   constructor (config) {

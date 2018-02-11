@@ -349,24 +349,29 @@ describe('slackAdapter', async () => {
   })
 
   describe('receive Info Request', () => {
-    it('should return the GitHub page info and a standin for the stellar bot`s address if they are not registered', async () => {
+    it('should return a message with no mention of the stellar bot`s address if they are not registered', async () => {
       process.env.GITHUB_URL = 'testurl'
+      process.env.STELLAR_PUBLIC_KEY = 'pubkey1234'
       let infoCommand = new Command.Info(accountWithoutWallet.adapter, accountWithoutWallet.uniqueId)
       var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onInfoRequest")
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
       assert(spy.withArgs(infoCommand, false).calledOnce)
-      assert.equal(returned, `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      let expected = slackAdapter.getBotInfo(false)
+      assert.equal(JSON.stringify(returned), JSON.stringify(expected))
+      assert(JSON.stringify(returned).includes(process.env.GITHUB_URL))
+      assert.notEqual(JSON.stringify(returned).includes(process.env.STELLAR_PUBLIC_KEY), true)
     })
 
     it(`should return the bot's wallet address and the GitHub url info if they are registered`, async () => {
       process.env.GITHUB_URL = 'testurl'
-      process.env.STELLAR_PUBLIC_KEY = 'testpubkey'
+      process.env.STELLAR_PUBLIC_KEY = 'pubkey1234'
       let infoCommand = new Command.Info(accountWithWallet.adapter, accountWithWallet.uniqueId)
       var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onInfoRequest")
       const returned = await slackAdapter.receiveInfoRequest(infoCommand)
-
       assert(spy.withArgs(infoCommand, true).calledOnce)
-      assert.equal(returned, `NOTE: This bot is not run or controlled by the Stellar Development Foundation. It is a community created project.\n\nDeposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`)
+      let expected = slackAdapter.getBotInfo(true)
+      assert.equal(JSON.stringify(returned), JSON.stringify(expected))
+      assert(JSON.stringify(returned).includes(process.env.STELLAR_PUBLIC_KEY))
     })
   })
 
