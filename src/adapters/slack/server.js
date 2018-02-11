@@ -151,11 +151,7 @@ class SlackServer {
 
       // Don't send immediately: We need to check the type first. If it's a string just send it. If it's JSON, set the content type
       let toSend = await that.adapter.handleCommand(command)
-      // Check if we're sending back a JSON object
-      // See: https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript#8511350
-      if(toSend === Object(toSend)) {
-        res.set('Content-Type', 'application/json');
-      }
+      configureRes(res, toSend)
       res.send(toSend);
     });
 
@@ -178,7 +174,9 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      let toSend = await that.adapter.handleCommand(command)
+      configureRes(res, toSend)
+      res.send(toSend);
     });
 
 
@@ -244,6 +242,15 @@ class SlackServer {
 
   close(done){
     this.server.close(done);
+  }
+}
+
+
+configureRes = function(res, toSend) {
+  // Check if we're sending back a JSON object
+  // See: https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript#8511350
+  if(toSend === Object(toSend)) {
+    res.set('Content-Type', 'application/json');
   }
 }
 
