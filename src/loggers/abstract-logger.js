@@ -157,7 +157,7 @@ class Logger {
 
       },
 
-      onRefundFailed(transactionBeingRefunded) {
+      onRefundFailed(transactionBeingRefunded, exception) {
 
       }
 
