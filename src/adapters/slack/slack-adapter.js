@@ -166,6 +166,96 @@ class Slack extends Adapter {
     return `You withdrew \`${withdrawal.amount} XLM\` to your wallet at \`${address}\`\n\nYour transaction hash is \`${txHash}\`\nYou can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${txHash}`;
   }
 
+////
+
+
+  /**
+   *
+   * Called when the public key address you're trying to withdraw to doesn't exist
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsDestinationAccountDoesNotExist (tipDevs) {
+    // Override this or listen to events!
+    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   *
+   * Called when you try to withdraw with no address
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsNoAddressProvided (tipDevs) {
+    // Override this or listen to events!
+    return "Tip Devs no address provided: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   *
+   * Called when you try to make a withdraw with an invalid amount, such as "asdf"
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsInvalidAmountProvided (tipDevs) {
+    // Override this or listen to events!
+    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   *
+   * Called when the user does not have a high enough balance to complete their tipDevs.
+   * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
+   *
+   * @param tipDevs {TipDevelopers}
+   * @param balance {Number}
+   * @returns {String}
+   */
+  async onTipDevsFailedWithInsufficientBalance (tipDevs, balance) {
+    // Override this or listen to events!
+    return "Tip Devs failed with insufficient balance: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   * Called when, for any reason, we attempt to withdraw but sending the transaction to the Horizon server fails.
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsSubmissionFailed (tipDevs) {
+    // Override this or listen to events!
+    return "Tip Devs submission failed: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   *
+   * Called when you try to withdraw with any invalid address (should only occur when the address is provided as an additional argument / is not retreived directly from the Account db).
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {Promise<void>}
+   */
+  async onWithdrawal (withdrawal, address, txHash) {
+    // Override this or listen to events!
+    this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
+  }
+  /**
+   * Called on a successfull tipDevs
+   * @param tipDevs {TipDevelopers}
+   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {String}
+   */
+  async onTipDevs (tipDevs, address, txHash) {
+    // Override this or listen to events!
+    return `You tipped the devs ${tipDevs.amount}`
+  }
+
+  /////
+
+
+
+
   /**
    * Routes a command depending on its class to the appropriate function
    *
