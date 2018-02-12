@@ -151,7 +151,16 @@ class Logger {
 
       onRegistrationSentTermsAgreement(registration) {
 
+      },
+
+      onRefundSucceeded(transactionBeingRefunded) {
+
+      },
+
+      onRefundFailed(transactionBeingRefunded) {
+
       }
+
     }
   }
 

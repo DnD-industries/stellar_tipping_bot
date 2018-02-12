@@ -207,6 +207,16 @@ class TipAnalytics extends AbstractLogger {
       onRegistrationSentTermsAgreement(registration) {
         let data = TipAnalytics.getRegistrationAnalyticsBase(registration)
         if(mixpanel) mixpanel.track('registration sent terms agreement', data)
+      },
+
+      onRefundSucceeded(transactionBeingRefunded) {
+        let data = TipAnalytics.getTransactionAnalyticsBase(transactionBeingRefunded)
+        if(mixpanel) mixpanel.track('transaction refund succeeded', data)
+      },
+
+      onRefundFailed(transactionBeingRefunded) {
+        let data = TipAnalytics.getTransactionAnalyticsBase(transactionBeingRefunded)
+        if(mixpanel) mixpanel.track('transaction refund failed', data)
       }
     }
   }
@@ -301,6 +311,20 @@ class TipAnalytics extends AbstractLogger {
       account_createdAt: account.createdAt,
       account_balance: account.balance,
       account_address: account.walletAddress
+    }
+  }
+
+  static getTransactionAnalyticsBase(tx) {
+    return {
+      time: new Date(),
+      tx_target: tx.target,
+      tx_cursor: tx.cursor,
+      tx_memoId: tx.memoId,
+      tx_type: tx.type,
+      tx_amount: tx.amount,
+      tx_hash: tx.hash,
+      tx_credited: tx.credited,
+      tx_refunded: tx.refunded
     }
   }
 
