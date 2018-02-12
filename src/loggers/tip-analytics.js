@@ -235,7 +235,7 @@ class TipAnalytics extends AbstractLogger {
    */
   static getCommandAnalyticsBase(command) {
     return {
-      time: new Date().toISOString(),
+      time: new Date(),
       sourceId: command.uniqueId,
       adapter: command.adapter,
       hash: command.hash,
@@ -313,7 +313,7 @@ class TipAnalytics extends AbstractLogger {
 
   static getAccountAnalyticsBase(account) {
     return {
-      time: new Date().toISOString(),
+      time: new Date(),
       account_uniqueId: account.uniqueId,
       account_createdAt: account.createdAt,
       account_balance: account.balance,
@@ -323,7 +323,7 @@ class TipAnalytics extends AbstractLogger {
 
   static getTransactionAnalyticsBase(tx) {
     return {
-      time: new Date().toISOString(),
+      time: new Date(),
       tx_target: tx.target,
       tx_cursor: tx.cursor,
       tx_memoId: tx.memoId,
@@ -344,7 +344,7 @@ class TipAnalytics extends AbstractLogger {
    */
   static getOAuthAnalyticsBase(adapter, blob) {
     return Object.assign(blob, {
-      time: new Date().toISOString(),
+      time: new Date(),
       adapter: adapter
     })
   }
