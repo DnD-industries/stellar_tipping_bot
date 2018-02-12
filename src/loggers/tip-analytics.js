@@ -127,12 +127,12 @@ class TipAnalytics extends AbstractLogger {
         if(mixpanel) mixpanel.track('tipDevs destination account does not exist', data)
       },
 
-      onTipDevsInsufficientBalance(withdrawal, balance) {
+      onTipDevsInsufficientBalance(tipDevs, balance) {
         let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
         if(mixpanel) mixpanel.track('tipDevs insufficient balance', data)
       },
 
-      onTipDevsBadlyFormedAddress(withdrawal, badWalletAddress) {
+      onTipDevsBadlyFormedAddress(tipDevs, badWalletAddress) {
         let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
         if(mixpanel) mixpanel.track('tipDevs no address provided', data)
       },
