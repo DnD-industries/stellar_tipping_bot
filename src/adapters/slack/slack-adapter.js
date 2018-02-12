@@ -142,7 +142,7 @@ class Slack extends Adapter {
    * // TODO: Implement this
    */
   async onWithdrawalSubmissionFailed (withdrawal) {
-    this.emit('withdrawalSubmissionFailed ', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    return "Submission to horizon failed. There may be a problem with the Stellar network or Horizon. Try again later."
   }
 
   /**
@@ -187,7 +187,7 @@ class Slack extends Adapter {
    */
   async onTipDevsNoAddressProvided (tipDevs) {
     // Override this or listen to events!
-    return "Tip Devs no address provided: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    return "The developers have not registered their address. How silly of us!"
   }
 
   /**
@@ -213,17 +213,17 @@ class Slack extends Adapter {
    */
   async onTipDevsFailedWithInsufficientBalance (tipDevs, balance) {
     // Override this or listen to events!
-    return "Tip Devs failed with insufficient balance: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    return `You requested to send the developers \`${Utils.formatNumber(tipDevs.amount)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
   }
 
   /**
-   * Called when, for any reason, we attempt to withdraw but sending the transaction to the Horizon server fails.
+   * Called when, for any reason, we attempt to tip devs but sending the transaction to the Horizon server fails.
    * @param tipDevs {TipDevelopers}
    * @returns {String}
    */
   async onTipDevsSubmissionFailed (tipDevs) {
     // Override this or listen to events!
-    return "Tip Devs submission failed: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    return `Sending your transaction to Horizon failed. Please try again later.`;
   }
 
   /**
