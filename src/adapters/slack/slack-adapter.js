@@ -464,7 +464,7 @@ class Slack extends Adapter {
     let obj = {
       "attachments": [
         {
-          "text": "*Registered Successfully",
+          "text": "*Registered Successfully*",
           "fallback": "Registered successfully. Welcome to the tipping bot.",
           "color": "#36a64f",
           "fields": [
