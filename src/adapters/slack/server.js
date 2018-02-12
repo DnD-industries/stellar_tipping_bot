@@ -263,8 +263,14 @@ class SlackServer {
  * @returns {Promise<void>}
  */
 respondToCommand = async function(command, res, adapter) {
+  console.log("Responding:\n")
+  console.log(`Command:\n${JSON.stringify(command)}`)
+  console.log(`Res:\n${JSON.stringify(res)}`)
+  console.log(`Adapter:\n${JSON.stringify(adapter)}`)
   let toSend = await adapter.handleCommand(command)
   configureRes(res, toSend)
+  console.log("Sending response:\n")
+  console.log(`${JSON.stringify(toSend)}`)
   res.send(toSend);
 }
 
