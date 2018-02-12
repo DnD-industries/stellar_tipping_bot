@@ -230,17 +230,6 @@ class Slack extends Adapter {
   }
 
   /**
-   *
-   * Called when you try to withdraw with any invalid address (should only occur when the address is provided as an additional argument / is not retreived directly from the Account db).
-   *
-   * @param tipDevs {TipDevelopers}
-   * @returns {Promise<void>}
-   */
-  async onWithdrawal (withdrawal, address, txHash) {
-    // Override this or listen to events!
-    this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
-  }
-  /**
    * Called on a successfull tipDevs
    * @param tipDevs {TipDevelopers}
    * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
@@ -250,9 +239,6 @@ class Slack extends Adapter {
     // Override this or listen to events!
     return `You tipped the devs ${tipDevs.amount}`
   }
-
-  /////
-
 
 
 
