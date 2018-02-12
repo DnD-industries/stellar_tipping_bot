@@ -25,7 +25,7 @@ class SlackCommandUtils {
                 command = new Command.Register(adapter, sourceId, walletPublicKey);
                 break;
             case "tip":
-                targetId = msg.team_id + "." + this.extractUserIdFromCommand(params[0]);
+                targetId = msg.team_id + ":" + this.extractUserIdFromCommand(params[0]);
                 amount = parseFloat(params[1]);
                 command = new Command.Tip(adapter, sourceId, targetId, amount);
                 break;

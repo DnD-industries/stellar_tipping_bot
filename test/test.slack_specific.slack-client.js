@@ -62,7 +62,7 @@ describe('slack-message', async () => {
     it('should call itself again with just the slack user ID if it is originally called with a full uniqueID', async () => {
       let teamID = "T12345"
       let userID = "U67890"
-      let uniqueID = teamID + '.' + userID;
+      let uniqueID = teamID + ':' + userID;
       let spy = sinon.spy(client, "getDMIdForUser") // Spy on ourselves, retaining all original functionality
 
       try {
