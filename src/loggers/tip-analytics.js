@@ -147,7 +147,7 @@ class TipAnalytics extends AbstractLogger {
         if(mixpanel) mixpanel.track('tipDevs invalid amount', data)
       },
 
-      onTipDevsSuccess(withdrawal, address, txHash) {
+      onTipDevsSuccess(tipDevs, address, txHash) {
         let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
         data.address = address
         data.txHash = txHash

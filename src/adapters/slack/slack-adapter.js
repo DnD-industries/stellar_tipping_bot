@@ -166,9 +166,6 @@ class Slack extends Adapter {
     return `You withdrew \`${withdrawal.amount} XLM\` to your wallet at \`${address}\`\n\nYour transaction hash is \`${txHash}\`\nYou can validate the transaction at: ${process.env.STELLAR_TX_VIEWER_URL_BASE}/${txHash}`;
   }
 
-////
-
-
   /**
    *
    * Called when the public key address you're trying to withdraw to doesn't exist

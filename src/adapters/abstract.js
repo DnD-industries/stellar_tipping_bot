@@ -206,7 +206,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsDestinationAccountDoesNotExist (tipDevs) {
     // Override this or listen to events!
-    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    this.emit('tipDevsDestinationAccountDoesNotExist', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
   }
 
   /**
@@ -218,7 +218,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsNoAddressProvided (tipDevs) {
     // Override this or listen to events!
-    return "Tip Devs no address provided: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    this.emit('tipDevsNoAddressProvided', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
   }
 
   /**
@@ -230,7 +230,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsInvalidAmountProvided (tipDevs) {
     // Override this or listen to events!
-    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    this.emit('tipDevsInvalidAmountProvided', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
   }
 
   /**
@@ -244,7 +244,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsFailedWithInsufficientBalance (tipDevs, balance) {
     // Override this or listen to events!
-    return "Tip Devs failed with insufficient balance: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+    this.emit('tipDevsFailedWithInsufficientBalance', tipDevs.amount, balance);
   }
 
   /**
@@ -254,18 +254,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsSubmissionFailed (tipDevs) {
     // Override this or listen to events!
-    return "Tip Devs submission failed: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
-  }
-
-  /**
-   * Called on a successfull tipDevs
-   * @param tipDevs {TipDevelopers}
-   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
-   * @returns {String}
-   */
-  async onTipDevs (tipDevs, address, txHash) {
-    // Override this or listen to events!
-    return `You tipped the devs ${tipDevs.amount}`
+    this.emit('tipDevsSubmissionFailed', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
   }
 
   /**
@@ -278,6 +267,16 @@ class Adapter extends EventEmitter {
   async onWithdrawal (withdrawal, address, txHash) {
     // Override this or listen to events!
     this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
+  }
+  /**
+   * Called on a successfull tipDevs
+   * @param tipDevs {TipDevelopers}
+   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {String}
+   */
+  async onTipDevs (tipDevs, address, txHash) {
+    // Override this or listen to events!
+    this.emit('tipDevsSuccess', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash)
   }
 
   // *** +++ Registration related functions +
@@ -454,7 +453,7 @@ class Adapter extends EventEmitter {
    * otherwise will call the appropriate function on the adapter in the event that there is an insufficient balance or other issue.
    *
    * @param tipDevsRequest {TipDevelopers}
-   * @returns {String}
+   * @returns {Promise<void>}
    */
   async receiveTipDevelopersRequest (tipDevsRequest) {
     const adapter = tipDevsRequest.adapter;
@@ -463,8 +462,6 @@ class Adapter extends EventEmitter {
     const devsAddress = tipDevsRequest.address;
     const tipAmountRequested = tipDevsRequest.amount;
     let tipAmount;
-    console.log("\n\n\n\n\n\n\n\n\n\n\n\n")
-    console.log("In receiveTipDevelopersRequest")
     try {
       tipAmount = new Big(tipAmountRequested);
     } catch (e) {
@@ -476,14 +473,12 @@ class Adapter extends EventEmitter {
     const fixedAmount = tipAmount.toFixed(7);
 
     if(typeof devsAddress === 'undefined' || devsAddress === null) {
-      console.log("Devs address is undefined")
       this.getLogger().CommandEvents.onTipDevsNoAddressProvided(tipDevsRequest)
       return this.onTipDevsNoAddressProvided(tipDevsRequest);
     }
 
 
     if (!StellarSdk.StrKey.isValidEd25519PublicKey(devsAddress)) {
-      console.log("Devs address is invalid")
       this.getLogger().CommandEvents.onTipDevsBadlyFormedAddress(tipDevsRequest, devsAddress)
       return this.onTipDevsBadlyFormedAddress(tipDevsRequest);
     }
@@ -492,7 +487,6 @@ class Adapter extends EventEmitter {
     const target = await tipDevsRequest.getSourceAccount();
     // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(tipAmount)) {
-      console.log("Source can't pay")
       this.getLogger().CommandEvents.onTipDevsInsufficientBalance(tipDevsRequest, target.balance)
       return this.onTipDevsFailedWithInsufficientBalance(tipDevsRequest, target.balance);
     }
@@ -500,13 +494,9 @@ class Adapter extends EventEmitter {
     // Tip Developers
     try {
       // txHash is the hash from the stellar blockchain, not our internal hash
-      console.log("Trying to  do transaction");
       const txHash = await target.tipDevelopers(this.config.stellar, devsAddress, tipAmount, hash);
-      console.log("Should have gone through now")
       this.getLogger().CommandEvents.onTipDevsSuccess(tipDevsRequest, devsAddress, txHash)
-      let toReturn = this.onTipDevs(tipDevsRequest, devsAddress, txHash);
-      console.log("Should be returning: " + toReturn)
-      return toReturn
+      return this.onTipDevs(tipDevsRequest, devsAddress, txHash);
     } catch (exc) {
       if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
         this.getLogger().CommandEvents.onTipDevsDestinationAccountDoesNotExist(tipDevsRequest)
