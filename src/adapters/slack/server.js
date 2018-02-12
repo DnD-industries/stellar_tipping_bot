@@ -99,8 +99,9 @@ class SlackServer {
           res.send("We won't register you now. Feel free to register another time.")
         } else {
           let registrationCommand = Command.Deserialize(payload.actions[0].value)
-          // res.send(await that.adapter.registerUser(registrationCommand))
-          respondToCommand(registrationCommand, res, that.adapter)
+          let toSend = await that.adapter.registerUser(registrationCommand)
+          configureRes(res, toSend)
+          res.send(toSend);
           }
       }catch (e) {
         console.log("Error when getting registration command");
@@ -263,12 +264,8 @@ class SlackServer {
  * @returns {Promise<void>}
  */
 respondToCommand = async function(command, res, adapter) {
-  console.log("Responding:\n")
-  console.log(`Command:\n${JSON.stringify(command)}`)
   let toSend = await adapter.handleCommand(command)
   configureRes(res, toSend)
-  console.log("Sending response:\n")
-  console.log(`${JSON.stringify(toSend)}`)
   res.send(toSend);
 }
 
