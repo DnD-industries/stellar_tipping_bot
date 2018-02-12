@@ -17,9 +17,9 @@ Starry is a tipbot which allows Slack participants to send tips directly to othe
 If we nail the tipping functionality with time to spare, or even after the intial SBC deadline is reached, Starry can be improved in a multitude of ways in order to better serve the Stellar community.
 
 Starry could:
-  - Detect and field common questions, such as those about legacy Stellar accounts. 
-  - Interpret "/tip [@username] [amount][usd/cny/etc]" to mean sending XLM at the current market rate, utilizing APIs to detect current market rate and send accordingly, after confirming with user in Slack.
-  - Plenty of other ways I'm sure! Send your ideas in here or in GalacticTalk.
+   - Detect and field common questions, such as those about legacy Stellar accounts. 
+   - Interpret "/tip [@username] [amount][usd/cny/etc]" to mean sending XLM at the current market rate, utilizing APIs to detect current market rate and send accordingly, after confirming with user in Slack.
+   - Plenty of other ways I'm sure! Send your ideas in here or in GalacticTalk.
 
 ## Starry's Lunar origins
 Starry is a robot crazy about Stellar. Before coming to earth, Starry lived a solitary life on the moon. Though they had many hobbies - model building, playing piano, reading poetry - Starry longed for something which the gray and docile environs of the moon could not provide. Community!
