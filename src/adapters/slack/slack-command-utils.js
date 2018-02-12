@@ -41,7 +41,7 @@ class SlackCommandUtils {
             case "info":
               command = new Command.Info(adapter, sourceId);
               break;
-            case "tipdevelopers":
+            case "tip-developers":
               amount = parseFloat(params[0]) || params[0]; // If we don't have a valid float, just include the info all the same for reference later on]
               console.log(`Creating Command.TipDevelopers with amount of ${amount}`);
               command = new Command.TipDevelopers(adapter, sourceId, amount)
