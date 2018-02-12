@@ -464,6 +464,7 @@ class Adapter extends EventEmitter {
     let tipAmount;
     try {
       tipAmount = new Big(tipAmountRequested);
+      console.log("Set tip amount")
     } catch (e) {
       console.log(`Bad data fed to new Big() in Adapter::receiveTipDevelopersRequest()\n${JSON.stringify(e)}`);
       console.log(`Withdrawal request amount is ${tipAmountRequested}`);
@@ -487,6 +488,7 @@ class Adapter extends EventEmitter {
     const target = await tipDevsRequest.getSourceAccount();
     // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
     if (!target.canPay(tipAmount)) {
+      console.log("Insufficient balance dude")
       this.getLogger().CommandEvents.onTipDevsInsufficientBalance(tipDevsRequest, target.balance)
       return this.onTipDevsFailedWithInsufficientBalance(tipDevsRequest, target.balance);
     }
