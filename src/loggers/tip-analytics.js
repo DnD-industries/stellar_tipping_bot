@@ -236,6 +236,7 @@ class TipAnalytics extends AbstractLogger {
   static getCommandAnalyticsBase(command) {
     return {
       time: new Date(),
+      distinct_id: command.uniqueId,
       sourceId: command.uniqueId,
       adapter: command.adapter,
       hash: command.hash,
@@ -314,6 +315,7 @@ class TipAnalytics extends AbstractLogger {
   static getAccountAnalyticsBase(account) {
     return {
       time: new Date(),
+      distinct_id: account.uniqueId,
       account_uniqueId: account.uniqueId,
       account_createdAt: account.createdAt,
       account_balance: account.balance,
@@ -324,6 +326,7 @@ class TipAnalytics extends AbstractLogger {
   static getTransactionAnalyticsBase(tx) {
     return {
       time: new Date(),
+      distinct_id: tx.target,
       tx_target: tx.target,
       tx_cursor: tx.cursor,
       tx_memoId: tx.memoId,
