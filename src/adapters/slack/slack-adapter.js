@@ -344,8 +344,7 @@ class Slack extends Adapter {
    * @returns {Promise<string>}
    */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    let account = await Account.Singleton().userForWalletAddress()
-    return this.getBalanceInfo(account)
+    return this.getFirstTimeRegistrationMessage(walletAddress)
   }
 
 
@@ -460,6 +459,46 @@ class Slack extends Adapter {
     return await slackClient.botClientForUniqueId(uniqueId)
   }
 
+
+  getFirstTimeRegistrationMessage(walletAddress) {
+    let obj = {
+      "attachments": [
+        {
+          "text": "*Registered Successfully",
+          "fallback": "Registered successfully. Welcome to the tipping bot.",
+          "color": "#36a64f",
+          "fields": [
+            {
+              "title": "Your wallet address",
+              "value": walletAddress,
+              "short": false
+            },
+            {
+              "title": "To deposit, send XLM to",
+              "value": process.env.STELLAR_PUBLIC_KEY,
+              "short": false
+            },
+            {
+              "title": "To tip users",
+              "value": "Use the /tip command",
+              "short": false
+            },
+            {
+              "title": "To check your balance",
+              "value": "Use the /balance command",
+              "short": false
+            }
+            {
+              "title": "To withdraw",
+              "value": "Use the /withdraw command",
+              "short": false
+            }
+          ]
+        }
+      ]
+    }
+    return obj;
+  }
 
   getBalanceInfo (account) {
     let userIsRegistered = !!account.walletAddress

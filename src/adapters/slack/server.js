@@ -99,8 +99,9 @@ class SlackServer {
           res.send("We won't register you now. Feel free to register another time.")
         } else {
           let registrationCommand = Command.Deserialize(payload.actions[0].value)
-          res.send(await that.adapter.registerUser(registrationCommand))
-        }
+          // res.send(await that.adapter.registerUser(registrationCommand))
+          respondToCommand(registrationCommand, res, that.adapter)
+          }
       }catch (e) {
         console.log("Error when getting registration command");
         console.log(`${JSON.stringify(e)}`)
