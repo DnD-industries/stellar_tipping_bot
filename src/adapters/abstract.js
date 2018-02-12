@@ -272,11 +272,11 @@ class Adapter extends EventEmitter {
    * Called on a successfull tipDevs
    * @param tipDevs {TipDevelopers}
    * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
-   * @returns {Promise<void>}
+   * @returns {String}
    */
   async onTipDevs (tipDevs, address, txHash) {
     // Override this or listen to events!
-    this.emit('tipDevs', tipDevs.uniqueId, address, tipDevs.amount, tipDevs.hash);
+    return `You tipped the devs ${tipDevs.amount}`
   }
 
   // *** +++ Registration related functions +
