@@ -22,7 +22,7 @@ class SLMessage {
    * @returns {String} The UUID of this user, as defined by the format "[teamId].[userId]"
    */
   get uniqueUserID() {
-    return `${this.team_id}.${this.user_id}`;
+    return `${this.team_id}:${this.user_id}`;
   }
 }
 
