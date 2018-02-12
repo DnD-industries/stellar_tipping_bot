@@ -344,8 +344,56 @@ class Slack extends Adapter {
    * @returns {Promise<string>}
    */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    let account = await Account.Singleton().userForWalletAddress()
-    return this.getBalanceInfo(account)
+    return this.getFirstTimeRegistrationMessage(walletAddress)
+  }
+
+  getFirstTimeRegistrationMessage (walletAddress) {
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.\nThis bot is not affiliated with the Stellar Development Foundation. Please use /info command for disclaimer.`;
+
+    let obj = {
+      "attachments": [{
+        "fallback": "Required plain-text summary of the attachment.",
+        "color": "#36a64f",
+        "title": "Registered Successfully",
+        "fields": [
+          {
+            "title": "Your wallet address",
+            "value": walletAddress,
+            "short": false
+          },
+          {
+            "title": "To deposit, send XLM to",
+            "value": process.env.STELLAR_PUBLIC_KEY,
+            "short": false
+          },
+          {
+            "title": "To tip users",
+            "value": "Use the /tip command",
+            "short": false
+          },
+          {
+            "title": "To check your balance",
+            "value": "Use the /balance command",
+            "short": false
+          },
+          {
+            "title": "Disclaimer",
+            "value": "This bot is not affiliated with the Stellar Development Foundation in any official capacity.\nYou should keep no more funds in this bot than you can afford to lose.\nLost funds will not be replaced. Use at your own discretion.",
+            "short": false
+          }
+        ]
+      }]
+    }
+
+    if(userIsRegistered) {
+      // Add in the other field at array position 2
+      obj.attachments[0].fields.splice(2, 0, {
+        "title": "Send deposits to ",
+        "value": process.env.STELLAR_PUBLIC_KEY,
+        "short": false
+      })
+    }
+    return obj
   }
 
 
@@ -487,11 +535,6 @@ class Slack extends Adapter {
         {
           "title": "To deposit, send XLM to",
           "value": process.env.STELLAR_PUBLIC_KEY,
-          "short": false
-        },
-        {
-          "title": "To tip users",
-          "value": "Use the /tip command",
           "short": false
         },
         {
