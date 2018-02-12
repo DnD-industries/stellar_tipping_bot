@@ -487,7 +487,7 @@ class Slack extends Adapter {
               "title": "To check your balance",
               "value": "Use the /balance command",
               "short": false
-            }
+            },
             {
               "title": "To withdraw",
               "value": "Use the /withdraw command",
