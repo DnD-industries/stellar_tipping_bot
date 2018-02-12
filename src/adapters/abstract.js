@@ -326,9 +326,9 @@ class Adapter extends EventEmitter {
    * Called when the user registers a wallet for the first time i.e. they did not previously have a wallet address.
    *
    * @param walletAddress {String} The wallet address the user has registered.
-   * @returns {Promise<*>}
+   * @returns {string>}
    */
-  async onRegistrationRegisteredFirstWallet(walletAddress) {
+  onRegistrationRegisteredFirstWallet(walletAddress) {
     return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.\nThis bot is not affiliated with the Stellar Development Foundation. Please use /info command for disclaimer.`;
   }
 
