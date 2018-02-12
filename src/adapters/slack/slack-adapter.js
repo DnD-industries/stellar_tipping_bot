@@ -234,7 +234,7 @@ class Slack extends Adapter {
    */
   async onTipDevs (tipDevs, address, txHash) {
     // Override this or listen to events!
-    return `You tipped the devs ${tipDevs.amount}`
+    return `You tipped the devs ${tipDevs.amount} XLM. Thank you so much for your donation!`
   }
 
   /**
