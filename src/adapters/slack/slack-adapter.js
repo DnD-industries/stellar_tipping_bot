@@ -345,10 +345,10 @@ class Slack extends Adapter {
    */
   getTermsAgreement(registrationCommand) {
     return JSON.parse('{\n' +
-        '    "text": "Do you understand you could lose all your deposits?",\n' +
+        '    "text": "*Disclaimer*",\n' +
         '    "attachments": [\n' +
         '        {\n' +
-        '            "text": "You should not put anything in this bot that you can\'t afford to lose!\\nHere are just a few things that could result in you losing your XLM.\\n1) Our servers get hacked.\\n2) We run away with everything.\\n3) Our code is exploited.",\n' +
+        '            "text": "1) This bot is not affiliated with the Stellar Development Foundation in any official capacity.\\n2) You should keep no more funds in this bot than you can afford to lose.\\n3) Lost funds will not be replaced. Use at your own discretion.",\n' +
         '            "fallback": "You are unable to choose a game",\n' +
         '            "callback_id": "terms_agreement",\n' +
         '            "color": "#00CC00",\n' +
@@ -356,14 +356,14 @@ class Slack extends Adapter {
         '            "actions": [\n' +
         '                {\n' +
         '                    "name": "confirm",\n' +
-        '                    "text": "I Understand. Sign me up.",\n' +
+        '                    "text": "I Understand.",\n' +
         '                    "style": "primary",\n' +
         '                    "type": "button",\n' +
         '                    "value": ' + `${JSON.stringify(registrationCommand.serialize())}` + '\n' +
         '                },\n' +
         '                {\n' +
         '                    "name": "cancel",\n' +
-        '                    "text": "Cancel sign up.",\n' +
+        '                    "text": "Cancel.",\n' +
         '                    "style": "danger",\n' +
         '                    "type": "button",\n' +
         '                    "value": "false"\n' +
