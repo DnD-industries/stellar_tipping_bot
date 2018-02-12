@@ -5,6 +5,7 @@ const Utils       = require('../../utils')
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const Command     = require('../commands/command')
 const Analytics   = require('../../loggers/tip-analytics')
+const Account     = require('../../models/account')
 
 /**
  * The Slack adapter itself is actually what is responsible for generating
@@ -332,8 +333,19 @@ class Slack extends Adapter {
       return this.onRegistrationReplacedOldWallet(usersExistingWallet, registrationCommand.walletPublicKey)
     } else {
       this.getLogger().CommandEvents.onRegisteredSuccessfully(registrationCommand, true)
-      return this.onRegistrationRegisteredFirstWallet(registrationCommand.walletPublicKey)
+      return await this.onRegistrationRegisteredFirstWallet(registrationCommand.walletPublicKey)
     }
+  }
+
+  /**
+   * Called when the user registers a wallet for the first time i.e. they did not previously have a wallet address.
+   *
+   * @param walletAddress {String} The wallet address the user has registered.
+   * @returns {Promise<string>}
+   */
+  async onRegistrationRegisteredFirstWallet(walletAddress) {
+    let account = await Account.Singleton().userForWalletAddress()
+    return this.getBalanceInfo(account)
   }
 
 
