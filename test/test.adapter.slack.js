@@ -164,7 +164,7 @@ describe('slackAdapter', async () => {
       let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
       var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
       let returnedValue = await slackAdapter.registerUser(msg);
-      assert.equal(returnedValue, `${slackAdapter.onRegistrationRegisteredFirstWallet(msg.walletPublicKey)}`);
+      assert.equal(returnedValue, `${await slackAdapter.onRegistrationRegisteredFirstWallet(msg.walletPublicKey)}`);
       assert(spy.withArgs(msg, true).calledOnce)
     })
   })

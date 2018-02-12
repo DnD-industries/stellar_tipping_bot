@@ -344,7 +344,7 @@ class Slack extends Adapter {
    * @returns {Promise<string>}
    */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return this.getFirstTimeRegistrationMessage(walletAddress)
+    return await this.getFirstTimeRegistrationMessage(walletAddress)
   }
 
 
