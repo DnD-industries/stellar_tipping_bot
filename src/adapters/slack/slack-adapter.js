@@ -240,8 +240,6 @@ class Slack extends Adapter {
     return `You tipped the devs ${tipDevs.amount}`
   }
 
-
-
   /**
    * Routes a command depending on its class to the appropriate function
    *
