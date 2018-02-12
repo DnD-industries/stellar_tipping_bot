@@ -333,7 +333,7 @@ class Slack extends Adapter {
       return this.onRegistrationReplacedOldWallet(usersExistingWallet, registrationCommand.walletPublicKey)
     } else {
       this.getLogger().CommandEvents.onRegisteredSuccessfully(registrationCommand, true)
-      return this.onRegistrationRegisteredFirstWallet(registrationCommand.walletPublicKey)
+      return await this.onRegistrationRegisteredFirstWallet(registrationCommand.walletPublicKey)
     }
   }
 
@@ -343,12 +343,12 @@ class Slack extends Adapter {
    * @param walletAddress {String} The wallet address the user has registered.
    * @returns {Promise<string>}
    */
-  onRegistrationRegisteredFirstWallet(walletAddress) {
+  async onRegistrationRegisteredFirstWallet(walletAddress) {
     return this.getFirstTimeRegistrationMessage(walletAddress)
   }
 
   getFirstTimeRegistrationMessage (walletAddress) {
-    // return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.\nThis bot is not affiliated with the Stellar Development Foundation. Please use /info command for disclaimer.`;
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.\nThis bot is not affiliated with the Stellar Development Foundation. Please use /info command for disclaimer.`;
 
     let obj = {
       "attachments": [{
@@ -383,6 +383,15 @@ class Slack extends Adapter {
           }
         ]
       }]
+    }
+
+    if(userIsRegistered) {
+      // Add in the other field at array position 2
+      obj.attachments[0].fields.splice(2, 0, {
+        "title": "Send deposits to ",
+        "value": process.env.STELLAR_PUBLIC_KEY,
+        "short": false
+      })
     }
     return obj
   }
