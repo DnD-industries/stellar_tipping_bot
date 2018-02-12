@@ -214,8 +214,15 @@ class TipAnalytics extends AbstractLogger {
         if(mixpanel) mixpanel.track('transaction refund succeeded', data)
       },
 
-      onRefundFailed(transactionBeingRefunded) {
+      onRefundFailed(transactionBeingRefunded, exception) {
         let data = TipAnalytics.getTransactionAnalyticsBase(transactionBeingRefunded)
+        // If exception is an object, enumerate its contents into our data object
+        if(exception === Object(exception)) {
+          data = Object.assign(data, exception)
+        } else {
+          // Otherwise, just assign it
+          data.exception = exception
+        }
         if(mixpanel) mixpanel.track('transaction refund failed', data)
       }
     }
