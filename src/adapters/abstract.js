@@ -206,7 +206,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsDestinationAccountDoesNotExist (tipDevs) {
     // Override this or listen to events!
-    this.emit('tipDevsDestinationAccountDoesNotExist', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
   }
 
   /**
@@ -218,7 +218,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsNoAddressProvided (tipDevs) {
     // Override this or listen to events!
-    this.emit('tipDevsNoAddressProvided', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+    return "Tip Devs no address provided: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
   }
 
   /**
@@ -230,7 +230,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsInvalidAmountProvided (tipDevs) {
     // Override this or listen to events!
-    this.emit('tipDevsInvalidAmountProvided', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
   }
 
   /**
@@ -244,7 +244,7 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsFailedWithInsufficientBalance (tipDevs, balance) {
     // Override this or listen to events!
-    this.emit('tipDevsFailedWithInsufficientBalance', tipDevs.amount, balance);
+    return "Tip Devs failed with insufficient balance: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
   }
 
   /**
@@ -254,7 +254,18 @@ class Adapter extends EventEmitter {
    */
   async onTipDevsSubmissionFailed (tipDevs) {
     // Override this or listen to events!
-    this.emit('tipDevsSubmissionFailed', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+    return "Tip Devs submission failed: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   * Called on a successfull tipDevs
+   * @param tipDevs {TipDevelopers}
+   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {String}
+   */
+  async onTipDevs (tipDevs, address, txHash) {
+    // Override this or listen to events!
+    return `You tipped the devs ${tipDevs.amount}`
   }
 
   /**
@@ -267,16 +278,6 @@ class Adapter extends EventEmitter {
   async onWithdrawal (withdrawal, address, txHash) {
     // Override this or listen to events!
     this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
-  }
-  /**
-   * Called on a successfull tipDevs
-   * @param tipDevs {TipDevelopers}
-   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
-   * @returns {String}
-   */
-  async onTipDevs (tipDevs, address, txHash) {
-    // Override this or listen to events!
-    return `You tipped the devs ${tipDevs.amount}`
   }
 
   // *** +++ Registration related functions +
