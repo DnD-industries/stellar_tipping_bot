@@ -4,6 +4,8 @@ services:
     image: davidbulnes/stellar-bot:${STELLARBOT_MASTER_TAG}
     ports:
       - 5000:5000
+    environment:
+     - TAG=${STELLARBOT_MASTER_TAG}
   db:
     ports:
       - 5455:5432
