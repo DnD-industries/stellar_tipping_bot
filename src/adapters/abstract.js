@@ -300,7 +300,7 @@ class Adapter extends EventEmitter {
    * @returns {Promise<string>}
    */
   async onRegistrationReplacedOldWallet(oldWallet, newWallet) {
-    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\``;
+    return `Your old wallet \`${oldWallet}\` has been replaced by \`${newWallet}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`;
   }
 
   /**

@@ -134,7 +134,7 @@ describe('slackAdapter', async () => {
       var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
       const returnedValue = await slackAdapter.handleRegistrationRequest(msg);
       const refreshedAccount = await Account.getOrCreate('testing', 'team.foo')
-      assert.equal(returnedValue, `Your old wallet \`${accountWithWallet.walletAddress}\` has been replaced by \`${newWalletId}\``);
+      assert.equal(returnedValue, `Your old wallet \`${accountWithWallet.walletAddress}\` has been replaced by \`${newWalletId}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
       assert.equal(refreshedAccount.walletAddress, newWalletId);
       assert(spy.withArgs(msg, false).calledOnce)
     })
@@ -153,7 +153,7 @@ describe('slackAdapter', async () => {
     //   let msg = new Command.Register('testing', 'newTeam.userId', desiredWalletAddress)
     //   var spy = sinon.spy(slackAdapter.getLogger().CommandEvents, "onRegisteredSuccessfully")
     //   let returnedValue = await slackAdapter.handleRegistrationRequest(msg);
-    //   assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`);
+    //   assert.equal(returnedValue, `Successfully registered with wallet address \`${desiredWalletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.\nThis bot is not affiliated with the Stellar Development Foundation. Please use /info command for disclaimer.`);
     //   assert(spy.withArgs(msg, true).calledOnce)
     // })
   })
