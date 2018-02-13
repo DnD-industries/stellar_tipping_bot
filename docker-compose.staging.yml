@@ -1,0 +1,12 @@
+version: '3'
+services:
+  app:
+    image: davidbulnes/stellar-bot:${STELLARBOT_STAGING_TAG}
+    ports:
+      - 4000:4000
+  db:
+    ports:
+      - 4455:5432
+  redis:
+    ports:
+      - 5379:6379 

@@ -88,7 +88,7 @@ module.exports = async function (models) {
      *
      * to should be a public address
      * amount can be a string or a Big
-     * hash should just be something unique - we use the msg id from reddit,
+     * hash should just be something unique
      * but a uuid4 or sth like that would work as well.
      */
     createTransaction: function (to, amount, hash, memo = "") {

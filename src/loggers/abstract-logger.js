@@ -7,7 +7,31 @@ class Logger {
 
     this.MessagingEvents = {
       onTipReceivedMessageSent(tip, userIsRegistered) {
+      },
+
+      onDepositReceiptMessageSent(account) {
       }
+    }
+
+    this.OAuthEvents = {
+
+      /**
+       *
+       * @param adapter {String} The adapter we are calling from
+       * @param blob {Object} A package of key-value pairs that we want to add to the analytics call
+       * @returns {Object}
+       */
+      getOAuthAnalyticsBase(adapter, blob) {
+      },
+
+      onOAuthAddEmptyOAuthToken(adapter, blob) {
+      },
+
+      onAddedNewAuthToken(adapter, blob) {
+      },
+
+      onAddingOAuthFailed(adapter, blob, exception) {
+      },
     }
 
     this.CommandEvents = {
@@ -65,6 +89,34 @@ class Logger {
 
       },
 
+      onTipDevsNoAddressProvided(withdrawal) {
+
+      },
+
+      onTipDevsDestinationAccountDoesNotExist(withdrawal) {
+
+      },
+
+      onTipDevsInsufficientBalance(withdrawal, balance) {
+
+      },
+
+      onTipDevsBadlyFormedAddress(withdrawal, badWalletAddress) {
+
+      },
+
+      onTipDevsSubmissionToHorizonFailed(withdrawal) {
+
+      },
+
+      onTipDevsInvalidAmountProvided(withdrawal) {
+
+      },
+
+      onTipDevsSuccess(withdrawal, address, txHash) {
+
+      },
+
       onDepositSuccess(sourceAccount, amount) {
 
       },
@@ -74,18 +126,6 @@ class Logger {
       },
 
       onInfoRequest(infoCmd, userIsRegistered) {
-
-      },
-
-      onAddedNonExistantAuthTokenForTeam(team) {
-
-      },
-
-      onAddedNewAuthTokenForTeam(team) {
-
-      },
-
-      onAddingOAuthForTeamFailed(team) {
 
       },
 
@@ -107,7 +147,20 @@ class Logger {
 
       onRegisteredSuccessfully(registration, isFirstRegistration) {
 
+      },
+
+      onRegistrationSentTermsAgreement(registration) {
+
+      },
+
+      onRefundSucceeded(transactionBeingRefunded) {
+
+      },
+
+      onRefundFailed(transactionBeingRefunded, exception) {
+
       }
+
     }
   }
 

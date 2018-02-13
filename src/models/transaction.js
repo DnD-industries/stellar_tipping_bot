@@ -13,7 +13,7 @@ module.exports = (db) => {
       target: String,
       cursor: String,
       memoId: String,
-      type: ['deposit', 'withdrawal', 'refund'],
+      type: ['deposit', 'withdrawal', 'refund', 'developer_tip'],
       createdAt: String,
       amount: String,
       asset: String,
@@ -115,28 +115,6 @@ module.exports = (db) => {
             console.log("DEPOSITS CLOSED, refunding transaction:", JSON.stringify(this));
             Transaction.events.emit('REFUND', this);
             return;
-          }
-
-          //Check for the presence of a memo in this transaction
-          if (this.memoId) {
-            const accountParts = this.memoId.replace(/\s/g, '').split('/')
-            if (accountParts.length === 2) {
-              const adapter = accountParts[0];
-              const uniqueId = accountParts[1];
-
-              //If this transaction/memo is from reddit, then use the memo parameters to parse the deposit
-              if(adapter === "reddit"){
-                const userWithUniqueId = await Account.getOrCreate(adapter, uniqueId);
-                //If we found our user with the given adapter and uniqueId, credit the deposit.
-                //If we haven't found our user, we'll try again below using the public wallet id.
-                if (userWithUniqueId) {
-                  Transaction.creditDepositToAccount(this, userWithUniqueId);
-                  return; //Return, as we found our account
-                }
-              } else {
-                console.error("Unrecognized transaction memo: '" + this.memoId + "'. Searching by public wallet address...");
-              }
-            }
           }
 
           const userWithWalletId = await Account.userForWalletAddress(this.source);

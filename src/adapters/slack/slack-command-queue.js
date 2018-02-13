@@ -63,6 +63,7 @@ class CommandQueue {
       let client = await SlackClient.botClientForCommand(command);
       console.log(`Command is: ${JSON.stringify(command)}`);
       let textBody = await slackAdapter.handleCommand(command);
+      console.log("Text body is:" + textBody)
       client.sendPlainTextDMToSlackUser(Utils.slackUserIdFromUniqueId(command.uniqueId), textBody);
       command = await this.popCommand();
     }

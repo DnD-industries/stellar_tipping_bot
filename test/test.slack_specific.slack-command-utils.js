@@ -51,8 +51,8 @@ describe('slack-command-utils', () => {
 
       let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
       let expectedAdapter   = "slack";
-      let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
-      let expectedTargetId  = "T8MPK3KV1.U8PTZ333N";
+      let expectedSourceId  = "T8MPK3KV1:U8PTZ287N";
+      let expectedTargetId  = "T8MPK3KV1:U8PTZ333N";
       let expectedAmount    = 123.72;
       assert.equal(expectedAdapter, command.adapter);
       assert.equal(expectedSourceId, command.sourceId);
@@ -75,7 +75,7 @@ describe('slack-command-utils', () => {
 
       let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
       let expectedAdapter   = "slack";
-      let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
+      let expectedSourceId  = "T8MPK3KV1:U8PTZ287N";
       let expectedAmount    = 123.72;
       assert.equal(expectedAdapter, command.adapter);
       assert.equal(expectedSourceId, command.sourceId);
@@ -98,7 +98,7 @@ describe('slack-command-utils', () => {
 
       let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
       let expectedAdapter   = "slack";
-      let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
+      let expectedSourceId  = "T8MPK3KV1:U8PTZ287N";
       let expectedAmount    = 123.72;
       let expectedAddress   = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN";
       assert.equal(expectedAdapter, command.adapter);
@@ -122,7 +122,7 @@ describe('slack-command-utils', () => {
 
       let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
       let expectedAdapter   = "slack";
-      let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
+      let expectedSourceId  = "T8MPK3KV1:U8PTZ287N";
       let expectedPublicKey    = "GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN";
       assert.equal(expectedAdapter, command.adapter);
       assert.equal(expectedSourceId, command.sourceId);
@@ -144,7 +144,7 @@ describe('slack-command-utils', () => {
 
       let command = slackUtils.extractCommandParamsFromMessage(new slackMessage(slackMsgBody));
       let expectedAdapter   = "slack";
-      let expectedSourceId  = "T8MPK3KV1.U8PTZ287N";
+      let expectedSourceId  = "T8MPK3KV1:U8PTZ287N";
       assert.equal(expectedAdapter, command.adapter);
       assert.equal(expectedSourceId, command.sourceId);
       assert(command instanceof Command.Info);
