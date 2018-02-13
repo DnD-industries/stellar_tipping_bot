@@ -133,7 +133,6 @@ class SlackServer {
      */
     app.post('/slack/withdraw', async function (req, res) {
       console.log('someone wants to make a withdrawal!');
-      console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
@@ -147,7 +146,6 @@ class SlackServer {
      */
     app.post('/slack/tipdevelopers', async function (req, res) {
       console.log('someone wants to tip the devs!');
-      console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
@@ -161,7 +159,6 @@ class SlackServer {
      */
     app.post('/slack/register', async function (req, res) {
       console.log('someone wants to register!');
-      console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
@@ -173,7 +170,6 @@ class SlackServer {
      */
     app.post('/slack/balance', async function (req, res) {
       console.log('someone wants to check their balance');
-      console.log(JSON.stringify(req.body));
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
