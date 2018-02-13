@@ -89,6 +89,34 @@ class Logger {
 
       },
 
+      onTipDevsNoAddressProvided(withdrawal) {
+
+      },
+
+      onTipDevsDestinationAccountDoesNotExist(withdrawal) {
+
+      },
+
+      onTipDevsInsufficientBalance(withdrawal, balance) {
+
+      },
+
+      onTipDevsBadlyFormedAddress(withdrawal, badWalletAddress) {
+
+      },
+
+      onTipDevsSubmissionToHorizonFailed(withdrawal) {
+
+      },
+
+      onTipDevsInvalidAmountProvided(withdrawal) {
+
+      },
+
+      onTipDevsSuccess(withdrawal, address, txHash) {
+
+      },
+
       onDepositSuccess(sourceAccount, amount) {
 
       },
@@ -119,7 +147,20 @@ class Logger {
 
       onRegisteredSuccessfully(registration, isFirstRegistration) {
 
+      },
+
+      onRegistrationSentTermsAgreement(registration) {
+
+      },
+
+      onRefundSucceeded(transactionBeingRefunded) {
+
+      },
+
+      onRefundFailed(transactionBeingRefunded, exception) {
+
       }
+
     }
   }
 

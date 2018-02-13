@@ -31,7 +31,8 @@ module.exports = {
    * @param uniqueId {String} A unique ID for a user in the format of [teamid].[userid]
    */
   slackUserIdFromUniqueId: (uniqueId) => {
-    return uniqueId.split(`.`)[1]
+    console.log("Getting userID from unique ID: " + uniqueId)
+    return uniqueId.split(`:`)[1]
   },
 
   /**
@@ -39,7 +40,7 @@ module.exports = {
    * @param uniqueId {String} A unique ID for a user in the format of [teamid].[userid]
    */
   slackTeamIdFromUniqueId: (uniqueId) => {
-    return uniqueId.split(`.`)[0]
+    return uniqueId.split(`:`)[0]
   },
 
 

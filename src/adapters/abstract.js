@@ -50,9 +50,11 @@ class Adapter extends EventEmitter {
     this.emit('refund', transaction);
     try {
       const refundTx = await transaction.refund(this.config.stellar, transaction);
+      this.getLogger().CommandEvents.onRefundSucceeded(transaction)
       console.log("Refund Succeeded");
     } catch (exc) {
       console.log("Refund Failed");
+      this.getLogger().CommandEvents.onRefundFailed(transaction, exc)
     }
   }
 
@@ -184,15 +186,99 @@ class Adapter extends EventEmitter {
    this.emit('withdrawalInvalidAddress', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash);
   }
 
+  // ------------
+  //
+  // /**
+  //  * Gets called when there is a problem submitting the transaction to the Horizon server with the Stellar SDK.
+  //  *
+  //  * @param tipDevs {TipDevelopers}
+  //  * @returns {Promise<void>}
+  //  */
+  // async onTipDevsReferenceError (tipDevs) {
+  //   // Override this or listen to events!
+  //   this.emit('tipDevsReferenceError', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+  // }
+
   /**
-   * Called on a successfull withdrawal
-   * @param withdrawal {Withdraw}
-   * @param address {String} The address to which the withdrawal was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
-   * @returns {Promise<void>}
+   *
+   * Called when the public key address you're trying to withdraw to doesn't exist
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsDestinationAccountDoesNotExist (tipDevs) {
+    // Override this or listen to events!
+    this.emit('tipDevsDestinationAccountDoesNotExist', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+  }
+
+  /**
+   *
+   * Called when you try to withdraw with no address
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsNoAddressProvided (tipDevs) {
+    // Override this or listen to events!
+    this.emit('tipDevsNoAddressProvided', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+  }
+
+  /**
+   *
+   * Called when you try to make a withdraw with an invalid amount, such as "asdf"
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsInvalidAmountProvided (tipDevs) {
+    // Override this or listen to events!
+    this.emit('tipDevsInvalidAmountProvided', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+  }
+
+  /**
+   *
+   * Called when the user does not have a high enough balance to complete their tipDevs.
+   * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
+   *
+   * @param tipDevs {TipDevelopers}
+   * @param balance {Number}
+   * @returns {String}
+   */
+  async onTipDevsFailedWithInsufficientBalance (tipDevs, balance) {
+    // Override this or listen to events!
+    this.emit('tipDevsFailedWithInsufficientBalance', tipDevs.amount, balance);
+  }
+
+  /**
+   * Called when, for any reason, we attempt to withdraw but sending the transaction to the Horizon server fails.
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsSubmissionFailed (tipDevs) {
+    // Override this or listen to events!
+    this.emit('tipDevsSubmissionFailed', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash);
+  }
+
+  /**
+   *
+   * Called when you try to withdraw with any invalid address (should only occur when the address is provided as an additional argument / is not retreived directly from the Account db).
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
    */
   async onWithdrawal (withdrawal, address, txHash) {
     // Override this or listen to events!
     this.emit('withdrawal', withdrawal.uniqueId, address, withdrawal.amount, withdrawal.hash);
+  }
+  /**
+   * Called on a successfull tipDevs
+   * @param tipDevs {TipDevelopers}
+   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {String}
+   */
+  async onTipDevs (tipDevs, address, txHash) {
+    // Override this or listen to events!
+    this.emit('tipDevsSuccess', tipDevs.uniqueId, tipDevs.address, tipDevs.amount, tipDevs.hash)
   }
 
   // *** +++ Registration related functions +
@@ -242,10 +328,10 @@ class Adapter extends EventEmitter {
    * Called when the user registers a wallet for the first time i.e. they did not previously have a wallet address.
    *
    * @param walletAddress {String} The wallet address the user has registered.
-   * @returns {Promise<string>}
+   * @returns {Promise<*>}
    */
   async onRegistrationRegisteredFirstWallet(walletAddress) {
-    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.`;
+    return `Successfully registered with wallet address \`${walletAddress}\`.\n\nSend XLM deposits to \`${process.env.STELLAR_PUBLIC_KEY}\` to make funds available for use with the '/tip' command.\nThis bot is not affiliated with the Stellar Development Foundation. Please use /info command for disclaimer.`;
   }
 
   /**
@@ -361,9 +447,72 @@ class Adapter extends EventEmitter {
         this.getLogger().CommandEvents.onWithdrawalSubmissionToHorizonFailed(withdrawalRequest)
         return this.onWithdrawalSubmissionFailed(uniqueId, address, fixedAmount, hash);
       }
-      // throw (exc)
     }
   }
+
+  /**
+   * Will cause the bot to send the requested amount of XLM to the developers' provided wallet address as defined in process.env,
+   * otherwise will call the appropriate function on the adapter in the event that there is an insufficient balance or other issue.
+   *
+   * @param tipDevsRequest {TipDevelopers}
+   * @returns {Promise<void>}
+   */
+  async receiveTipDevelopersRequest (tipDevsRequest) {
+    const adapter = tipDevsRequest.adapter;
+    const uniqueId = tipDevsRequest.uniqueId;
+    const hash = tipDevsRequest.hash;
+    const devsAddress = tipDevsRequest.address;
+    const tipAmountRequested = tipDevsRequest.amount;
+    let tipAmount;
+    try {
+      tipAmount = new Big(tipAmountRequested);
+      console.log("Set tip amount")
+    } catch (e) {
+      console.log(`Bad data fed to new Big() in Adapter::receiveTipDevelopersRequest()\n${JSON.stringify(e)}`);
+      console.log(`Withdrawal request amount is ${tipAmountRequested}`);
+      this.getLogger().CommandEvents.onTipDevsInvalidAmountProvided(tipDevsRequest)
+      return this.onTipDevsInvalidAmountProvided(tipDevsRequest);
+    }
+    const fixedAmount = tipAmount.toFixed(7);
+
+    if(typeof devsAddress === 'undefined' || devsAddress === null) {
+      this.getLogger().CommandEvents.onTipDevsNoAddressProvided(tipDevsRequest)
+      return this.onTipDevsNoAddressProvided(tipDevsRequest);
+    }
+
+
+    if (!StellarSdk.StrKey.isValidEd25519PublicKey(devsAddress)) {
+      this.getLogger().CommandEvents.onTipDevsBadlyFormedAddress(tipDevsRequest, devsAddress)
+      return this.onTipDevsBadlyFormedAddress(tipDevsRequest);
+    }
+
+    // Fetch the account
+    const target = await tipDevsRequest.getSourceAccount();
+    // TODO: Rather than having this fetch occur here, I think it might make more sense to move this to the  Command constructor
+    if (!target.canPay(tipAmount)) {
+      console.log("Insufficient balance dude")
+      this.getLogger().CommandEvents.onTipDevsInsufficientBalance(tipDevsRequest, target.balance)
+      return this.onTipDevsFailedWithInsufficientBalance(tipDevsRequest, target.balance);
+    }
+
+    // Tip Developers
+    try {
+      // txHash is the hash from the stellar blockchain, not our internal hash
+      const txHash = await target.tipDevelopers(this.config.stellar, devsAddress, tipAmount, hash);
+      this.getLogger().CommandEvents.onTipDevsSuccess(tipDevsRequest, devsAddress, txHash)
+      return this.onTipDevs(tipDevsRequest, devsAddress, txHash);
+    } catch (exc) {
+      if (exc === 'DESTINATION_ACCOUNT_DOES_NOT_EXIST') {
+        this.getLogger().CommandEvents.onTipDevsDestinationAccountDoesNotExist(tipDevsRequest)
+        return this.onTipDevsDestinationAccountDoesNotExist(tipDevsRequest);
+      }
+      if (exc === 'TIP_DEVS_SUBMISSION_FAILED') {
+        this.getLogger().CommandEvents.onTipDevsSubmissionToHorizonFailed(tipDevsRequest)
+        return this.onTipDevsSubmissionFailed(tipDevsRequest);
+      }
+    }
+  }
+
 
   /**
    *

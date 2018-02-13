@@ -117,6 +117,43 @@ class TipAnalytics extends AbstractLogger {
         if(mixpanel) mixpanel.track('withdrawal success', data)
       },
 
+      onTipDevsNoAddressProvided(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs no address provided', data)
+      },
+
+      onTipDevsDestinationAccountDoesNotExist(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs destination account does not exist', data)
+      },
+
+      onTipDevsInsufficientBalance(tipDevs, balance) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs insufficient balance', data)
+      },
+
+      onTipDevsBadlyFormedAddress(tipDevs, badWalletAddress) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs no address provided', data)
+      },
+
+      onTipDevsSubmissionToHorizonFailed(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs submission to horizon failed', data)
+      },
+
+      onTipDevsInvalidAmountProvided(tipDevs) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        if(mixpanel) mixpanel.track('tipDevs invalid amount', data)
+      },
+
+      onTipDevsSuccess(tipDevs, address, txHash) {
+        let data = TipAnalytics.getTipDevsAnalyticsBase(tipDevs)
+        data.address = address
+        data.txHash = txHash
+        if(mixpanel) mixpanel.track('tipDevs success', data)
+      },
+
       onDepositSuccess(sourceAccount, amount) {
         let data = TipAnalytics.getAccountAnalyticsBase(sourceAccount)
         data.amount = amount
@@ -165,6 +202,28 @@ class TipAnalytics extends AbstractLogger {
           isFirstRegistration: isFirstRegistration
         })
         if(mixpanel) mixpanel.track('registration success', data)
+      },
+
+      onRegistrationSentTermsAgreement(registration) {
+        let data = TipAnalytics.getRegistrationAnalyticsBase(registration)
+        if(mixpanel) mixpanel.track('registration sent terms agreement', data)
+      },
+
+      onRefundSucceeded(transactionBeingRefunded) {
+        let data = TipAnalytics.getTransactionAnalyticsBase(transactionBeingRefunded)
+        if(mixpanel) mixpanel.track('transaction refund succeeded', data)
+      },
+
+      onRefundFailed(transactionBeingRefunded, exception) {
+        let data = TipAnalytics.getTransactionAnalyticsBase(transactionBeingRefunded)
+        // If exception is an object, enumerate its contents into our data object
+        if(exception === Object(exception)) {
+          data = Object.assign(data, exception)
+        } else {
+          // Otherwise, just assign it
+          data.exception = exception
+        }
+        if(mixpanel) mixpanel.track('transaction refund failed', data)
       }
     }
   }
@@ -177,6 +236,7 @@ class TipAnalytics extends AbstractLogger {
   static getCommandAnalyticsBase(command) {
     return {
       time: new Date(),
+      distinct_id: command.uniqueId,
       sourceId: command.uniqueId,
       adapter: command.adapter,
       hash: command.hash,
@@ -206,6 +266,18 @@ class TipAnalytics extends AbstractLogger {
     return Object.assign(TipAnalytics.getCommandAnalyticsBase(withdrawal), {
       amount: withdrawal.amount,
       address: withdrawal.address
+    })
+  }
+
+  /**
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {Object}
+   */
+  static getTipDevsAnalyticsBase(tipDevs) {
+    return Object.assign(TipAnalytics.getCommandAnalyticsBase(tipDevs), {
+      amount: tipDevs.amount,
+      address: tipDevs.address
     })
   }
 
@@ -243,10 +315,26 @@ class TipAnalytics extends AbstractLogger {
   static getAccountAnalyticsBase(account) {
     return {
       time: new Date(),
+      distinct_id: account.uniqueId,
       account_uniqueId: account.uniqueId,
       account_createdAt: account.createdAt,
       account_balance: account.balance,
       account_address: account.walletAddress
+    }
+  }
+
+  static getTransactionAnalyticsBase(tx) {
+    return {
+      time: new Date(),
+      distinct_id: tx.target,
+      tx_target: tx.target,
+      tx_cursor: tx.cursor,
+      tx_memoId: tx.memoId,
+      tx_type: tx.type,
+      tx_amount: tx.amount,
+      tx_hash: tx.hash,
+      tx_credited: tx.credited,
+      tx_refunded: tx.refunded
     }
   }
 

@@ -7,6 +7,7 @@ const slackClient   = require('./slack-client');
 const SlackAdapter  = require('../slack/slack-adapter');
 const CommandQueue  = require('./slack-command-queue');
 const request       = require('request-promise');
+const Command       = require('../commands/command')
 const redis         = require('redis');
 //Redis consts
 const MESSAGE_FLUSH_INTERVAL = 1; // milliseconds
@@ -91,6 +92,24 @@ class SlackServer {
       }        
     });
 
+    app.post('/slack/interactive', async function (req, res) {
+      try {
+        let payload = JSON.parse(req.body.payload)
+        if (payload.actions[0].value == "false") {
+          res.send("We won't register you now. Feel free to register another time.")
+        } else {
+          let registrationCommand = Command.Deserialize(payload.actions[0].value)
+          let toSend = await that.adapter.registerUser(registrationCommand)
+          configureRes(res, toSend)
+          res.send(toSend);
+          }
+      }catch (e) {
+        console.log("Error when getting registration command");
+        console.log(`${JSON.stringify(e)}`)
+        res.status(401).send("There was an error. Please try again.")
+      }
+    })
+
     /**
      * Set up how /tip command should be dealt with
      */
@@ -105,7 +124,7 @@ class SlackServer {
 
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      respondToCommand(command, res, that.adapter)
     });
 
 
@@ -124,6 +143,20 @@ class SlackServer {
     });
 
     /**
+     * Set up how /withdraw command should be dealt with
+     */
+    app.post('/slack/tipdevelopers', async function (req, res) {
+      console.log('someone wants to tip the devs!');
+      console.log(JSON.stringify(req.body));
+      let msg = new slackMessage(req.body);
+      let command = slackUtils.extractCommandParamsFromMessage(msg);
+
+      that.CommandQueue.pushCommand(command);
+
+      res.send(REQUEST_BEING_PROCESSED);
+    });
+
+    /**
      * Set up how /register command should be dealt with
      */
     app.post('/slack/register', async function (req, res) {
@@ -132,7 +165,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      respondToCommand(command, res, that.adapter)
     });
 
     /**
@@ -144,7 +177,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      respondToCommand(command, res, that.adapter)
     });
 
     /**
@@ -154,7 +187,7 @@ class SlackServer {
       let msg = new slackMessage(req.body);
       let command = slackUtils.extractCommandParamsFromMessage(msg);
 
-      res.send(await that.adapter.handleCommand(command));
+      respondToCommand(command, res, that.adapter)
     });
 
 
@@ -172,9 +205,12 @@ class SlackServer {
       console.log("Request path:",req.path);
       console.log("Headers:", JSON.stringify(req.headers));
       console.log("Body/Query:", req.method === "GET" ? req.query : JSON.stringify(req.body));
+
+      console.log("\n\n" + JSON.stringify(req.body))
     }
 
     //Allow the request to proceed if it is a GET request to authorize the app being added to a Slack team
+    // TODO: Adopt this same convention for /slack/interactive
     if (req.method === "GET" && req.path === "/slack/oauth") {
       //Check for the presence of an authorization code
       if (req.query.code) {
@@ -185,6 +221,25 @@ class SlackServer {
     } else {
       //If this is a GET request, use the query token, otherwise look for it in the body
       let token = req.method === "GET" ? req.query.token : req.body.token;
+      // NOTE that the /slack/interactive POST calls we receive are formatted slightly differently for some reason.
+      // Instead of everything being at the req.body level it's at the req.body.payload level. No idea why, just how Slack implemented it.
+      if(req.body.payload) {
+        console.log("\n\n\n\n")
+        let theObj = req.body.payload
+        if(!theObj) {
+          console.log("Failed to make the payload object")
+        }
+        // console.log("Req body: " + req.body)
+
+        let payload = JSON.parse(req.body.payload);
+        console.log(`Payload is ${payload}`)
+        console.log(`TeamID: ${payload.team.id}`)
+        console.log(`UserID: ${payload.user.id}`)
+        token = payload.token
+        console.log(`Token is ${token}`)
+
+      }
+      console.log(`Token is ${token}`)
       //With the proper validation token from Slack, route the request accordingly.
       //Otherwise reply with a 401 status code
       token === process.env.SLACK_VERIFICATION_TOKEN ? next() : res.status(401).send("Invalid Slack token");
@@ -198,6 +253,27 @@ class SlackServer {
 
   close(done){
     this.server.close(done);
+  }
+}
+
+/**
+ *
+ * @param command {Command}
+ * @param res A response object
+ * @param adapter {SlackAdapter}
+ * @returns {Promise<void>}
+ */
+respondToCommand = async function(command, res, adapter) {
+  let toSend = await adapter.handleCommand(command)
+  configureRes(res, toSend)
+  res.send(toSend);
+}
+
+configureRes = function(res, toSend) {
+  // Check if we're sending back a JSON object
+  // See: https://stackoverflow.com/questions/8511281/check-if-a-value-is-an-object-in-javascript#8511350
+  if(toSend === Object(toSend)) {
+    res.set('Content-Type', 'application/json');
   }
 }
 

@@ -21,7 +21,8 @@ module.exports = (db) => {
       createdAt: String,
       updatedAt: String,
       balance: String,
-      walletAddress: String // THIS IS A PUBLIC KEY, NOT THE SECRET KEY. DO NOT STORE USERS' SECRET KEYS EVER
+      walletAddress: String, // THIS IS A PUBLIC KEY, NOT THE SECRET KEY. DO NOT STORE USERS' SECRET KEYS EVER
+      hasAcceptedTerms: Boolean
     }, {
 
     methods: {
@@ -64,7 +65,7 @@ module.exports = (db) => {
           })
 
           if (exists) {
-            throw new 'DUPLICATE_TRANSFER'
+            throw 'DUPLICATE_TRANSFER'
           }
           await this.saveAsync()
           await targetAccount.saveAsync()
@@ -113,6 +114,73 @@ module.exports = (db) => {
         })
       },
 
+      tipDevelopers: async function (stellar, to, tipAmount, hash, Transaction = db.models.transaction) {
+        const Action = db.models.action
+
+        return await Account.withinTransaction(async () => {
+          if (!this.canPay(tipAmount)) {
+            throw 'Insufficient balance. Always check with `canPay` before tipping devs!'
+          }
+          const sourceBalance = new Big(this.balance)
+          const amount = new Big(tipAmount)
+          this.balance = sourceBalance.minus(amount).toFixed(7)
+          const refundBalance = new Big(this.balance)
+
+          const now = new Date()
+          const doc = {
+            memoId: 'Donation for tipping bot',
+            amount: amount.toFixed(7),
+            createdAt: now.toISOString(),
+            asset: 'native',
+            source: stellar.address,
+            target: to,
+            hash: hash,
+            type: 'developer_tip'
+          }
+          const txExists = await Transaction.existsAsync({
+            hash: hash,
+            type: 'developer_tip',
+            target: to
+          })
+
+          if (txExists) {
+            // Withdrawal already happened within a concurrent transaction, let's skip
+            this.balance = refundBalance.plus(amount).toFixed(7)
+            throw 'DUPLICATE_DEV_TIP'
+          }
+
+          let txSendResponse;
+
+          try {
+            const tx = await stellar.createTransaction(to, tipAmount.toFixed(7), hash)
+            txSendResponse = await stellar.send(tx)
+          } catch (exc) {
+            this.balance = refundBalance.plus(amount).toFixed(7)
+            throw exc
+          }
+
+          await this.saveAsync()
+          await Transaction.createAsync(doc)
+          try {
+            await Action.createAsync({
+              hash: hash,
+              type: 'developer_tip',
+              sourceaccount_id: this.id,
+              amount: amount.toFixed(7),
+              address: to
+            })
+
+            await Action.oneAsync({hash: hash, sourceaccount_id: this.id})
+            console.log(`Send response: ${txSendResponse}`);
+            console.log(`Hash: ${hash}`);
+            return txSendResponse
+
+          } catch (e) {
+            console.log(e)
+          }
+        })
+      },
+
       /**
        * Withdraw money from the main account to the requested account by the user.
        *
@@ -120,7 +188,7 @@ module.exports = (db) => {
        *
        * to should be a public address
        * withdrawalAmount can be a string or a Big
-       * hash should just be something unique - we use the msg id from reddit,
+       * hash should just be something unique
        * but a uuid4 or sth like that would work as well.
        *
        * Should return response body from transaction send
@@ -221,6 +289,10 @@ module.exports = (db) => {
             this.walletAddress = null
             return Promise.reject(new Error('BAD_PUBLIC_WALLET_ADDRESS'))
           }
+        }
+
+        if(!this.hasAcceptedTerms) {
+          this.hasAcceptedTerms = false
         }
 
         if (!this.createdAt) {

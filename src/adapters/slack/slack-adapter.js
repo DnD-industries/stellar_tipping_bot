@@ -5,6 +5,7 @@ const Utils       = require('../../utils')
 const oauth_token = process.env.SLACK_BOT_OAUTH_TOKEN;
 const Command     = require('../commands/command')
 const Analytics   = require('../../loggers/tip-analytics')
+const Account     = require('../../models/account')
 
 /**
  * The Slack adapter itself is actually what is responsible for generating
@@ -142,7 +143,7 @@ class Slack extends Adapter {
    * // TODO: Implement this
    */
   async onWithdrawalSubmissionFailed (withdrawal) {
-    this.emit('withdrawalSubmissionFailed ', withdrawal.uniqueId, withdrawal.address, withdrawal.amount, withdrawal.hash)
+    return "Submission to horizon failed. There may be a problem with the Stellar network or Horizon. Try again later."
   }
 
   /**
@@ -167,6 +168,77 @@ class Slack extends Adapter {
   }
 
   /**
+   *
+   * Called when the public key address you're trying to withdraw to doesn't exist
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsDestinationAccountDoesNotExist (tipDevs) {
+    // Override this or listen to events!
+    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   *
+   * Called when you try to withdraw with no address
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsNoAddressProvided (tipDevs) {
+    // Override this or listen to events!
+    return "The developers have not registered their address. How silly of us!"
+  }
+
+  /**
+   *
+   * Called when you try to make a withdraw with an invalid amount, such as "asdf"
+   *
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsInvalidAmountProvided (tipDevs) {
+    // Override this or listen to events!
+    return "Tip Devs Destination does not exist: " +   `${tipDevs.uniqueId} ${tipDevs.address} ${tipDevs.amount} ${tipDevs.hash}`;
+  }
+
+  /**
+   *
+   * Called when the user does not have a high enough balance to complete their tipDevs.
+   * Balance is not part of the Command.Withdraw object's params. It is acquired via the Account class.
+   *
+   * @param tipDevs {TipDevelopers}
+   * @param balance {Number}
+   * @returns {String}
+   */
+  async onTipDevsFailedWithInsufficientBalance (tipDevs, balance) {
+    // Override this or listen to events!
+    return `You requested to send the developers \`${Utils.formatNumber(tipDevs.amount)} XLM\` but your wallet only contains \`${Utils.formatNumber(balance)} XLM\``;
+  }
+
+  /**
+   * Called when, for any reason, we attempt to tip devs but sending the transaction to the Horizon server fails.
+   * @param tipDevs {TipDevelopers}
+   * @returns {String}
+   */
+  async onTipDevsSubmissionFailed (tipDevs) {
+    // Override this or listen to events!
+    return `Sending your transaction to Horizon failed. Please try again later.`;
+  }
+
+  /**
+   * Called on a successfull tipDevs
+   * @param tipDevs {TipDevelopers}
+   * @param address {String} The address to which the tipDevs was made. Included here because the Withdraw command is not responsible for obtaining the wallet of the given user at the time it is created.
+   * @returns {String}
+   */
+  async onTipDevs (tipDevs, address, txHash) {
+    // Override this or listen to events!
+    return `You tipped the devs ${tipDevs.amount} XLM. Thank you so much for your donation!`
+  }
+
+  /**
    * Routes a command depending on its class to the appropriate function
    *
    * @param command {Command}
@@ -186,6 +258,8 @@ class Slack extends Adapter {
       return this.receiveWithdrawalRequest(command);
     } else if (command instanceof Command.Info) {
       return this.receiveInfoRequest(command);
+    } else if (command instanceof Command.TipDevelopers) {
+      return this.receiveTipDevelopersRequest(command);
     }
   }
 
@@ -224,7 +298,6 @@ class Slack extends Adapter {
       return `That is my address. You must register with your own address.`;
     }
 
-    // If the user is already registered, send them a message back explaining (and what their Wallet Address is)
     const usersExistingWallet = await this.Account.walletAddressForUser(command.adapter, command.sourceId)
 
     // If it's the same wallet, just send a message back
@@ -233,27 +306,85 @@ class Slack extends Adapter {
       return this.onRegistrationSameAsExistingWallet(usersExistingWallet)
     }
 
-    // Check to see if a user already exists with that wallet
+    // Check to see if a user already exists with that wallet. If they do, send a message back to the user about it.
     const userWithWalletId = await this.Account.userForWalletAddress(command.walletPublicKey)
     if(userWithWalletId) {
       this.getLogger().CommandEvents.onRegisteredWithWalletRegisteredToOtherUser(command, userWithWalletId)
       return this.onRegistrationOtherUserHasRegisteredWallet(command.walletPublicKey)
     }
 
-    // In both remaining cases, we save the new wallet
-    const account = await this.Account.getOrCreate(command.adapter, command.sourceId)
-    await account.setWalletAddress(command.walletPublicKey)
-
-    // If we replaced an old wallet, send the appropriate message
+    // In the case where we are replacing an old wallet, we go ahead and replace it immediately
     if (usersExistingWallet) {
-      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, false)
-      return this.onRegistrationReplacedOldWallet(usersExistingWallet, command.walletPublicKey)
+      return this.registerUser(command)
+    }
+
+    // Otherwise, we send them a terms confirmation message. Final registration is handled using callbacks from button pushes on that message. See server.js
+    this.getLogger().CommandEvents.onRegistrationSentTermsAgreement(command)
+    return this.getTermsAgreement(command)
+  }
+
+  async registerUser(registrationCommand) {
+    const account = await this.Account.getOrCreate(registrationCommand.adapter, registrationCommand.sourceId)
+    const usersExistingWallet = await this.Account.walletAddressForUser(registrationCommand.adapter, registrationCommand.sourceId)
+    await account.setWalletAddress(registrationCommand.walletPublicKey)
+    // Not their first time registering a wallet
+    if(usersExistingWallet) {
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(registrationCommand, false)
+      return this.onRegistrationReplacedOldWallet(usersExistingWallet, registrationCommand.walletPublicKey)
     } else {
-      // Otherwise, we've simply saved the user's first wallet
-      this.getLogger().CommandEvents.onRegisteredSuccessfully(command, true)
-      return this.onRegistrationRegisteredFirstWallet(command.walletPublicKey)
+      this.getLogger().CommandEvents.onRegisteredSuccessfully(registrationCommand, true)
+      return await this.onRegistrationRegisteredFirstWallet(registrationCommand.walletPublicKey)
     }
   }
+
+  /**
+   * Called when the user registers a wallet for the first time i.e. they did not previously have a wallet address.
+   *
+   * @param walletAddress {String} The wallet address the user has registered.
+   * @returns {Promise<string>}
+   */
+  async onRegistrationRegisteredFirstWallet(walletAddress) {
+    return await this.getFirstTimeRegistrationMessage(walletAddress)
+  }
+
+
+  /**
+   * Returns a JSON payload
+   *
+   * @param registrationCommand {Register}
+   * @returns {Promise<string>}
+   */
+  getTermsAgreement(registrationCommand) {
+    return JSON.parse('{\n' +
+        '    "text": "*Disclaimer*",\n' +
+        '    "attachments": [\n' +
+        '        {\n' +
+        '            "text": "1) This bot is not affiliated with the Stellar Development Foundation in any official capacity.\\n2) You should keep no more funds in this bot than you can afford to lose.\\n3) Lost funds will not be replaced. Use at your own discretion.",\n' +
+        '            "fallback": "You are unable to choose a game",\n' +
+        '            "callback_id": "terms_agreement",\n' +
+        '            "color": "#00CC00",\n' +
+        '            "attachment_type": "default",\n' +
+        '            "actions": [\n' +
+        '                {\n' +
+        '                    "name": "confirm",\n' +
+        '                    "text": "I Understand.",\n' +
+        '                    "style": "primary",\n' +
+        '                    "type": "button",\n' +
+        '                    "value": ' + `${JSON.stringify(registrationCommand.serialize())}` + '\n' +
+        '                },\n' +
+        '                {\n' +
+        '                    "name": "cancel",\n' +
+        '                    "text": "Cancel.",\n' +
+        '                    "style": "danger",\n' +
+        '                    "type": "button",\n' +
+        '                    "value": "false"\n' +
+        '                }\n' +
+        '            ]\n' +
+        '        }\n' +
+        '    ]\n' +
+        '}')
+  }
+
 
   /**
    *
@@ -278,13 +409,9 @@ class Slack extends Adapter {
   async receiveBalanceRequest (cmd) {
     console.log("in Receive balance request");
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
-    if(!account.walletAddress) {
-      this.getLogger().CommandEvents.onBalanceRequest(cmd, false)
-      return `Your wallet address is: \`Use the /register command to register your wallet address\`\nYour balance is: \'${account.balance}\'`
-    } else {
-      this.getLogger().CommandEvents.onBalanceRequest(cmd, true)
-      return `Your wallet address is: \`${account.walletAddress}\`\nYour balance is: \'${account.balance}\'`
-    }
+    let userIsRegistered = !!account.walletAddress
+    this.getLogger().CommandEvents.onBalanceRequest(cmd, userIsRegistered)
+    return this.getBalanceInfo(account)
   }
 
   /**
@@ -296,11 +423,7 @@ class Slack extends Adapter {
     const account = await this.Account.getOrCreate(cmd.adapter, cmd.sourceId)
     // Use !! to hard convert to boolean
     this.getLogger().CommandEvents.onInfoRequest(cmd, !!account.walletAddress)
-    if(!account.walletAddress) {
-      return `Deposit address: Register a valid wallet address to show the tipping bot's Deposit Address\nGitHub homepage: ${process.env.GITHUB_URL}`
-    } else {
-      return `Deposit address: \`${process.env.STELLAR_PUBLIC_KEY}\`\nGitHub homepage: ${process.env.GITHUB_URL}`
-    }
+    return this.getBotInfo(!!account.walletAddress)
   }
 
   async receiveNewAuthTokensForTeam (team, authToken, botToken) {
@@ -334,6 +457,130 @@ class Slack extends Adapter {
    */
   async getBotClientForUniqueId (uniqueId) {
     return await slackClient.botClientForUniqueId(uniqueId)
+  }
+
+
+  getFirstTimeRegistrationMessage(walletAddress) {
+    let obj = {
+      "attachments": [
+        {
+          "text": "*Registered Successfully*",
+          "fallback": "Registered successfully. Welcome to the tipping bot.",
+          "color": "#36a64f",
+          "fields": [
+            {
+              "title": "Your wallet address",
+              "value": walletAddress,
+              "short": false
+            },
+            {
+              "title": "To deposit, send XLM to",
+              "value": process.env.STELLAR_PUBLIC_KEY,
+              "short": false
+            },
+            {
+              "title": "To tip users",
+              "value": "Use the /tip command",
+              "short": false
+            },
+            {
+              "title": "To check your balance",
+              "value": "Use the /balance command",
+              "short": false
+            },
+            {
+              "title": "To withdraw",
+              "value": "Use the /withdraw command",
+              "short": false
+            }
+          ]
+        }
+      ]
+    }
+    return obj;
+  }
+
+  getBalanceInfo (account) {
+    let userIsRegistered = !!account.walletAddress
+    let obj = {
+      "attachments": [
+        {
+          "fallback": "Information about your balance.",
+          "color": "#36a64f",
+          "fields": []
+        }
+      ]
+    }
+    if (userIsRegistered) {
+      obj.attachments[0].fields = [
+        {
+          "title": "Your wallet address",
+          "value": account.walletAddress,
+          "short": false
+        },
+        {
+          "title": "Your balance",
+          "value": account.balance,
+          "short": true
+        },
+        {
+          "title": "To deposit, send XLM to",
+          "value": process.env.STELLAR_PUBLIC_KEY,
+          "short": false
+        },
+        {
+          "title": "To tip users",
+          "value": "Use the /tip command",
+          "short": false
+        }
+      ]
+    } else {
+      obj.attachments[0].fields = [
+        {
+          "title": "You must register to have a balance",
+          "value": "Use the /register command",
+          "short": false
+        }
+      ]
+    }
+    return obj;
+  }
+
+  getBotInfo (userIsRegistered) {
+    let obj = {
+      "attachments": [{
+        "fallback": "Required plain-text summary of the attachment.",
+        "color": "#36a64f",
+        "title": "Bot Info",
+        "fields": [
+          {
+            "title": "Authors",
+            "value": "@dlohnes and @dbulnes",
+            "short": true
+          },
+          {
+            "title": "Source and License",
+            "value": "<" + process.env.GITHUB_URL + "|Github>",
+            "short": true
+          },
+          {
+            "title": "Disclaimer",
+            "value": "This bot is not affiliated with the Stellar Development Foundation in any official capacity.\nYou should keep no more funds in this bot than you can afford to lose.\nLost funds will not be replaced. Use at your own discretion.",
+            "short": false
+          }
+        ]
+      }]
+    }
+
+    if(userIsRegistered) {
+      // Add in the other field at array position 2
+      obj.attachments[0].fields.splice(2, 0, {
+        "title": "Send deposits to ",
+        "value": process.env.STELLAR_PUBLIC_KEY,
+        "short": false
+      })
+    }
+    return obj
   }
 
   constructor (config) {

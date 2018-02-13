@@ -24,13 +24,13 @@ describe('models / account', async () => {
     }
 
     account = await Account.createAsync({
-      adapter: 'reddit',
+      adapter: 'resting',
       uniqueId: 'foo',
       balance: '1.0000000'
     })
 
     accountWithWallet = await Account.createAsync({
-      adapter: 'reddit',
+      adapter: 'resting',
       uniqueId: 'goodwall',
       balance: '1.0000000',
       walletAddress: 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN'
@@ -38,21 +38,21 @@ describe('models / account', async () => {
   })
 
   describe('deposit', () => {
-    it ('should deposit on the account and create action', async () => {
+    it ('should deposit on the account and create action if the source wallet address is recognized', async () => {
       const tx = await Transaction.createAsync({
             memoId: 'reddit/foo',
             amount: '5.0000000',
             createdAt: new Date('2018-01-01'),
             asset: 'native',
             cursor: 'token',
-            source: 'source',
+            source: 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN',
             target: 'target',
             hash: 'hash',
             type: 'deposit'
       })
       await account.deposit(tx)
 
-      const reloaded = await Account.getOrCreate('reddit', 'foo')
+      const reloaded = await Account.getOrCreate('resting', 'foo')
       const action = await Action.oneAsync({hash: 'hash', type: 'deposit', sourceaccount_id: reloaded.id})
 
       assert.equal(reloaded.balance, '6.0000000')
@@ -66,7 +66,7 @@ describe('models / account', async () => {
             createdAt: new Date('2018-01-01'),
             asset: 'native',
             cursor: 'token',
-            source: 'source',
+            source: 'GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN',
             target: 'target',
             hash: 'hash',
             type: 'deposit'
@@ -74,7 +74,7 @@ describe('models / account', async () => {
         Account.events.on('DEPOSIT', async () => {
           const exists = await Action.existsAsync({
             hash: 'hash',
-            sourceaccount_id: account.id,
+            sourceaccount_id: accountWithWallet.id,
             type: 'deposit'
           })
           assert.ok(exists)
@@ -88,7 +88,7 @@ describe('models / account', async () => {
           }
 
           assert.equal(assertedExc, 'DUPLICATE_DEPOSIT')
-          const reloaded = await Account.getOrCreate('reddit', 'foo')
+          const reloaded = await Account.getOrCreate('resting', 'foo')
           // 1 + the initial transaction, but not three when we deposit again
           assert.equal(reloaded.balance, '2.0000000')
           done()
@@ -99,13 +99,13 @@ describe('models / account', async () => {
 
   describe('getOrCreate', () => {
     it ('should only create a new account if it does not already exist', async () => {
-      const sameAccount = await Account.getOrCreate('reddit', 'foo')
+      const sameAccount = await Account.getOrCreate('resting', 'foo')
       assert.equal(account._id, sameAccount._id)
 
-      const otherAccount = await Account.getOrCreate('reddit', 'bar', {
+      const otherAccount = await Account.getOrCreate('resting', 'bar', {
         balance: '5.0000000'
       })
-      assert.equal(otherAccount.adapter, 'reddit')
+      assert.equal(otherAccount.adapter, 'resting')
       assert.equal(otherAccount.uniqueId, 'bar')
       assert.equal(otherAccount.balance, '5.0000000')
     })
@@ -173,12 +173,12 @@ describe('models / account', async () => {
 
   describe('walletAddressForUser', () => {
     it ('should return the user`s wallet if the user with the given uniqueId for the given adapter has a wallet address set', async () => {
-      const usersWallet = await Account.walletAddressForUser('reddit', 'goodwall')
+      const usersWallet = await Account.walletAddressForUser('resting', 'goodwall')
       assert.equal(usersWallet, `GDO7HAX2PSR6UN3K7WJLUVJD64OK3QLDXX2RPNMMHI7ZTPYUJOHQ6WTN`, "User should have a wallet address")
     })
 
     it ('should return null if the given user does not have a wallet address set', async () => {
-      const usersWallet = await Account.walletAddressForUser('reddit', 'foo')
+      const usersWallet = await Account.walletAddressForUser('resting', 'foo')
       assert.equal(usersWallet, null, "User should not have a wallet address")
     })
   })

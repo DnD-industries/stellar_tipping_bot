@@ -2,7 +2,6 @@ require('dotenv').config({path: process.env.NODE_ENV ? './.env' + process.env.NO
 const SlackServer = require('./src/adapters/slack/server');
 
 // +++ Adapters +
-const Reddit = require('./src/adapters/reddit');
 const Slack = require('./src/adapters/slack/slack-adapter');
 
 async function bootstrap () {

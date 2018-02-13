@@ -17,9 +17,9 @@ Starry is a tipbot which allows Slack participants to send tips directly to othe
 If we nail the tipping functionality with time to spare, or even after the intial SBC deadline is reached, Starry can be improved in a multitude of ways in order to better serve the Stellar community.
 
 Starry could:
-  - Detect and field common questions, such as those about legacy Stellar accounts. 
-  - Interpret "/tip [@username] [amount][usd/cny/etc]" to mean sending XLM at the current market rate, utilizing APIs to detect current market rate and send accordingly, after confirming with user in Slack.
-  - Plenty of other ways I'm sure! Send your ideas in here or in GalacticTalk.
+   - Detect and field common questions, such as those about legacy Stellar accounts. 
+   - Interpret "/tip [@username] [amount][usd/cny/etc]" to mean sending XLM at the current market rate, utilizing APIs to detect current market rate and send accordingly, after confirming with user in Slack.
+   - Plenty of other ways I'm sure! Send your ideas in here or in GalacticTalk.
 
 ## Starry's Lunar origins
 Starry is a robot crazy about Stellar. Before coming to earth, Starry lived a solitary life on the moon. Though they had many hobbies - model building, playing piano, reading poetry - Starry longed for something which the gray and docile environs of the moon could not provide. Community!
@@ -54,11 +54,6 @@ REDIS_URL=redis://redis:6379
 STELLAR_HORIZON=https://horizon-testnet.stellar.org
 STELLAR_SECRET_KEY=YOUR_SECRET_KEY_HERE
 STELLAR_CURSOR_PAGING_TOKEN=YOUR_INITIAL_PAGING_TOKEN
-
-REDDIT_CLIENT_ID=YOUR_REDDIT_APP_CLIENT_ID
-REDDIT_CLIENT_SECRET=YOUR_REDDIT_APP_SECRET
-REDDIT_USER=YOUR_STELLAR_BOT
-REDDIT_PASS=YOUR_STELLAR_BOT_PASSWORD
 
 SLACK_VERIFICATION_TOKEN=YOUR_SLACK_VERIFICATION_TOKEN
 SLACK_BOT_OAUTH_TOKEN=YOUR_SLACK_OAUTH_TOKEN

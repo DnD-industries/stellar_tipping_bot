@@ -13,8 +13,8 @@ class SlackClient extends WebClient {
    * @returns {Promise<*|PromiseLike<T>|Promise<T>>}
    */
   async getDMIdForUser(userID) {
-
-    if(userID.includes(".")) {
+    console.log(`Get DMID for userID: ${userID}`)
+    if(userID.includes(":")) {
       return this.getDMIdForUser(Utils.slackUserIdFromUniqueId(userID));
     }
 
