@@ -52,22 +52,22 @@ if !( echo $TAG | grep -q "latest" ) ; then
         cd $STELLARBOT_MASTER_PATH #Needs to be set in /etc/environment to be available outside of just terminal sessions
         #Set our env variable for the master tag to $TAG, and remove the prefix, storing in $PREFIX_REMOVED_TAG
         remove_tag_prefix $TAG "master_"
-        STELLARBOT_MASTER_TAG=$TAG #Needs to be set in /etc/environment to be available outside of just terminal sessions
+        export STELLARBOT_MASTER_TAG=$TAG #Needs to be set in /etc/environment to be available outside of just terminal sessions
         echo "STELLARBOT_MASTER_TAG="$STELLARBOT_MASTER_TAG
         git_fetch_reset "master" $PREFIX_REMOVED_TAG
         docker-compose_pull_up "master"     
-        cp $STELLARBOT_MASTER_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
+        #cp $STELLARBOT_MASTER_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
     elif echo "$TAG" | grep -q "staging"; then
         #Change our path to the relative absolute where our stellar bot docker-compose.yml resides
         cd $STELLARBOT_STAGING_PATH #Needs to be set in /etc/environment to be available outside of just terminal sessions
         #Set our env variable for the staging tag to $TAG, and remove the prefix, storing in $PREFIX_REMOVED_TAG
         remove_tag_prefix $TAG "staging_"    
-        STELLARBOT_STAGING_TAG=$TAG 
+        export STELLARBOT_STAGING_TAG=$TAG 
         echo "STELLARBOT_STAGING_TAG="$STELLARBOT_STAGING_TAG
         git_fetch_reset "staging" $PREFIX_REMOVED_TAG
         docker-compose_pull_up "staging"
         #copy our script
-        cp $STELLARBOT_STAGING_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
+        #cp $STELLARBOT_STAGING_PATH/deploy_scripts/pull_and_restart.sh $PWD/scripts/pull_and_restart.sh
     else     
         echo "NOT PULLING: staging or master not found in tag"
     fi
