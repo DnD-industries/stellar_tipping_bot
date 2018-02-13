@@ -101,7 +101,7 @@ docker-compose exec db sh -c 'su postgres -c "createdb stellar_testing"'
 ```
 
 ## Get it going
-
+ 
 Run the tests:
 
 ```
