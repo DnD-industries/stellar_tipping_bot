@@ -162,7 +162,7 @@ describe('models / account', async () => {
         }
       }
       try {
-        await account.withdraw(Stellar, accountWithWallet.walletAddress, new Big(withdrawalAmount), "hash12345", MockTransaction)
+        await accountWithWallet.withdraw(Stellar, accountWithWallet.walletAddress, new Big(withdrawalAmount), "hash12345", MockTransaction)
         assert(false, "Should have fallen into catch")
       } catch (e) {
         assert.equal(e, 'DUPLICATE_WITHDRAWAL')
