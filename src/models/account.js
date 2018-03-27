@@ -230,9 +230,7 @@ module.exports = (db) => {
         const Action = db.models.action
 
         return await Account.withinTransaction(async () => {
-
-          const startingBalance = this.balance
-
+          
           if (! await this.lockInPayment(withdrawalAmount)) {
             throw 'Insufficient balance. Always check with `canPay` before withdrawing money!'
           }
